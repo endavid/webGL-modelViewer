@@ -1,4 +1,4 @@
-(function() {
+(function(global) {
   "use strict";
 
   var WavefrontUtils = {
@@ -191,8 +191,6 @@
       callback(out);
     },
   };
-
-  // export all
-  window.WavefrontUtils = WavefrontUtils;
-
-})();
+  // export
+  global.WavefrontUtils = (global.module || {}).exports = WavefrontUtils;
+})(this);

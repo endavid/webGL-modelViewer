@@ -1,4 +1,4 @@
-(function() {
+(function(global) {
   "use strict";
 
   function floatStringToArray(text) {
@@ -111,12 +111,11 @@
       }
       model.meshes.push(submesh);
       Object.keys(ngons).forEach(function(n) {
-        console.log(n+"-gons not supported. Only triangles and quads");
+        console.warn(n+"-gons not supported. Only triangles and quads");
       });
       return model;
     }
   };
-
   // export
-  window.ColladaUtils = ColladaUtils;
-})();
+  global.ColladaUtils = (global.module || {}).exports = ColladaUtils;
+})(this);

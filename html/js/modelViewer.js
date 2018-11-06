@@ -1,4 +1,4 @@
-(function() {
+(function(global) {
   "use strict";
 
   var ViewParameters = {
@@ -295,6 +295,5 @@
   });
 
   // Exposed globals (needed in controls.js)
-  window.ViewParameters = ViewParameters;
-
-})();
+  global.ViewParameters = (global.module || {}).exports = ViewParameters;
+})(this);

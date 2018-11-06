@@ -1,4 +1,4 @@
-(function() {
+(function(global) {
   "use strict";
   // Singletons, so defined with object literals
   // Ref. http://www.phpied.com/3-ways-to-define-a-javascript-class/
@@ -497,7 +497,6 @@
   };
 
   // export libs
-  window.GFX = GFX;
-  window.MATH = MATH;
-
-})();
+  global.GFX = (global.module || {}).exports = GFX;
+  global.MATH = (global.module || {}).exports = MATH;
+})(this);
