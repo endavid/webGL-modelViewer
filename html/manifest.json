@@ -1,0 +1,19 @@
+{
+  "name": "EnDavid ModelViewer",
+  "version": "1.0",
+  "icons": {
+    "24": "resources/vidLogo.png",
+    "128": "resources/vidLogo.png"
+  },
+  "app": {
+    "launch": {
+      "local_path": "modelViewer.html"
+    }
+  },
+  "permissions": [
+    "http://*/*",
+    "https://*/*",
+    "file://*"
+  ],
+  "manifest_version": 2
+}
