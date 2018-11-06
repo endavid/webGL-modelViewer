@@ -39,7 +39,7 @@ body {
 	height: 140px;
 	margin-left: auto ;
     margin-right: auto ;
-	background-image: url("resources/vidLogo.png");
+	background-image: url("../resources/vidLogo.png");
 	background-repeat: no-repeat;
 }
 
