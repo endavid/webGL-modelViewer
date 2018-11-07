@@ -29,90 +29,95 @@
     return out;
   }
 
+  function readMeshes(json, defaultMaterial) {
+    var positions = [];
+    var normals = [];
+    var uvs = [];
+    var vertices = [];
+    var meshes = [];
+    var src = json.COLLADA.library_geometries.geometry.mesh.source;
+    var isZUp = (json.COLLADA.asset.up_axis === "Z_UP");
+    src.forEach(function (e) {
+      if (e._id.indexOf("positions") >= 0) {
+        positions = floatStringToArray(e.float_array.__text);
+      }
+      else if (e._id.indexOf("normals") >= 0) {
+        normals = floatStringToArray(e.float_array.__text);
+      }
+      else if (e._id.indexOf("map") >= 0) {
+        uvs = floatStringToArray(e.float_array.__text);
+      }
+    });
+    var polylist = json.COLLADA.library_geometries.geometry.mesh.polylist;
+    var numInputs = polylist.input.length;
+    var vcount = intStringToArray(polylist.vcount);
+    var polygons = toVectorArray(intStringToArray(polylist.p), numInputs);
+    var submesh = { indices: [] };
+    if (defaultMaterial) {
+      submesh.material = defaultMaterial;
+    }
+    for (var i = 0; i < polygons.length; i++) {
+      var p = polygons[i];
+      vertices.push(positions[3*p[0]]);
+      if (isZUp) {
+        vertices.push(positions[3*p[0]+2]);
+        vertices.push(-positions[3*p[0]+1]);
+      } else {
+        vertices.push(positions[3*p[0]+1]);
+        vertices.push(positions[3*p[0]+2]);
+      }
+      vertices.push(p[1]===undefined?0:normals[3*p[1]]);
+      if (isZUp) {
+        vertices.push(p[1]===undefined?0:normals[3*p[1]+2]);
+        vertices.push(p[1]===undefined?0:-normals[3*p[1]+1]);
+      } else {
+        vertices.push(p[1]===undefined?0:normals[3*p[1]+1]);
+        vertices.push(p[1]===undefined?0:normals[3*p[1]+2]);
+      }
+      vertices.push(p[2]===undefined?0:uvs[2*p[2]]);
+      vertices.push(p[2]===undefined?0:uvs[2*p[2]+1]);
+    }
+    var ngons = {};
+    var j=0;
+    for (i = 0; i < vcount.length; i++) {
+      var c = vcount[i];
+      if (c === 3 || c === 4) {
+        submesh.indices.push(j);
+        submesh.indices.push(j+1);
+        submesh.indices.push(j+2);
+        if (c === 4) {
+          submesh.indices.push(j);
+          submesh.indices.push(j+1);
+          submesh.indices.push(j+3);
+        }
+      }
+      else {
+        ngons[""+vcount[i]] = true;
+      }
+      j += c;
+    }
+    meshes.push(submesh);
+    Object.keys(ngons).forEach(function(n) {
+      console.warn(n+"-gons not supported. Only triangles and quads");
+    });
+    return {
+      meshes: meshes,
+      vertices: vertices,
+      materials: {}
+    };
+  }
+
   var ColladaUtils = {
     parseCollada: function(xmlText, defaultMaterial) {
       // https://github.com/abdmob/x2js
       var x2js = new X2JS();
       var json = x2js.xml_str2json(xmlText);
-      var positions = [];
-      var normals = [];
-      var uvs = [];
-      var meshes = [];
-      var model = {
-        materials: {},
-        vertices: [],
-        meshes: []
-      };
+      var model = readMeshes(json, defaultMaterial);
       if (defaultMaterial) {
         model.materials[defaultMaterial] = {
           albedoMap: defaultMaterial
         };
       }
-      var src = json.COLLADA.library_geometries.geometry.mesh.source;
-      var isZUp = (json.COLLADA.asset.up_axis === "Z_UP");
-      src.forEach(function (e) {
-        if (e._id.indexOf("positions") >= 0) {
-          positions = floatStringToArray(e.float_array.__text);
-        }
-        else if (e._id.indexOf("normals") >= 0) {
-          normals = floatStringToArray(e.float_array.__text);
-        }
-        else if (e._id.indexOf("map") >= 0) {
-          uvs = floatStringToArray(e.float_array.__text);
-        }
-      });
-      var polylist = json.COLLADA.library_geometries.geometry.mesh.polylist;
-      var numInputs = polylist.input.length;
-      var vcount = intStringToArray(polylist.vcount);
-      var polygons = toVectorArray(intStringToArray(polylist.p), numInputs);
-      var submesh = { indices: [] };
-      if (defaultMaterial) {
-        submesh.material = defaultMaterial;
-      }
-      for (var i = 0; i < polygons.length; i++) {
-        var p = polygons[i];
-        model.vertices.push(positions[3*p[0]]);
-        if (isZUp) {
-          model.vertices.push(positions[3*p[0]+2]);
-          model.vertices.push(-positions[3*p[0]+1]);
-        } else {
-          model.vertices.push(positions[3*p[0]+1]);
-          model.vertices.push(positions[3*p[0]+2]);
-        }
-        model.vertices.push(p[1]===undefined?0:normals[3*p[1]]);
-        if (isZUp) {
-          model.vertices.push(p[1]===undefined?0:normals[3*p[1]+2]);
-          model.vertices.push(p[1]===undefined?0:-normals[3*p[1]+1]);
-        } else {
-          model.vertices.push(p[1]===undefined?0:normals[3*p[1]+1]);
-          model.vertices.push(p[1]===undefined?0:normals[3*p[1]+2]);
-        }
-        model.vertices.push(p[2]===undefined?0:uvs[2*p[2]]);
-        model.vertices.push(p[2]===undefined?0:uvs[2*p[2]+1]);
-      }
-      var ngons = {};
-      var j=0;
-      for (i = 0; i < vcount.length; i++) {
-        var c = vcount[i];
-        if (c === 3 || c === 4) {
-          submesh.indices.push(j);
-          submesh.indices.push(j+1);
-          submesh.indices.push(j+2);
-          if (c === 4) {
-            submesh.indices.push(j);
-            submesh.indices.push(j+1);
-            submesh.indices.push(j+3);
-          }
-        }
-        else {
-          ngons[""+vcount[i]] = true;
-        }
-        j += c;
-      }
-      model.meshes.push(submesh);
-      Object.keys(ngons).forEach(function(n) {
-        console.warn(n+"-gons not supported. Only triangles and quads");
-      });
       return model;
     }
   };
