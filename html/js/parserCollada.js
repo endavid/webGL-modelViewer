@@ -62,6 +62,8 @@
       if (defaultMaterial) {
         submesh.material = defaultMaterial;
       }
+      // interleave vertex data as
+      // position (3), normal (3), UVs (2)
       for (var i = 0; i < polygons.length; i++) {
         var p = polygons[i];
         vertices.push(positions[3*p[0]]);
@@ -112,12 +114,71 @@
     };
   }
 
+  function readSkin(json) {
+    var controller = json.COLLADA.library_controllers.controller;
+    var skin = controller ? controller.skin : controller;
+    var skinData = {};
+    if (!skin) {
+      return skinData;
+    }
+    var isZUp = (json.COLLADA.asset.up_axis === "Z_UP");
+    var weightData = [];
+    skin.source.forEach(function (e) {
+      if (e._id.indexOf("weights") >= 0) {
+        weightData = floatStringToArray(e.float_array.__text);
+      }
+      else if (e._id.indexOf("bind_poses") >= 0) {
+        skinData.bindPoses = floatStringToArray(e.float_array.__text);
+      }
+      else if (e._id.indexOf("joints") >= 0) {
+        skinData.joints = e.Name_array.__text.split(" ");
+      }
+    });
+    var v = intStringToArray(skin.vertex_weights.v);
+    var jointWeightIndices = toVectorArray(v, 2);
+    var vcount = intStringToArray(skin.vertex_weights.vcount);
+    skinData.bindShapeMatrix = floatStringToArray(skin.bind_shape_matrix);
+    skinData.weights = mapWeightsPerVertex(vcount, jointWeightIndices, weightData);
+    return skinData;
+  }
+
+  function mapWeightsPerVertex(vcount, jointWeightIndices, weightData) {
+    var moreThan4JointsCount = 0;
+    var weights = [];
+    var iv = 0;
+    vcount.forEach(function (jointsPerVertex) {
+      if (jointsPerVertex > 4) {
+        moreThan4JointsCount++;
+      }
+      var jointWeightPairs = [];
+      for (var j = 0; j < jointsPerVertex; j++) {
+        if (j <= 4) { // if there are more joints, ignore
+          var jointIndex = jointWeightIndices[iv][0];
+          var weightIndex = jointWeightIndices[iv][1];
+          var weight = weightData[weightIndex];
+          jointWeightPairs.push([jointIndex, weight]);
+        }
+        iv++;
+      }
+      weights.push(jointWeightPairs);
+    });
+    if (moreThan4JointsCount > 0) {
+      console.warn("There are " + moreThan4JointsCount + " vertices with more than 4 contributing joints! Ignoring the 5th onwards...");
+    }
+    return weights;
+  }
+
+  function readSkeleton(json) {
+
+  }
+
   var ColladaUtils = {
     parseCollada: function(xmlText, defaultMaterial) {
       // https://github.com/abdmob/x2js
       var x2js = new X2JS();
       var json = x2js.xml_str2json(xmlText);
       var model = readMeshes(json, defaultMaterial);
+      var skin = readSkin(json);
       if (defaultMaterial) {
         model.materials[defaultMaterial] = {
           albedoMap: defaultMaterial
