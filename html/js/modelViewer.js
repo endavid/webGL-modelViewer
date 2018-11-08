@@ -45,8 +45,23 @@
     this.shaderLit = null;
     this.uniforms = null;
     this.attribs = null;
+    this.initExtensions(["OES_element_index_uint"]);
     this.initShaders();
   }
+
+  Resources.prototype.initExtensions = function(list)
+  {
+    var self = this;
+    this.extensions = {};
+    list.forEach(function (e){
+      var ext = self.gl.getExtension(e);
+      if (!ext) {
+        console.error("Failed to get extension: " + e);
+      } else {
+        self.extensions[e] = ext;
+      }
+    });
+  };
 
   Resources.prototype.initShaders = function()
   {
@@ -280,7 +295,7 @@
             console.error("Not even the white texture is ready!");
           }
           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
-          gl.drawElements(gl.TRIANGLES, mesh.numPoints, gl.UNSIGNED_SHORT, 0);
+          gl.drawElements(gl.TRIANGLES, mesh.numPoints, gl.UNSIGNED_INT, 0);
         });
       }
       drawAllLabels(ctx, projectionMatrix, viewMatrix, modelMatrix, gl.canvas.width, gl.canvas.height);

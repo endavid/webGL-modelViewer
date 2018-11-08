@@ -195,7 +195,7 @@
         };
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-                      new Uint16Array(m.indices), // 32-bit for more than 64K verts
+                      new Uint32Array(m.indices), // 32-bit for more than 64K verts
           gl.STATIC_DRAW);
         modelData.meshes.push(mesh);
       });
