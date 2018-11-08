@@ -213,7 +213,7 @@
     // ------------------------------------
     // matrices
     // ------------------------------------
-    var projectionMatrix = window.MATH.getProjection(40, canvas.width/canvas.height, 0.1, 50);
+    var projectionMatrix = window.MATH.getProjection(40, canvas.width/canvas.height, 0.1, 500);
     var modelMatrix = window.MATH.getI4();
     var viewMatrix = window.MATH.getI4();
 
