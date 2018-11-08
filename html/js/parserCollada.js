@@ -35,6 +35,7 @@
     var uvs = [];
     var vertices = [];
     var meshes = [];
+    var ngons = {};
     var src = json.COLLADA.library_geometries.geometry.mesh.source;
     var isZUp = (json.COLLADA.asset.up_axis === "Z_UP");
     src.forEach(function (e) {
@@ -44,59 +45,63 @@
       else if (e._id.indexOf("normals") >= 0) {
         normals = floatStringToArray(e.float_array.__text);
       }
-      else if (e._id.indexOf("map") >= 0) {
+      else if (e._id.indexOf("map") >= 0 || e._id.indexOf("uvs") >= 0) {
         uvs = floatStringToArray(e.float_array.__text);
       }
     });
-    var polylist = json.COLLADA.library_geometries.geometry.mesh.polylist;
-    var numInputs = polylist.input.length;
-    var vcount = intStringToArray(polylist.vcount);
-    var polygons = toVectorArray(intStringToArray(polylist.p), numInputs);
-    var submesh = { indices: [] };
-    if (defaultMaterial) {
-      submesh.material = defaultMaterial;
+    var polylists = json.COLLADA.library_geometries.geometry.mesh.polylist;
+    if (!Array.isArray(polylists)) {
+      polylists = [polylists];
     }
-    for (var i = 0; i < polygons.length; i++) {
-      var p = polygons[i];
-      vertices.push(positions[3*p[0]]);
-      if (isZUp) {
-        vertices.push(positions[3*p[0]+2]);
-        vertices.push(-positions[3*p[0]+1]);
-      } else {
-        vertices.push(positions[3*p[0]+1]);
-        vertices.push(positions[3*p[0]+2]);
+    var j = 0; // face index
+    polylists.forEach(function (polylist) {
+      var numInputs = polylist.input.length;
+      var vcount = intStringToArray(polylist.vcount);
+      var polygons = toVectorArray(intStringToArray(polylist.p), numInputs);
+      var submesh = { indices: [] };
+      if (defaultMaterial) {
+        submesh.material = defaultMaterial;
       }
-      vertices.push(p[1]===undefined?0:normals[3*p[1]]);
-      if (isZUp) {
-        vertices.push(p[1]===undefined?0:normals[3*p[1]+2]);
-        vertices.push(p[1]===undefined?0:-normals[3*p[1]+1]);
-      } else {
-        vertices.push(p[1]===undefined?0:normals[3*p[1]+1]);
-        vertices.push(p[1]===undefined?0:normals[3*p[1]+2]);
+      for (var i = 0; i < polygons.length; i++) {
+        var p = polygons[i];
+        vertices.push(positions[3*p[0]]);
+        if (isZUp) {
+          vertices.push(positions[3*p[0]+2]);
+          vertices.push(-positions[3*p[0]+1]);
+        } else {
+          vertices.push(positions[3*p[0]+1]);
+          vertices.push(positions[3*p[0]+2]);
+        }
+        var noNormals = p[1] === undefined;
+        vertices.push(noNormals ? 0 : normals[3*p[1]]);
+        if (isZUp) {
+          vertices.push(noNormals ? 0 :normals[3*p[1]+2]);
+          vertices.push(noNormals ? 0 :-normals[3*p[1]+1]);
+        } else {
+          vertices.push(noNormals ? 0 : normals[3*p[1]+1]);
+          vertices.push(noNormals ? 0 : normals[3*p[1]+2]);
+        }
+        var noUVs = p[2] === undefined;
+        vertices.push(noUVs ? 0 : uvs[2*p[2]] || 0);
+        vertices.push(noUVs ? 0 : uvs[2*p[2]+1] || 0);
       }
-      vertices.push(p[2]===undefined?0:uvs[2*p[2]]);
-      vertices.push(p[2]===undefined?0:uvs[2*p[2]+1]);
-    }
-    var ngons = {};
-    var j=0;
-    for (i = 0; i < vcount.length; i++) {
-      var c = vcount[i];
-      if (c === 3 || c === 4) {
-        submesh.indices.push(j);
-        submesh.indices.push(j+1);
-        submesh.indices.push(j+2);
-        if (c === 4) {
+      vcount.forEach(function(c) {
+        if (c === 3 || c === 4) {
           submesh.indices.push(j);
           submesh.indices.push(j+1);
-          submesh.indices.push(j+3);
+          submesh.indices.push(j+2);
+          if (c === 4) {
+            submesh.indices.push(j);
+            submesh.indices.push(j+2);
+            submesh.indices.push(j+3);
+          }
+        } else {
+          ngons[""+c] = true;
         }
-      }
-      else {
-        ngons[""+vcount[i]] = true;
-      }
-      j += c;
-    }
-    meshes.push(submesh);
+        j += c;
+      });
+      meshes.push(submesh);
+    });
     Object.keys(ngons).forEach(function(n) {
       console.warn(n+"-gons not supported. Only triangles and quads");
     });

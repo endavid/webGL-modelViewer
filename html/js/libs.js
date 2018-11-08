@@ -176,6 +176,7 @@
     initModelFromJson: function(gl, modelData, imageUris, model) {
       //vertices
       modelData.vertexBuffer= gl.createBuffer();
+      console.log("Number of vertices: " + (model.vertices.length/8));
       gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexBuffer);
       gl.bufferData(gl.ARRAY_BUFFER,
                     new Float32Array(model.vertices),
