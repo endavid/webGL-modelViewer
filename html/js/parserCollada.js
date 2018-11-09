@@ -169,7 +169,78 @@
   }
 
   function readSkeleton(json) {
+    var node = json.COLLADA.library_visual_scenes.visual_scene.node;
+    if (!Array.isArray(node)) {
+      node = node.node;
+    }
+    var i = 0;
+    var rootJoint;
+    while (i < node.length && !rootJoint) {
+      if (node[i]._type === "JOINT") {
+        rootJoint = node[i];
+      }
+      i++;
+    }
+    return extractBoneTree(rootJoint, null);
+  }
 
+  function extractBoneTree(joint, parent) {
+    if (!joint) {
+      return {};
+    }
+    var skeleton = {};
+    var t = extractTransform(joint);
+    skeleton[joint._id] = {
+      parent: parent,
+      transform: t.transform,
+      rotationOrder: t.rotationOrder
+    };
+    var children = Array.isArray(joint.node) ? joint.node : [joint.node];
+    children.forEach(function (child) {
+      var branch = extractBoneTree(child, joint._id);
+      // flatten tree into dictionary
+      var jointList = Object.keys(branch);
+      jointList.forEach(function (j) {
+        skeleton[j] = branch[j];
+      });
+    });
+    return skeleton;
+  }
+
+  function extractTransform(joint) {
+    var data = {
+      transform: [],
+      rotationOrder: ""
+    };
+    if (joint.matrix) {
+      data.transform = floatStringToArray(joint.matrix.__text);
+    } else {
+      var t = floatStringToArray(joint.translate.__text || joint.translate);
+      var s = floatStringToArray(joint.scale.__text || joint.scale);
+      var rx = [];
+      var ry = [];
+      var rz = [];
+      for (var i = 0; i < 3; i++) {
+        var r = joint.rotate[i];
+        if (r._sid === "rotateX") {
+          data.rotationOrder += "x";
+          rx = floatStringToArray(r.__text);
+        } else if (r._sid === "rotateY") {
+          data.rotationOrder += "y";
+          ry = floatStringToArray(r.__text);
+        } else if (r._sid === "rotateZ") {
+          data.rotationOrder += "z";
+          rz = floatStringToArray(r.__text);
+        }
+      }
+      data.transform = [
+        rx[0] * s[0], ry[0] * s[1], rz[0] * s[2], t[0],
+        rx[1] * s[0], ry[1] * s[1], rz[1] * s[2], t[1],
+        rx[2] * s[0], ry[2] * s[1], rz[2] * s[2], t[2],
+        rx[3],        ry[3],        rz[3],        1.0
+      ];
+    }
+    return data;
   }
 
   var ColladaUtils = {
@@ -179,6 +250,7 @@
       var json = x2js.xml_str2json(xmlText);
       var model = readMeshes(json, defaultMaterial);
       var skin = readSkin(json);
+      var skeleton = readSkeleton(json);
       if (defaultMaterial) {
         model.materials[defaultMaterial] = {
           albedoMap: defaultMaterial
