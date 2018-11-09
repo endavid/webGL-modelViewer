@@ -243,6 +243,39 @@
     return data;
   }
 
+  function readAnimations(json) {
+    var anims = json.COLLADA.library_animations;
+    if (!anims) {
+      return {};
+    }
+    anims = Array.isArray(anims.animation) ? anims.animation : [anims.animation];
+    var animations = {};
+    anims.forEach(function (anim) {
+      var target = anim.channel._target.split("/");
+      var boneId = target[0];
+      var targetId = target[1];
+      animations[boneId] = {};
+      anim.source.forEach(function (src) {
+        if (src.float_array) {
+          var id = src.float_array._id;
+          var floats = floatStringToArray(src.float_array.__text);
+          if (id.indexOf("input") >= 0) {
+            animations[boneId].keyframes = floats;
+          } else if (id.indexOf("output") >= 0) {
+            if (targetId.indexOf("translation") >= 0 || targetId.indexOf("scale") >= 0) {
+              animations[boneId][targetId] = toVectorArray(floats, 3);
+            } else if (targetId.indexOf("matrix") >= 0) {
+              animations[boneId][targetId] = toVectorArray(floats, 16);
+            } else {
+              animations[boneId][targetId] = floats;
+            }
+          }
+        }
+      });
+    });
+    return animations;
+  }
+
   var ColladaUtils = {
     parseCollada: function(xmlText, defaultMaterial) {
       // https://github.com/abdmob/x2js
@@ -251,6 +284,7 @@
       var model = readMeshes(json, defaultMaterial);
       var skin = readSkin(json);
       var skeleton = readSkeleton(json);
+      var anims = readAnimations(json);
       if (defaultMaterial) {
         model.materials[defaultMaterial] = {
           albedoMap: defaultMaterial
