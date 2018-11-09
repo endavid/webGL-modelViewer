@@ -29,6 +29,19 @@
     return out;
   }
 
+  function flipAxisForMatrix(matrix) {
+    return [
+      m[0], m[2], -m[1], m[3],
+      m[8], m[10], -m[9], m[11],
+      -m[4], -m[6], m[5], -m[7],
+      m[12], m[14], -m[13], m[15]
+    ];
+  }
+
+  function isZUp(json) {
+    return json.COLLADA.asset.up_axis === "Z_UP";
+  }
+
   function readMeshes(json, defaultMaterial) {
     var positions = [];
     var normals = [];
@@ -37,7 +50,7 @@
     var meshes = [];
     var ngons = {};
     var src = json.COLLADA.library_geometries.geometry.mesh.source;
-    var isZUp = (json.COLLADA.asset.up_axis === "Z_UP");
+    var invertAxis = isZUp(json);
     src.forEach(function (e) {
       if (e._id.indexOf("positions") >= 0) {
         positions = floatStringToArray(e.float_array.__text);
@@ -67,7 +80,7 @@
       for (var i = 0; i < polygons.length; i++) {
         var p = polygons[i];
         vertices.push(positions[3*p[0]]);
-        if (isZUp) {
+        if (invertAxis) {
           vertices.push(positions[3*p[0]+2]);
           vertices.push(-positions[3*p[0]+1]);
         } else {
@@ -76,7 +89,7 @@
         }
         var noNormals = p[1] === undefined;
         vertices.push(noNormals ? 0 : normals[3*p[1]]);
-        if (isZUp) {
+        if (invertAxis) {
           vertices.push(noNormals ? 0 :normals[3*p[1]+2]);
           vertices.push(noNormals ? 0 :-normals[3*p[1]+1]);
         } else {
@@ -121,14 +134,20 @@
     if (!skin) {
       return skinData;
     }
-    var isZUp = (json.COLLADA.asset.up_axis === "Z_UP");
+    var invertAxis = isZUp(json);
     var weightData = [];
     skin.source.forEach(function (e) {
       if (e._id.indexOf("weights") >= 0) {
         weightData = floatStringToArray(e.float_array.__text);
       }
       else if (e._id.indexOf("bind_poses") >= 0) {
-        skinData.bindPoses = floatStringToArray(e.float_array.__text);
+        var bp = floatStringToArray(e.float_array.__text);
+        bp = toVectorArray(bp, 16);
+        if (invertAxis) {
+          skinData.bindPoses = bp.map(flipAxisForMatrix);
+        } else {
+          skinData.bindPoses = bp;
+        }
       }
       else if (e._id.indexOf("joints") >= 0) {
         skinData.joints = e.Name_array.__text.split(" ");
@@ -137,7 +156,12 @@
     var v = intStringToArray(skin.vertex_weights.v);
     var jointWeightIndices = toVectorArray(v, 2);
     var vcount = intStringToArray(skin.vertex_weights.vcount);
-    skinData.bindShapeMatrix = floatStringToArray(skin.bind_shape_matrix);
+    var bsm = floatStringToArray(skin.bind_shape_matrix);
+    if (invertAxis) {
+      skinData.bindShapeMatrix = flipAxisForMatrix(bsm);
+    } else {
+      skinData.bindShapeMatrix = bsm;
+    }
     skinData.weights = mapWeightsPerVertex(vcount, jointWeightIndices, weightData);
     return skinData;
   }
@@ -181,15 +205,16 @@
       }
       i++;
     }
-    return extractBoneTree(rootJoint, null);
+    var invertAxis = isZUp(json);
+    return extractBoneTree(rootJoint, null, invertAxis);
   }
 
-  function extractBoneTree(joint, parent) {
+  function extractBoneTree(joint, parent, invertAxis) {
     if (!joint) {
       return {};
     }
     var skeleton = {};
-    var t = extractTransform(joint);
+    var t = extractTransform(joint, invertAxis);
     skeleton[joint._id] = {
       parent: parent,
       transform: t.transform,
@@ -197,7 +222,7 @@
     };
     var children = Array.isArray(joint.node) ? joint.node : [joint.node];
     children.forEach(function (child) {
-      var branch = extractBoneTree(child, joint._id);
+      var branch = extractBoneTree(child, joint._id, invertAxis);
       // flatten tree into dictionary
       var jointList = Object.keys(branch);
       jointList.forEach(function (j) {
@@ -207,7 +232,7 @@
     return skeleton;
   }
 
-  function extractTransform(joint) {
+  function extractTransform(joint, invertAxis) {
     var data = {
       transform: [],
       rotationOrder: ""
@@ -240,6 +265,9 @@
         rx[3],        ry[3],        rz[3],        1.0
       ];
     }
+    if (invertAxis) {
+      data.transform = flipAxisForMatrix(data.transform);
+    }
     return data;
   }
 
@@ -249,6 +277,7 @@
       return {};
     }
     anims = Array.isArray(anims.animation) ? anims.animation : [anims.animation];
+    var invertAxis = isZUp(json);
     var animations = {};
     anims.forEach(function (anim) {
       var target = anim.channel._target.split("/");
@@ -265,7 +294,12 @@
             if (targetId.indexOf("translation") >= 0 || targetId.indexOf("scale") >= 0) {
               animations[boneId][targetId] = toVectorArray(floats, 3);
             } else if (targetId.indexOf("matrix") >= 0) {
-              animations[boneId][targetId] = toVectorArray(floats, 16);
+              var matrices = toVectorArray(floats, 16);
+              if (invertAxis) {
+                animations[boneId][targetId] = matrices.map(flipAxisForMatrix);
+              } else {
+                animations[boneId][targetId] = matrices;
+              }
             } else {
               animations[boneId][targetId] = floats;
             }
