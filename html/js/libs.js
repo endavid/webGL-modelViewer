@@ -180,7 +180,13 @@
       modelData.vertexBuffer= gl.createBuffer();
       modelData.stride = model.stride;
       console.log("#vertices: " + (model.vertices.length/model.stride));
+      if (model.skin) {
+        modelData.skinnedModel = new SkinnedModel(model.skin, model.skeleton, model.anims);
+      }
       gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexBuffer);
+      // atm, only floats allowed ...
+      // but we should be able to mix with other datatypes
+      // https://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
       gl.bufferData(gl.ARRAY_BUFFER,
                     new Float32Array(model.vertices),
                     gl.STATIC_DRAW);
@@ -490,6 +496,28 @@
       out[1] = m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * v[3];
       out[2] = m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * v[3];
       out[3] = m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3];
+      return out;
+    },
+
+    mulMatrix: function(ma, mb, m, offset) {
+      var out = m || new Array(16);
+      var o = offset || 0;
+      out[0+o] = ma[0] * mb[0] + ma[4] * mb[1] + ma[8] * mb[2] + ma[12] * mb[3];
+      out[1+o] = ma[1] * mb[0] + ma[5] * mb[1] + ma[9] * mb[2] + ma[13] * mb[3];
+      out[2+o] = ma[2] * mb[0] + ma[6] * mb[1] + ma[10] * mb[2] + ma[14] * mb[3];
+      out[3+o] = ma[3] * mb[0] + ma[7] * mb[1] + ma[11] * mb[2] + ma[15] * mb[3];
+      out[4+o] = ma[0] * mb[4] + ma[4] * mb[5] + ma[8] * mb[6] + ma[12] * mb[7];
+      out[5+o] = ma[1] * mb[4] + ma[5] * mb[5] + ma[9] * mb[6] + ma[13] * mb[7];
+      out[6+o] = ma[2] * mb[4] + ma[6] * mb[5] + ma[10] * mb[6] + ma[14] * mb[7];
+      out[7+o] = ma[3] * mb[4] + ma[7] * mb[5] + ma[11] * mb[6] + ma[15] * mb[7];
+      out[8+o] = ma[0] * mb[8] + ma[4] * mb[9] + ma[8] * mb[10] + ma[12] * mb[11];
+      out[9+o] = ma[1] * mb[8] + ma[5] * mb[9] + ma[9] * mb[10] + ma[13] * mb[11];
+      out[10+o] = ma[2] * mb[8] + ma[6] * mb[9] + ma[10] * mb[10] + ma[14] * mb[11];
+      out[11+o] = ma[3] * mb[8] + ma[7] * mb[9] + ma[11] * mb[10] + ma[15] * mb[11];
+      out[12+o] = ma[0] * mb[12] + ma[4] * mb[13] + ma[8] * mb[14] + ma[12] * mb[15];
+      out[13+o] = ma[1] * mb[12] + ma[5] * mb[13] + ma[9] * mb[14] + ma[13] * mb[15];
+      out[14+o] = ma[2] * mb[12] + ma[6] * mb[13] + ma[10] * mb[14] + ma[14] * mb[15];
+      out[15+o] = ma[3] * mb[12] + ma[7] * mb[13] + ma[11] * mb[14] + ma[15] * mb[15];
       return out;
     },
 

@@ -205,19 +205,25 @@
 
   function readSkeleton(json) {
     var node = json.COLLADA.library_visual_scenes.visual_scene.node;
-    if (!Array.isArray(node)) {
-      node = node.node;
-    }
-    var i = 0;
-    var rootJoint;
-    while (i < node.length && !rootJoint) {
-      if (node[i]._type === "JOINT") {
-        rootJoint = node[i];
-      }
-      i++;
-    }
+    var rootJoint = findRootNode(node);
     var invertAxis = isZUp(json);
     return extractBoneTree(rootJoint, null, invertAxis);
+  }
+
+  function findRootNode(node) {
+    var nodes = Array.isArray(node) ? node : [node];
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i]._type === "JOINT") {
+        return nodes[i];
+      }
+      if (nodes[i].node) {
+        var joint = findRootNode(nodes[i].node);
+        if (joint) {
+          return joint;
+        }
+      }
+    }
+    return null;
   }
 
   function extractBoneTree(joint, parent, invertAxis) {
@@ -335,6 +341,9 @@
           albedoMap: defaultMaterial
         };
       }
+      model.skin = skin;
+      model.skeleton = skeleton;
+      model.anims = anims;
       return model;
     }
   };

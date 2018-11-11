@@ -258,11 +258,6 @@
     var projectionMatrix = MATH.getProjection(40, canvas.width/canvas.height, 0.1, 500);
     var modelMatrix = MATH.getI4();
     var viewMatrix = MATH.getI4();
-    var maxJoints = 100;
-    var joints = new Array(maxJoints * 16);
-    for (var offset = 0; offset < 16 * maxJoints; offset+=16) {
-      MATH.setI4(joints, offset);
-    }
 
     // --------------------------------------------
     // Drawing
@@ -305,8 +300,8 @@
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
       if (modelData.vertexBuffer && res.ready() && whiteTexture.webglTexture) {
-        var isSkinned = modelData.stride === 16;
-        var shader = isSkinned ? res.shaders.litSkin : res.shaders.lit;
+        var skinned = modelData.skinnedModel;
+        var shader = skinned ? res.shaders.litSkin : res.shaders.lit;
         var stride = 4 * modelData.stride; // in bytes
         shader.use(gl);
         gl.uniform1i(shader.uniforms.sampler, 0);
@@ -318,10 +313,10 @@
         gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
         gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4*3);
         gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, 4*(3+3));
-        if (isSkinned) {
+        if (skinned) {
           gl.vertexAttribPointer(shader.attribs.boneWeights, 4, gl.FLOAT, false, stride, 4*(3+3+2));
           gl.vertexAttribPointer(shader.attribs.boneIndices, 4, gl.FLOAT, false, stride, 4*(3+3+2+4));
-          gl.uniformMatrix4fv(shader.uniforms.joints, false, joints);
+          gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
         }
 
         // draw all submeshes
