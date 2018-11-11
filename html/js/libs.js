@@ -178,6 +178,7 @@
     initModelFromJson: function(gl, modelData, imageUris, model) {
       //vertices
       modelData.vertexBuffer= gl.createBuffer();
+      modelData.stride = model.stride;
       console.log("#vertices: " + (model.vertices.length/model.stride));
       gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexBuffer);
       gl.bufferData(gl.ARRAY_BUFFER,
@@ -417,11 +418,12 @@
               0,0,0,1];
     },
 
-    setI4: function(m) {
-      m[0]=1; m[1]=0; m[2]=0; m[3]=0;
-      m[4]=0; m[5]=1; m[6]=0; m[7]=0;
-      m[8]=0; m[9]=0; m[10]=1; m[11]=0;
-      m[12]=0; m[13]=0; m[14]=0; m[15]=1;
+    setI4: function(m, offset) {
+      var o = offset || 0;
+      m[o+0] =1; m[o+1] =0; m[o+2] =0; m[o+3] =0;
+      m[o+4] =0; m[o+5] =1; m[o+6] =0; m[o+7] =0;
+      m[o+8] =0; m[o+9] =0; m[o+10]=1; m[o+11]=0;
+      m[o+12]=0; m[o+13]=0; m[o+14]=0; m[o+15]=1;
     },
 
     setScale4: function(m, scale) {

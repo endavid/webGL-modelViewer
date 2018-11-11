@@ -42,7 +42,7 @@
     return json.COLLADA.asset.up_axis === "Z_UP";
   }
 
-  function readMeshes(json, defaultMaterial) {
+  function readMeshes(json, defaultMaterial, skin) {
     var positions = [];
     var normals = [];
     var uvs = [];
@@ -77,8 +77,7 @@
       }
       // interleave vertex data as
       // position (3), normal (3), UVs (2)
-      for (var i = 0; i < polygons.length; i++) {
-        var p = polygons[i];
+      polygons.forEach(function (p) {
         vertices.push(positions[3*p[0]]);
         if (invertAxis) {
           vertices.push(positions[3*p[0]+2]);
@@ -99,7 +98,18 @@
         var noUVs = p[2] === undefined;
         vertices.push(noUVs ? 0 : uvs[2*p[2]] || 0);
         vertices.push(noUVs ? 0 : uvs[2*p[2]+1] || 0);
-      }
+        if (skin) {
+          var weights = [1.0, 0.0, 0.0, 0.0];
+          var indices = [0, 0, 0, 0];
+          var list = skin.weights[p[0]];
+          for (var j = 0; j < list.length; j++) {
+            indices[j] = list[j][0];
+            weights[j] = list[j][1];
+          }
+          weights.forEach(function(w) { vertices.push(w); });
+          indices.forEach(function(i) { vertices.push(i); });
+        }
+      });
       vcount.forEach(function(c) {
         if (c === 3 || c === 4) {
           submesh.indices.push(j);
@@ -122,7 +132,7 @@
     });
     return {
       meshes: meshes,
-      stride: 8,
+      stride: skin ? 16 : 8,
       vertices: vertices,
       materials: {}
     };
@@ -131,10 +141,10 @@
   function readSkin(json) {
     var controller = json.COLLADA.library_controllers.controller;
     var skin = controller ? controller.skin : controller;
-    var skinData = {};
     if (!skin) {
-      return skinData;
+      return null;
     }
+    var skinData = {};
     var invertAxis = isZUp(json);
     var weightData = [];
     skin.source.forEach(function (e) {
@@ -316,8 +326,8 @@
       // https://github.com/abdmob/x2js
       var x2js = new X2JS();
       var json = x2js.xml_str2json(xmlText);
-      var model = readMeshes(json, defaultMaterial);
       var skin = readSkin(json);
+      var model = readMeshes(json, defaultMaterial, skin);
       var skeleton = readSkeleton(json);
       var anims = readAnimations(json);
       if (defaultMaterial) {

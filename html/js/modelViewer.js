@@ -108,6 +108,11 @@
         "shaders/geometry.vs", "shaders/lighting.fs",
         ["uv", "position", "normal"],
         ["Pmatrix", "Vmatrix", "Mmatrix", "lightDirection", "sampler"]
+      ),
+      litSkin: new Shader(this.gl,
+        "shaders/skinning.vs", "shaders/lighting.fs",
+        ["uv", "position", "normal", "boneWeights", "boneIndices"],
+        ["Pmatrix", "Vmatrix", "Mmatrix", "lightDirection", "sampler", "joints"]
       )
     };
   };
@@ -145,8 +150,8 @@
   function drawAllLabels(ctx, projectionMatrix, viewMatrix, modelMatrix, canvasWidth, canvasHeight) {
     var labels = ViewParameters.labels;
     function worldToPixels(world) {
-      var view = window.MATH.mulVector(viewMatrix, world);
-      var clip = window.MATH.mulVector(projectionMatrix, view);
+      var view = MATH.mulVector(viewMatrix, world);
+      var clip = MATH.mulVector(projectionMatrix, view);
       clip[0] /= clip[3]; clip[1] /= clip[3];
       // convert from clipspace to pixels
       return [(clip[0] *  0.5 + 0.5) * canvasWidth, (clip[1] * -0.5 + 0.5) * canvasHeight];
@@ -160,7 +165,7 @@
     Object.keys(labels.model).forEach(function (k) {
       var pos = labels.model[k];
       pos[3] = 1;
-      var world = window.MATH.mulVector(modelMatrix, pos);
+      var world = MATH.mulVector(modelMatrix, pos);
       var pix = worldToPixels(world);
       drawLabel(ctx, pix[0], pix[1], k);
     });
@@ -236,7 +241,7 @@
     // Resources
     // ------------------------------------
     var res = new Resources(gl, canvas.width, canvas.height);
-    var whiteTexture = window.GFX.loadTexture(gl, ViewParameters.imageUris.white, true /* keep in textureCache forever */);
+    var whiteTexture = GFX.loadTexture(gl, ViewParameters.imageUris.white, true /* keep in textureCache forever */);
     // ------------------------------------
     // model data
     // ------------------------------------
@@ -250,9 +255,14 @@
     // ------------------------------------
     // matrices
     // ------------------------------------
-    var projectionMatrix = window.MATH.getProjection(40, canvas.width/canvas.height, 0.1, 500);
-    var modelMatrix = window.MATH.getI4();
-    var viewMatrix = window.MATH.getI4();
+    var projectionMatrix = MATH.getProjection(40, canvas.width/canvas.height, 0.1, 500);
+    var modelMatrix = MATH.getI4();
+    var viewMatrix = MATH.getI4();
+    var maxJoints = 100;
+    var joints = new Array(maxJoints * 16);
+    for (var offset = 0; offset < 16 * maxJoints; offset+=16) {
+      MATH.setI4(joints, offset);
+    }
 
     // --------------------------------------------
     // Drawing
@@ -283,19 +293,21 @@
         dY*=amortization;
         updateViewRotation(dX, dY);
       }
-      window.MATH.setScale4(modelMatrix, ViewParameters.modelScale);
-      window.MATH.rotateY(modelMatrix, ViewParameters.modelRotationTheta);
-      window.MATH.rotateX(modelMatrix, ViewParameters.modelRotationPhi);
-      window.MATH.setI4(viewMatrix);
-      window.MATH.translateZ(viewMatrix, ViewParameters.cameraDistance);
-      window.MATH.translateY(viewMatrix, ViewParameters.cameraHeight);
+      MATH.setScale4(modelMatrix, ViewParameters.modelScale);
+      MATH.rotateY(modelMatrix, ViewParameters.modelRotationTheta);
+      MATH.rotateX(modelMatrix, ViewParameters.modelRotationPhi);
+      MATH.setI4(viewMatrix);
+      MATH.translateZ(viewMatrix, ViewParameters.cameraDistance);
+      MATH.translateY(viewMatrix, ViewParameters.cameraHeight);
 
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
       if (modelData.vertexBuffer && res.ready() && whiteTexture.webglTexture) {
-        var shader = res.shaders.lit;
+        var isSkinned = modelData.stride === 16;
+        var shader = isSkinned ? res.shaders.litSkin : res.shaders.lit;
+        var stride = 4 * modelData.stride; // in bytes
         shader.use(gl);
         gl.uniform1i(shader.uniforms.sampler, 0);
         gl.uniformMatrix4fv(shader.uniforms.Pmatrix, false, projectionMatrix);
@@ -303,9 +315,14 @@
         gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, modelMatrix);
         gl.uniform3f(shader.uniforms.lightDirection, ViewParameters.lightDirection[0], ViewParameters.lightDirection[1], ViewParameters.lightDirection[2]);
         gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexBuffer);
-        gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, 4*(3+3+2), 0);
-        gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, 4*(3+3+2), 4*3);
-        gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, 4*(3+3+2), 4*(3+3));
+        gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
+        gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4*3);
+        gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, 4*(3+3));
+        if (isSkinned) {
+          gl.vertexAttribPointer(shader.attribs.boneWeights, 4, gl.FLOAT, false, stride, 4*(3+3+2));
+          gl.vertexAttribPointer(shader.attribs.boneIndices, 4, gl.FLOAT, false, stride, 4*(3+3+2+4));
+          gl.uniformMatrix4fv(shader.uniforms.joints, false, joints);
+        }
 
         // draw all submeshes
         modelData.meshes.forEach(function (mesh) {
