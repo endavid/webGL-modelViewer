@@ -168,6 +168,8 @@
     //     }
     //   },
     //   vertices: // float array in this order: position (3), normal (3), uv (2)
+    //         // + weights (4) + joint indices (1 -- 4 bytes) for skinned models
+    //   stride: 8 or 13
     //   meshes: // array of submeshes
     //      [ {material: // material reference
     //         indices: // faces of the submesh
@@ -176,7 +178,7 @@
     initModelFromJson: function(gl, modelData, imageUris, model) {
       //vertices
       modelData.vertexBuffer= gl.createBuffer();
-      console.log("Number of vertices: " + (model.vertices.length/8));
+      console.log("#vertices: " + (model.vertices.length/model.stride));
       gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexBuffer);
       gl.bufferData(gl.ARRAY_BUFFER,
                     new Float32Array(model.vertices),

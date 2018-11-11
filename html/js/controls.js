@@ -185,7 +185,13 @@
     }
 
 
-    var modelPresets = ["pear.json", "banana.json", "orange.json", "banana.obj", "tree01.dae"].map(function(e) {
+    var modelPresets = [
+      "pear.json",
+      "banana.json",
+      "orange.json",
+      "banana.obj",
+      "tree01.dae",
+      "monigote.dae"].map(function(e) {
       return {name: e, value: "resources/"+e};
     });
     var missingTexturePresets = [

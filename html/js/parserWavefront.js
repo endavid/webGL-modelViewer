@@ -11,6 +11,7 @@
       var uniqueIndexTriplets = {};
       var model = {
         materials: {},
+        stride: 8,
         vertices: [],
         meshes: []
       };

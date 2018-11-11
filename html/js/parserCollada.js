@@ -29,7 +29,7 @@
     return out;
   }
 
-  function flipAxisForMatrix(matrix) {
+  function flipAxisForMatrix(m) {
     return [
       m[0], m[2], -m[1], m[3],
       m[8], m[10], -m[9], m[11],
@@ -122,6 +122,7 @@
     });
     return {
       meshes: meshes,
+      stride: 8,
       vertices: vertices,
       materials: {}
     };

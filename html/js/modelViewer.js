@@ -34,6 +34,44 @@
     onRotation: function() {},
   };
 
+  function Shader(gl, vs, fs, attribs, uniforms) {
+    var self = this;
+    self.attribs = {};
+    self.uniforms = {};
+    GFX.useShader(gl, vs, fs, function(shaderProgram) {
+      self.program = shaderProgram;
+      attribs.forEach(function (a) {
+        self.attribs[a] = gl.getAttribLocation(self.program, a);
+      });
+      uniforms.forEach(function (u) {
+        self.uniforms[u] = gl.getUniformLocation(self.program, u);
+      });
+    });
+  }
+
+  Shader.prototype.enableVertexAttributes = function(gl) {
+    var attribKeys = Object.keys(this.attribs);
+    for (var i = 0; i < attribKeys.length; i++ ) {
+      gl.enableVertexAttribArray(this.attribs[attribKeys[i]]);
+    }
+  };
+
+  Shader.prototype.disableVertexAttributes = function(gl) {
+    var attribKeys = Object.keys(this.attribs);
+    for (var i = 0; i < attribKeys.length; i++ ) {
+      gl.disableVertexAttribArray(this.attribs[attribKeys[i]]);
+    }
+  };
+
+  Shader.prototype.use = function(gl) {
+    gl.useProgram(this.program);
+    this.enableVertexAttributes(gl);
+  };
+
+  Shader.prototype.disable = function(gl) {
+    this.disableVertexAttributes(gl);
+  };
+
   // ============================================
   /// Class to init resources
   function Resources(gl, width, height)
@@ -41,13 +79,13 @@
     this.gl = gl;
     this.width = width;
     this.height = height;
-    // shaders
-    this.shaderLit = null;
-    this.uniforms = null;
-    this.attribs = null;
     this.initExtensions(["OES_element_index_uint"]);
     this.initShaders();
   }
+
+  Resources.prototype.ready = function() {
+    return this.shaders.lit.program;
+  };
 
   Resources.prototype.initExtensions = function(list)
   {
@@ -65,29 +103,13 @@
 
   Resources.prototype.initShaders = function()
   {
-    var gl = this.gl;
-    var self = this;
-    window.GFX.useShader(gl, "shaders/geometry.vs", "shaders/lighting.fs", function(shaderProgram) {
-      self.shaderLit = shaderProgram;
-      // vertex attributes
-      self.attribs = {
-        uv:       gl.getAttribLocation(self.shaderLit, "uv"),
-        position: gl.getAttribLocation(self.shaderLit, "position"),
-        normal:   gl.getAttribLocation(self.shaderLit, "normal")
-      };
-      // uniforms
-      self.uniforms = {
-        matrixP: gl.getUniformLocation(self.shaderLit, "Pmatrix"),
-        matrixV: gl.getUniformLocation(self.shaderLit, "Vmatrix"),
-        matrixM: gl.getUniformLocation(self.shaderLit, "Mmatrix"),
-        lightDirection: gl.getUniformLocation(self.shaderLit, "lightDirection"),
-        sampler: gl.getUniformLocation(self.shaderLit, "sampler")
-      };
-      var attribKeys = Object.keys(self.attribs);
-      for (var i = 0; i < attribKeys.length; i++ ) {
-        gl.enableVertexAttribArray(self.attribs[attribKeys[i]]);
-      }
-    });
+    this.shaders = {
+      lit: new Shader(this.gl,
+        "shaders/geometry.vs", "shaders/lighting.fs",
+        ["uv", "position", "normal"],
+        ["Pmatrix", "Vmatrix", "Mmatrix", "lightDirection", "sampler"]
+      )
+    };
   };
 
   Resources.prototype.setDefaultTextureParameters = function()
@@ -223,7 +245,7 @@
       vertexBuffer: false,
       meshes: false
     };
-    window.GFX.loadModel(gl, ViewParameters, modelData, function() {animate(0);});
+    GFX.loadModel(gl, ViewParameters, modelData, function() {animate(0);});
 
     // ------------------------------------
     // matrices
@@ -251,7 +273,7 @@
 
       if (ViewParameters.model.uri !== modelData.modelURL || ViewParameters.needsReload) {
         ViewParameters.needsReload = false;
-        window.GFX.loadModel(gl, ViewParameters, modelData, function() {
+        GFX.loadModel(gl, ViewParameters, modelData, function() {
           console.log("Loaded: "+modelData.modelURL);
         });
       }
@@ -272,17 +294,18 @@
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-      if (modelData.vertexBuffer && res.shaderLit && whiteTexture.webglTexture) {
-        gl.useProgram(res.shaderLit);
-        gl.uniform1i(res.uniforms.sampler, 0);
-        gl.uniformMatrix4fv(res.uniforms.matrixP, false, projectionMatrix);
-        gl.uniformMatrix4fv(res.uniforms.matrixV, false, viewMatrix);
-        gl.uniformMatrix4fv(res.uniforms.matrixM, false, modelMatrix);
-        gl.uniform3f(res.uniforms.lightDirection, ViewParameters.lightDirection[0], ViewParameters.lightDirection[1], ViewParameters.lightDirection[2]);
+      if (modelData.vertexBuffer && res.ready() && whiteTexture.webglTexture) {
+        var shader = res.shaders.lit;
+        shader.use(gl);
+        gl.uniform1i(shader.uniforms.sampler, 0);
+        gl.uniformMatrix4fv(shader.uniforms.Pmatrix, false, projectionMatrix);
+        gl.uniformMatrix4fv(shader.uniforms.Vmatrix, false, viewMatrix);
+        gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, modelMatrix);
+        gl.uniform3f(shader.uniforms.lightDirection, ViewParameters.lightDirection[0], ViewParameters.lightDirection[1], ViewParameters.lightDirection[2]);
         gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexBuffer);
-        gl.vertexAttribPointer(res.attribs.position, 3, gl.FLOAT, false, 4*(3+3+2), 0);
-        gl.vertexAttribPointer(res.attribs.normal, 3, gl.FLOAT, false, 4*(3+3+2), 4*3);
-        gl.vertexAttribPointer(res.attribs.uv, 2, gl.FLOAT, false, 4*(3+3+2), 4*(3+3));
+        gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, 4*(3+3+2), 0);
+        gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, 4*(3+3+2), 4*3);
+        gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, 4*(3+3+2), 4*(3+3));
 
         // draw all submeshes
         modelData.meshes.forEach(function (mesh) {
@@ -297,6 +320,7 @@
           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
           gl.drawElements(gl.TRIANGLES, mesh.numPoints, gl.UNSIGNED_INT, 0);
         });
+        shader.disable(gl);
       }
       drawAllLabels(ctx, projectionMatrix, viewMatrix, modelMatrix, gl.canvas.width, gl.canvas.height);
       gl.flush();
