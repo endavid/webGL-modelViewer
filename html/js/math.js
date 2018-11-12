@@ -132,22 +132,22 @@
       var out = m || new Array(16);
       var o = offset || 0;
       // for row-major matrices
-      out[0+o] = ma[0] * mb[0] + ma[4] * mb[1] + ma[8] * mb[2] + ma[12] * mb[3];
-      out[1+o] = ma[1] * mb[0] + ma[5] * mb[1] + ma[9] * mb[2] + ma[13] * mb[3];
-      out[2+o] = ma[2] * mb[0] + ma[6] * mb[1] + ma[10] * mb[2] + ma[14] * mb[3];
-      out[3+o] = ma[3] * mb[0] + ma[7] * mb[1] + ma[11] * mb[2] + ma[15] * mb[3];
-      out[4+o] = ma[0] * mb[4] + ma[4] * mb[5] + ma[8] * mb[6] + ma[12] * mb[7];
-      out[5+o] = ma[1] * mb[4] + ma[5] * mb[5] + ma[9] * mb[6] + ma[13] * mb[7];
-      out[6+o] = ma[2] * mb[4] + ma[6] * mb[5] + ma[10] * mb[6] + ma[14] * mb[7];
-      out[7+o] = ma[3] * mb[4] + ma[7] * mb[5] + ma[11] * mb[6] + ma[15] * mb[7];
-      out[8+o] = ma[0] * mb[8] + ma[4] * mb[9] + ma[8] * mb[10] + ma[12] * mb[11];
-      out[9+o] = ma[1] * mb[8] + ma[5] * mb[9] + ma[9] * mb[10] + ma[13] * mb[11];
-      out[10+o] = ma[2] * mb[8] + ma[6] * mb[9] + ma[10] * mb[10] + ma[14] * mb[11];
-      out[11+o] = ma[3] * mb[8] + ma[7] * mb[9] + ma[11] * mb[10] + ma[15] * mb[11];
-      out[12+o] = ma[0] * mb[12] + ma[4] * mb[13] + ma[8] * mb[14] + ma[12] * mb[15];
-      out[13+o] = ma[1] * mb[12] + ma[5] * mb[13] + ma[9] * mb[14] + ma[13] * mb[15];
-      out[14+o] = ma[2] * mb[12] + ma[6] * mb[13] + ma[10] * mb[14] + ma[14] * mb[15];
-      out[15+o] = ma[3] * mb[12] + ma[7] * mb[13] + ma[11] * mb[14] + ma[15] * mb[15];
+      out[0+o]  = mb[0] * ma[0]  + mb[4] * ma[1]  + mb[8]  * ma[2]  + mb[12] * ma[3];
+      out[1+o]  = mb[1] * ma[0]  + mb[5] * ma[1]  + mb[9]  * ma[2]  + mb[13] * ma[3];
+      out[2+o]  = mb[2] * ma[0]  + mb[6] * ma[1]  + mb[10] * ma[2]  + mb[14] * ma[3];
+      out[3+o]  = mb[3] * ma[0]  + mb[7] * ma[1]  + mb[11] * ma[2]  + mb[15] * ma[3];
+      out[4+o]  = mb[0] * ma[4]  + mb[4] * ma[5]  + mb[8]  * ma[6]  + mb[12] * ma[7];
+      out[5+o]  = mb[1] * ma[4]  + mb[5] * ma[5]  + mb[9]  * ma[6]  + mb[13] * ma[7];
+      out[6+o]  = mb[2] * ma[4]  + mb[6] * ma[5]  + mb[10] * ma[6]  + mb[14] * ma[7];
+      out[7+o]  = mb[3] * ma[4]  + mb[7] * ma[5]  + mb[11] * ma[6]  + mb[15] * ma[7];
+      out[8+o]  = mb[0] * ma[8]  + mb[4] * ma[9]  + mb[8]  * ma[10] + mb[12] * ma[11];
+      out[9+o]  = mb[1] * ma[8]  + mb[5] * ma[9]  + mb[9]  * ma[10] + mb[13] * ma[11];
+      out[10+o] = mb[2] * ma[8]  + mb[6] * ma[9]  + mb[10] * ma[10] + mb[14] * ma[11];
+      out[11+o] = mb[3] * ma[8]  + mb[7] * ma[9]  + mb[11] * ma[10] + mb[15] * ma[11];
+      out[12+o] = mb[0] * ma[12] + mb[4] * ma[13] + mb[8]  * ma[14] + mb[12] * ma[15];
+      out[13+o] = mb[1] * ma[12] + mb[5] * ma[13] + mb[9]  * ma[14] + mb[13] * ma[15];
+      out[14+o] = mb[2] * ma[12] + mb[6] * ma[13] + mb[10] * ma[14] + mb[14] * ma[15];
+      out[15+o] = mb[3] * ma[12] + mb[7] * ma[13] + mb[11] * ma[14] + mb[15] * ma[15];
       return out;
     },
 

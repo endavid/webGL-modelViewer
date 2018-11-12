@@ -243,7 +243,7 @@
           url: params.model.uri,
           success: function(data) {
             var filename = GFX.getFileNameWithoutExtension(params.model.name);
-            var model = window.ColladaUtils.parseCollada(data, filename + ".png");
+            var model = ColladaUtils.parseCollada(data, filename + ".png");
             model.name = filename + ".json";
             callback(model);
           },

@@ -15,16 +15,17 @@
     }
     this.inverseBindMatrices = skin.bindPoses;
     this.skeleton = skeleton;
-    //this.applyDefaultPose();
+    this.applyDefaultPose();
   }
 
   /// JointMatrix * InvBindMatrix
   SkinnedModel.prototype.applyDefaultPose = function() {
     for (var i = 0; i < this.jointNames.length; i++) {
-      MATH.mulMatrix(
+      var m = MATH.mulMatrix(
         this.getDefaultPoseMatrix(i),
-        this.inverseBindMatrices[i],
-        this.joints, i * 16);
+        this.inverseBindMatrices[i]);
+      // convert row-major to column-major, GL-ready
+      MATH.transpose(m, this.joints, i * 16);
     }
   };
 

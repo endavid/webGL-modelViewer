@@ -1,6 +1,6 @@
 {
   "name": "EnDavid ModelViewer",
-  "version": "1.0",
+  "version": "1.0.1",
   "icons": {
     "24": "resources/vidLogo.png",
     "128": "resources/vidLogo.png"
@@ -15,5 +15,6 @@
     "https://*/*",
     "file://*"
   ],
-  "manifest_version": 2
+  "manifest_version": 2,
+  "content_security_policy": "script-src 'self' https://code.jquery.com https://*.jquery.com; object-src 'self'"
 }
