@@ -98,7 +98,7 @@
 
     mulVector: function(m, v) {
       var out = [0,0,0,0];
-      // for column-major matrices
+      // for row-major matrices
       out[0] = m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3];
       out[1] = m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * v[3];
       out[2] = m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * v[3];
@@ -106,10 +106,32 @@
       return out;
     },
 
+    transpose: function(mi, m, offset) {
+      var out = m || new Array(16);
+      var o = offset || 0;
+      out[0+o] = mi[0];
+      out[1+o] = mi[4];
+      out[2+o] = mi[8];
+      out[3+o] = mi[12];
+      out[4+o] = mi[1];
+      out[5+o] = mi[5];
+      out[6+o] = mi[9];
+      out[7+o] = mi[13];
+      out[8+o] = mi[2];
+      out[9+o] = mi[6];
+      out[10+o] = mi[10];
+      out[11+o] = mi[14];
+      out[12+o] = mi[3];
+      out[13+o] = mi[7];
+      out[14+o] = mi[11];
+      out[15+o] = mi[15];
+      return out;
+    },
+
     mulMatrix: function(ma, mb, m, offset) {
       var out = m || new Array(16);
       var o = offset || 0;
-      // for column-major matrices
+      // for row-major matrices
       out[0+o] = ma[0] * mb[0] + ma[4] * mb[1] + ma[8] * mb[2] + ma[12] * mb[3];
       out[1+o] = ma[1] * mb[0] + ma[5] * mb[1] + ma[9] * mb[2] + ma[13] * mb[3];
       out[2+o] = ma[2] * mb[0] + ma[6] * mb[1] + ma[10] * mb[2] + ma[14] * mb[3];
