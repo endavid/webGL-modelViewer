@@ -102,7 +102,7 @@
           var weights = [1.0, 0.0, 0.0, 0.0];
           var indices = [0, 0, 0, 0];
           var list = skin.weights[p[0]];
-          for (var j = 0; j < list.length; j++) {
+          for (var j = 0; j < Math.min(list.length, 4); j++) {
             indices[j] = list[j][0];
             weights[j] = list[j][1];
           }
