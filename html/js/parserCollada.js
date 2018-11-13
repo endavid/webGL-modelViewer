@@ -2,10 +2,10 @@
   "use strict";
 
   function floatStringToArray(text) {
-    return text.split(" ").map(function(e) { return parseFloat(e); });
+    return text.split(/[\s,]+/).map(function(e) { return parseFloat(e); });
   }
   function intStringToArray(text) {
-    return text.split(" ").map(function(e) { return parseInt(e); });
+    return text.split(/[\s,]+/).map(function(e) { return parseInt(e); });
   }
   // [a b c d e ...] -> [ [a b], [b c], ...]
   function toVectorArray(array, stride) {
@@ -42,6 +42,21 @@
     return json.COLLADA.asset.up_axis === "Z_UP";
   }
 
+  function getPolylistsAndTriangleLists(json) {
+    var lists = [];
+    var mesh = json.COLLADA.library_geometries.geometry.mesh;
+    ["polylist", "triangles"].forEach(function (key) {
+      if (mesh[key]) {
+        if (Array.isArray(mesh[key])) {
+          mesh[key].forEach(function(p) { lists.push(p); });
+        } else {
+          lists.push(mesh[key]);
+        }
+      }
+    });
+    return lists;
+  }
+
   function readMeshes(json, defaultMaterial, skin) {
     var positions = [];
     var normals = [];
@@ -49,8 +64,11 @@
     var vertices = [];
     var meshes = [];
     var ngons = {};
-    var src = json.COLLADA.library_geometries.geometry.mesh.source;
     var invertAxis = isZUp(json);
+    var src = json.COLLADA.library_geometries.geometry.mesh.source;
+    if (!Array.isArray(src)) {
+      src = [src];
+    }
     src.forEach(function (e) {
       if (e._id.indexOf("positions") >= 0) {
         positions = floatStringToArray(e.float_array.__text);
@@ -62,14 +80,18 @@
         uvs = floatStringToArray(e.float_array.__text);
       }
     });
-    var polylists = json.COLLADA.library_geometries.geometry.mesh.polylist;
-    if (!Array.isArray(polylists)) {
-      polylists = [polylists];
-    }
+    var polylists = getPolylistsAndTriangleLists(json);
     var j = 0; // face index
     polylists.forEach(function (polylist) {
-      var numInputs = polylist.input.length;
-      var vcount = intStringToArray(polylist.vcount);
+      var numInputs = Array.isArray(polylist.input) ? polylist.input.length : 1;
+      var vcount = [];
+      if (polylist.vcount) {
+        vcount = intStringToArray(polylist.vcount);
+      } else {
+        // all triangles
+        var count = parseInt(polylist._count);
+        vcount = Array.apply(null, Array(count)).map(function (x) { return 3; });
+      }
       var polygons = toVectorArray(intStringToArray(polylist.p), numInputs);
       var submesh = { indices: [] };
       if (defaultMaterial) {
@@ -151,7 +173,7 @@
       if (e._id.indexOf("weights") >= 0) {
         weightData = floatStringToArray(e.float_array.__text);
       }
-      else if (e._id.indexOf("bind_poses") >= 0) {
+      else if (e._id.indexOf("bind_poses") >= 0 || e._id.indexOf("Matrices") >= 0) {
         var bp = floatStringToArray(e.float_array.__text);
         bp = toVectorArray(bp, 16);
         if (invertAxis) {
@@ -160,8 +182,8 @@
           skinData.bindPoses = bp;
         }
       }
-      else if (e._id.indexOf("joints") >= 0) {
-        skinData.joints = e.Name_array.__text.split(" ");
+      else if (e._id.indexOf("joints") >= 0 || e._id.indexOf("Joints") >= 0) {
+        skinData.joints = e.Name_array.__text.split(/[\s,]+/);
       }
     });
     var v = intStringToArray(skin.vertex_weights.v);
@@ -297,6 +319,9 @@
     var invertAxis = isZUp(json);
     var animations = {};
     anims.forEach(function (anim) {
+      if (anim.animation) {
+        anim = anim.animation;
+      }
       var target = anim.channel._target.split("/");
       var boneId = target[0];
       var targetId = target[1];
@@ -312,7 +337,7 @@
           } else if (id.indexOf("output") >= 0) {
             if (targetId.indexOf("translation") >= 0 || targetId.indexOf("scale") >= 0) {
               animations[boneId][targetId] = toVectorArray(floats, 3);
-            } else if (targetId.indexOf("transform") >= 0) {
+            } else if (targetId.indexOf("transform") >= 0 || targetId.indexOf("matrix") >= 0) {
               var matrices = toVectorArray(floats, 16);
               if (invertAxis) {
                 animations[boneId][targetId] = matrices.map(flipAxisForMatrix);
