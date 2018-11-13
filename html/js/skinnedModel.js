@@ -16,6 +16,10 @@
     this.inverseBindMatrices = skin.bindPoses;
     this.skeleton = skeleton;
     this.applyDefaultPose();
+    var animKeys = Object.keys(anims);
+    this.keyframeCount = anims[animKeys[0]].keyframes.length;
+    this.anims = anims;
+    //this.applyPose(1);
   }
 
   /// JointMatrix * InvBindMatrix
@@ -23,6 +27,16 @@
     for (var i = 0; i < this.jointNames.length; i++) {
       var m = MATH.mulMatrix(
         this.getDefaultPoseMatrix(i),
+        this.inverseBindMatrices[i]);
+      // convert row-major to column-major, GL-ready
+      MATH.transpose(m, this.joints, i * 16);
+    }
+  };
+
+  SkinnedModel.prototype.applyPose = function(keyframe) {
+    for (var i = 0; i < this.jointNames.length; i++) {
+      var m = MATH.mulMatrix(
+        this.getAnimMatrix(i, keyframe),
         this.inverseBindMatrices[i]);
       // convert row-major to column-major, GL-ready
       MATH.transpose(m, this.joints, i * 16);
@@ -37,6 +51,29 @@
     while (parent) {
       node = this.skeleton[parent];
       m = MATH.mulMatrix(node.transform, m);
+      parent = node.parent;
+    }
+    // m = armatureTransform * m;
+    return m;
+  };
+
+  SkinnedModel.prototype.getJointMatrix = function(name, keyframe) {
+    var jointAnim = this.anims[name];
+    if (jointAnim) {
+      return jointAnim.transform[keyframe];
+    }
+    return MATH.getI4();
+  };
+
+  SkinnedModel.prototype.getAnimMatrix = function(i, keyframe) {
+    var name = this.jointNames[i];
+    var node = this.skeleton[name];
+    var m = this.getJointMatrix(name, keyframe);
+    var parent = node.parent;
+    while (parent) {
+      node = this.skeleton[parent];
+      var pm = this.getJointMatrix(parent, keyframe);
+      m = MATH.mulMatrix(pm, m);
       parent = node.parent;
     }
     // m = armatureTransform * m;

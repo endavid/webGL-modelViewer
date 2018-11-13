@@ -310,7 +310,7 @@
           } else if (id.indexOf("output") >= 0) {
             if (targetId.indexOf("translation") >= 0 || targetId.indexOf("scale") >= 0) {
               animations[boneId][targetId] = toVectorArray(floats, 3);
-            } else if (targetId.indexOf("matrix") >= 0) {
+            } else if (targetId.indexOf("transform") >= 0) {
               var matrices = toVectorArray(floats, 16);
               if (invertAxis) {
                 animations[boneId][targetId] = matrices.map(flipAxisForMatrix);
