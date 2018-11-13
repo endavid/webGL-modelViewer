@@ -300,7 +300,9 @@
       var target = anim.channel._target.split("/");
       var boneId = target[0];
       var targetId = target[1];
-      animations[boneId] = {};
+      if (animations[boneId] === undefined) {
+        animations[boneId] = {};
+      }
       anim.source.forEach(function (src) {
         if (src.float_array) {
           var id = src.float_array._id;

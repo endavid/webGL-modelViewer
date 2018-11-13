@@ -56,6 +56,7 @@
       m[2]=m[2]*c+mv1*s;
       m[6]=m[6]*c+mv5*s;
       m[10]=m[10]*c+mv9*s;
+      return m;
     },
 
     rotateY: function(m, angle) {
@@ -69,6 +70,7 @@
       m[2]=c*m[2]-s*mv0;
       m[6]=c*m[6]-s*mv4;
       m[10]=c*m[10]-s*mv8;
+      return m;
     },
 
     rotateZ: function(m, angle) {
@@ -82,6 +84,7 @@
       m[1]=c*m[1]+s*mv0;
       m[5]=c*m[5]+s*mv4;
       m[9]=c*m[9]+s*mv8;
+      return m;
     },
 
     translateX: function(m, t){

@@ -19,7 +19,7 @@
     var animKeys = Object.keys(anims);
     this.keyframeCount = anims[animKeys[0]].keyframes.length;
     this.anims = anims;
-    //this.applyPose(1);
+    //this.applyPose(0);
   }
 
   /// JointMatrix * InvBindMatrix
@@ -60,7 +60,35 @@
   SkinnedModel.prototype.getJointMatrix = function(name, keyframe) {
     var jointAnim = this.anims[name];
     if (jointAnim) {
-      return jointAnim.transform[keyframe];
+      if (jointAnim.transform) {
+        return jointAnim.transform[keyframe];
+      }
+      var transform = this.skeleton[name].transform;
+      var s = jointAnim.scale ? jointAnim.scale[keyframe] : [1, 1, 1];
+      var t = jointAnim.translation ? jointAnim.translation[keyframe] : [transform[3], transform[7], transform[11]];
+      var rx = jointAnim["rotateX.ANGLE"] ? MATH.degToRad(jointAnim["rotateX.ANGLE"][keyframe]) : 0;
+      var ry = jointAnim["rotateY.ANGLE"] ? MATH.degToRad(jointAnim["rotateY.ANGLE"][keyframe]) : 0;
+      var rz = jointAnim["rotateZ.ANGLE"] ? MATH.degToRad(jointAnim["rotateZ.ANGLE"][keyframe]) : 0;
+      var ms = MATH.getI4();
+      ms[0] = s[0]; ms[5] = s[1]; ms[10] = s[2];
+      var mt = MATH.getI4();
+      // row-major
+      mt[3] = t[0]; mt[7] = t[1]; mt[11] = t[2];
+      var mr = {
+        x: MATH.rotateX(MATH.getI4(), rx),
+        y: MATH.rotateY(MATH.getI4(), ry),
+        z: MATH.rotateZ(MATH.getI4(), rz)
+      };
+      // rotations are column-major! convert to row-major
+      mr.x = MATH.transpose(mr.x);
+      mr.y = MATH.transpose(mr.y);
+      mr.z = MATH.transpose(mr.z);
+      var order = this.skeleton[name].rotationOrder;
+      var m = MATH.mulMatrix(mr[order[0]], mr[order[1]]);
+      m = MATH.mulMatrix(m, mr[order[2]]);
+      m = MATH.mulMatrix(m, ms);
+      m = MATH.mulMatrix(mt, m);
+      return m;
     }
     return MATH.getI4();
   };
