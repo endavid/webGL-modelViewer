@@ -277,7 +277,7 @@
       rotationOrder: ""
     };
     if (joint.matrix) {
-      data.transform = floatStringToArray(joint.matrix.__text);
+      data.transform = floatStringToArray(joint.matrix.__text || joint.matrix);
     } else {
       var t = floatStringToArray(joint.translate.__text || joint.translate);
       var s = floatStringToArray(joint.scale.__text || joint.scale);

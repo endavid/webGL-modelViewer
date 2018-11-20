@@ -17,7 +17,7 @@
     this.skeleton = skeleton;
     this.applyDefaultPose();
     var animKeys = Object.keys(anims);
-    this.keyframeCount = anims[animKeys[0]].keyframes.length;
+    this.keyframeCount = animKeys.length > 0 ? anims[animKeys[0]].keyframes.length : 0;
     this.anims = anims;
     //this.applyPose(0);
   }
