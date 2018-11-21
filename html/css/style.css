@@ -48,12 +48,12 @@ body {
  * By setting a fixed width and margin-left & right to auto, we can center the div.
 */
 #title {
-  width: 180px;
-  height: 140px;
   margin-left: auto ;
   margin-right: auto ;
-  background-image: url("../resources/vidLogo.png");
-  background-repeat: no-repeat;
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
 }
 
 #mainarea {
