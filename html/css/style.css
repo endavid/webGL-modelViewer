@@ -1,13 +1,13 @@
 /** Based on CSS style from snake.endavid.com */
 body {
-	text-transform: none;
-	letter-spacing: 1px;
-	font-family: sans-serif, Monaco, "Lucida Console";
-	background-color: #2b2626;
-	font-size: 10pt;
-	margin:0;
-	padding:0;
-	color:#dbdbdb;
+  text-transform: none;
+  letter-spacing: 1px;
+  font-family: sans-serif, Monaco, "Lucida Console";
+  background-color: #2b2626;
+  font-size: 10pt;
+  margin:0;
+  padding:0;
+  color:#dbdbdb;
 }
 
 #page {
@@ -48,12 +48,12 @@ body {
  * By setting a fixed width and margin-left & right to auto, we can center the div.
 */
 #title {
-	width: 180px;
-	height: 140px;
-	margin-left: auto ;
-    margin-right: auto ;
-	background-image: url("../resources/vidLogo.png");
-	background-repeat: no-repeat;
+  width: 180px;
+  height: 140px;
+  margin-left: auto ;
+  margin-right: auto ;
+  background-image: url("../resources/vidLogo.png");
+  background-repeat: no-repeat;
 }
 
 #mainarea {
@@ -63,56 +63,56 @@ body {
 }
 
 #header {
-	height:140px;
-	padding-left: 25px;
-	padding-right:10px;
-	background-color: #5c5050;
+  height:140px;
+  padding-left: 25px;
+  padding-right:10px;
+  background-color: #5c5050;
 }
 
 #contentarea {
-	padding-left: 25px;
-	padding-right:10px;
-	line-height:14pt;
-	padding-top: 10px;
-	padding-bottom:10px;
-	margin-bottom: 20px;
+  padding-left: 25px;
+  padding-right:10px;
+  line-height:14pt;
+  padding-top: 10px;
+  padding-bottom:10px;
+  margin-bottom: 20px;
 }
 
 #footer {
-	text-shadow: 1px 1px 1px black;
-	width:870px;
-	clear:both;
-	height:30px;
-	margin-left: auto;
-	margin-right: auto;
-	margin-top: 10px;
-	padding-left: 15px;
-	padding-right: 15px;
-	padding-top: 10px;
-	text-align:left;
-	line-height:14pt;
-	color: #c8c4a0;
+  text-shadow: 1px 1px 1px black;
+  width:870px;
+  clear:both;
+  height:30px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 10px;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 10px;
+  text-align:left;
+  line-height:14pt;
+  color: #c8c4a0;
 }
 
 #listarea {
-	height: 600px;
-	width: 430px;
-	padding-left: 10px;
-	padding-right:10px;
-	line-height:14pt;
-	padding-top: 10px;
-	padding-bottom:10px;
-	overflow: auto;
-	float: left;
+  height: 600px;
+  width: 430px;
+  padding-left: 10px;
+  padding-right:10px;
+  line-height:14pt;
+  padding-top: 10px;
+  padding-bottom:10px;
+  overflow: auto;
+  float: left;
 }
 
 #productarea {
-	padding: 10px;
-	height: 600px;
-	width: 430px;
-	line-height:14pt;
-	overflow: auto;
-	float: right;
+  padding: 10px;
+  height: 600px;
+  width: 430px;
+  line-height:14pt;
+  overflow: auto;
+  float: right;
 }
 
 canvas {
@@ -121,32 +121,32 @@ canvas {
 }
 
 h1 {
-	font-family: Impact, Charcoal;
+  font-family: Impact, Charcoal;
 }
 
 h3 {
-	font-size: 18pt;
+  font-size: 18pt;
 }
 
 h4 {
-	text-align: center;
-	background-color: #044321;
-	border-radius: 10px;
-	-moz-border-radius: 10px;
+  text-align: center;
+  background-color: #044321;
+  border-radius: 10px;
+  -moz-border-radius: 10px;
 }
 
 emph {
-	color: #32e34a;
+  color: #32e34a;
 }
 
 a {
-	color: #ff8000;
-	text-decoration:none;
+  color: #ff8000;
+  text-decoration:none;
 }
 
 a:hover {
-	color: lime;
-	text-decoration:underline;
+  color: lime;
+  text-decoration:underline;
 }
 
 /* ------------------------- IMAGES ----------------------- */
@@ -156,8 +156,8 @@ border: none;
 }
 
 img.framed {
-border: 5px solid white;
-margin: 5px;
+  border: 5px solid white;
+  margin: 5px;
 }
 
 /* ------------------------- TABLES ----------------------- */
@@ -170,33 +170,34 @@ table {
 td {
   font-size: 8pt;
   color: #e6e6e6;
-  background-color: #3b4a05;
+  background-color: #005252;
   padding: 5px 10px 5px 10px;
   border-radius: 8px;
   -moz-border-radius: 8px;
 }
 
 td.selected {
-  border-style: dotted;
   font-size: 10pt;
   color: #e6e6e6;
-  background-color: #4d6200;
+  background-color: #009999;
+  border: 2px dotted #d3d3d3;
   padding: 5px 10px 5px 10px;
   border-radius: 8px;
   -moz-border-radius: 8px;
+  cursor: pointer;
 }
 
 #header td {
-	font-size: 10pt;
-	padding:  5px 20px 5px 20px;
-	vertical-align: middle;
+  font-size: 10pt;
+  padding:  5px 20px 5px 20px;
+  vertical-align: middle;
 }
 
 #contentarea td {
-	font-size: 10pt;
-	padding: 5px 10px 5px 10px;
-	border-radius: 8px;
-	-moz-border-radius: 8px;
+  font-size: 10pt;
+  padding: 5px 10px 5px 10px;
+  border-radius: 8px;
+  -moz-border-radius: 8px;
 }
 
 input[type="number"] {
@@ -204,13 +205,13 @@ input[type="number"] {
 }
 
 .container {
-	position: relative;
+  position: relative;
 }
 #text {
-	background-color: transparent;
-	position: absolute;
-	left: 0px;
-	top: 0px;
-	z-index: 10;
-	pointer-events: none;
+  background-color: transparent;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: 10;
+  pointer-events: none;
 }

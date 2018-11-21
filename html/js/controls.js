@@ -256,6 +256,14 @@
           ViewParameters.cameraFOV = parseFloat(value);
       })
     ]);
+    addGroup("Light Settings", [
+      createSlider("SunAltitude", ViewParameters.getSunAltitude(), -1, 1, 0.05, function(value) {
+        ViewParameters.setSunAltitude(value);
+      }),
+      createSlider("SunEastWest", ViewParameters.getSunEastWest(), -1, 1, 0.05, function(value) {
+        ViewParameters.setSunEastWest(value);
+      })
+    ]);
     addGroup("Shader Settings", [
       createDropdownList("missingTexture", missingTexturePresets, function(obj) {
         ViewParameters.imageUris.missing = obj.uri;

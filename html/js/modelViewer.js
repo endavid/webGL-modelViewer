@@ -31,12 +31,31 @@
     cameraHeight: 0.7,
     cameraPitch: 0,
     cameraFOV: 33.4,
-    lightDirection: [0.072, 0.71, 0.21],
     needsReload: false,
     keyframe: -1,
+    backgroundColor: 0x3d4d4d,
     onRotation: function() {},
-    onModelLoad: function() {}
+    onModelLoad: function() {},
+    getSunAltitude: function() { return Light.altitude; },
+    getSunEastWest: function() { return Light.eastWest; },
+    setSunAltitude: function(value) {
+      Light.altitude = value;
+      Light.updateDirection();
+    },
+    setSunEastWest: function(value) {
+      Light.eastWest = value;
+      Light.updateDirection();
+    }
   };
+
+  var Light = {
+    altitude: 1,
+    eastWest: 0.2,
+    updateDirection: function() {
+        Light.direction = MATH.normalize([Light.eastWest, Light.altitude, 1.0]);
+    },
+  };
+  Light.updateDirection();
 
   function Shader(gl, vs, fs, attribs, uniforms) {
     var self = this;
@@ -273,7 +292,8 @@
 
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#ffffff";
-    gl.clearColor(0.1,0.3,0,1);
+    var clearColor = MATH.rgbToFloat(ViewParameters.backgroundColor);
+    gl.clearColor(clearColor[0], clearColor[1], clearColor[2], 1);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clearDepth(1.0);
@@ -330,7 +350,7 @@
         gl.uniformMatrix4fv(shader.uniforms.Pmatrix, false, projectionMatrix);
         gl.uniformMatrix4fv(shader.uniforms.Vmatrix, false, viewMatrix);
         gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, modelMatrix);
-        gl.uniform3f(shader.uniforms.lightDirection, ViewParameters.lightDirection[0], ViewParameters.lightDirection[1], ViewParameters.lightDirection[2]);
+        gl.uniform3f(shader.uniforms.lightDirection, Light.direction[0], Light.direction[1], Light.direction[2]);
         gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexBuffer);
         gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
         gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4*3);

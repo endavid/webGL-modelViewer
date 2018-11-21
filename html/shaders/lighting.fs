@@ -14,12 +14,13 @@ void main(void) {
 	float specPower = 4.0;
 	float brdf = 0.125 * (specPower + 8.0) * pow(hnCos, specPower);
 	vec3 fresnelColor = 0.4 * (1.0 - albedo.rgb);
-	float fresnelPower = 4.0;
+	float fresnelPower = 2.0;
 	vec3 fresnel = fresnelColor * pow(1.0 - hnCos, fresnelPower);
 	vec3 specularColor = vec3(0.6, 0.6, 0.6);
 	vec3 specular = brdf * specularColor * incidentCos + fresnel;
-	vec3 ambientColor = vec3(0.1,0.1,0.11);
-	vec4 color = vec4(albedo.rgb * incidentCos + specular + ambientColor, albedo.a);
+	vec3 ambientColor = vec3(0.1,0.1,0.1);
+  vec3 sunColor = vec3(1.2, 1.1, 1.0);
+	vec4 color = vec4(albedo.rgb * incidentCos * incidentCos + specular + ambientColor, albedo.a);
 	gl_FragColor = color;
 	//gl_FragColor = albedo;
 	//gl_FragColor = vec4(vNormal, 1.0);

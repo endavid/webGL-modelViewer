@@ -5,6 +5,12 @@
     * need to be sent to the GPU.
     */
   var MATH = {
+    normalize: function(v) {
+      var norm = 0;
+      v.forEach(function(c) { norm += c * c; });
+      return v.map(function(c) { return c / norm; });
+    },
+    
     degToRad: function(angle)
     {
       return(angle * Math.PI/180);
@@ -159,6 +165,13 @@
         return null;
       }
       return n && (n & (n - 1)) === 0;
+    },
+
+    rgbToFloat: function(rgb) {
+      var r = (rgb >> 16) & 0x0000ff;
+      var g = (rgb >> 8) & 0x0000ff;
+      var b = (rgb) & 0x0000ff;
+      return [r / 255.0, g / 255.0, b / 255.0];
     }
   };
   // export
