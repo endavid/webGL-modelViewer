@@ -33,7 +33,9 @@
     cameraFOV: 33.4,
     lightDirection: [0.072, 0.71, 0.21],
     needsReload: false,
+    keyframe: -1,
     onRotation: function() {},
+    onModelLoad: function() {}
   };
 
   function Shader(gl, vs, fs, attribs, uniforms) {
@@ -277,6 +279,7 @@
     gl.clearDepth(1.0);
     gl.enable(gl.CULL_FACE); // cull back faces
     var time_old=0;
+    var keyframe = -1;
     var animate = function(time)
     {
       var dt=time-time_old;
@@ -286,6 +289,7 @@
         ViewParameters.needsReload = false;
         GFX.loadModel(gl, ViewParameters, modelData, function() {
           console.log("Loaded: "+modelData.modelURL);
+          ViewParameters.onModelLoad(modelData);
         });
       }
       if (!drag) {
@@ -311,6 +315,14 @@
 
       if (modelData.vertexBuffer && res.ready() && whiteTexture.webglTexture) {
         var skinned = modelData.skinnedModel;
+        if (skinned && keyframe !== ViewParameters.keyframe) {
+          keyframe = ViewParameters.keyframe;
+          if (keyframe === -1) {
+            skinned.applyDefaultPose();
+          } else {
+            skinned.applyPose(keyframe);
+          }
+        }
         var shader = skinned ? res.shaders.litSkin : res.shaders.lit;
         var stride = 4 * modelData.stride; // in bytes
         shader.use(gl);

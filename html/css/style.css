@@ -11,24 +11,37 @@ body {
 }
 
 #page {
-	background-color: #2b2626;
-	width: 960px;
-	margin:auto;
-	margin-top: 10px;
-	padding: auto;
+  background-color: #2b2626;
+  width: 1240px;
+  margin:auto;
+  margin-top: 10px;
+  padding: auto;
 }
 
 #sidemenu {
-	color: #e6e6e6;
-	float:left;
-	width:285px;
-	padding-left: 10px;
-	padding-right: 10px;
-	padding-top: 20px;
-	margin-right: 10px;
-	background-color: #5c5050;
-	border-radius: 15px;
-	-moz-border-radius: 15px;
+  color: #e6e6e6;
+  float:left;
+  width:285px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 20px;
+  margin-right: 10px;
+  background-color: #5c5050;
+  border-radius: 15px;
+  -moz-border-radius: 15px;
+}
+
+#sidemenuRight {
+  color: #e6e6e6;
+  float:right;
+  width:285px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 20px;
+  margin-right: 10px;
+  background-color: #5c5050;
+  border-radius: 15px;
+  -moz-border-radius: 15px;
 }
 
 /* This just contains the logo for this style, usually inside #sidemenu
@@ -44,12 +57,9 @@ body {
 }
 
 #mainarea {
-	width: 645px;
-	padding-top:20px;
-	float: right;
-	background-color: #5c5050;
-	border-radius: 15px;
-	-moz-border-radius: 15px;
+  width: 600px;
+  padding-top:20px;
+  display: inline-block;
 }
 
 #header {
@@ -157,23 +167,23 @@ table {
 	font-size: 10pt;
 }
 
-#sidemenu td {
-	font-size: 8pt;
-	color: #e6e6e6;
-	background-color: #3b4a05;
-	padding: 5px 10px 5px 10px;
-	border-radius: 8px;
-	-moz-border-radius: 8px;
+td {
+  font-size: 8pt;
+  color: #e6e6e6;
+  background-color: #3b4a05;
+  padding: 5px 10px 5px 10px;
+  border-radius: 8px;
+  -moz-border-radius: 8px;
 }
 
-#sidemenu td.selected {
-	border-style: dotted;
-	font-size: 10pt;
-	color: #e6e6e6;
-	background-color: #4d6200;
-	padding: 5px 10px 5px 10px;
-	border-radius: 8px;
-	-moz-border-radius: 8px;
+td.selected {
+  border-style: dotted;
+  font-size: 10pt;
+  color: #e6e6e6;
+  background-color: #4d6200;
+  padding: 5px 10px 5px 10px;
+  border-radius: 8px;
+  -moz-border-radius: 8px;
 }
 
 #header td {

@@ -127,7 +127,7 @@
       );
     };
 
-    var addGroup = function(id, elements) {
+    var addGroup = function(id, elements, parent) {
       var elementIds = [];
       elements.forEach(function(element) {
         // *_parent ids
@@ -138,14 +138,14 @@
           $("#"+elementId).toggle(AnimationSettings.hideDelay);
         });
       };
-      var tbody = $("#controls").find('tbody');
+      var tbody = $(parent || "#controls").find('tbody');
       tbody.append(createTitle(id).click(toggle));
       elements.forEach(function(element) {
         tbody.append(element);
       });
     };
 
-    window.ViewParameters.onRotation = function() {
+    ViewParameters.onRotation = function() {
       if (ViewParameters.modelRotationTheta < 0) {
         ViewParameters.modelRotationTheta += 2 * Math.PI;
       }
@@ -162,6 +162,12 @@
       $("#modelRotationTheta_number").attr('value', ViewParameters.modelRotationTheta);
       $("#modelRotationPhi").attr('value', ViewParameters.modelRotationPhi);
       $("#modelRotationPhi_number").attr('value', ViewParameters.modelRotationPhi);
+    };
+
+    ViewParameters.onModelLoad = function(modelData) {
+      if (modelData.skinnedModel) {
+        $("#keyframe").attr('max', modelData.skinnedModel.keyframeCount - 1);
+      }
     };
 
 
@@ -251,11 +257,17 @@
       })
     ]);
     addGroup("Shader Settings", [
-      createDropdownList("Missing texture", missingTexturePresets, function(obj) {
-        window.ViewParameters.imageUris.missing = obj.uri;
-        window.ViewParameters.needsReload = true;
+      createDropdownList("missingTexture", missingTexturePresets, function(obj) {
+        ViewParameters.imageUris.missing = obj.uri;
+        ViewParameters.needsReload = true;
       })
     ]);
+    addGroup("Animation Controls", [
+      createSlider("keyframe",
+      ViewParameters.keyframe, -1, -1, 1, function(value) {
+        ViewParameters.keyframe = parseInt(value);
+      })
+    ], "#controlsRight");
   }
 
   $( document ).ready(function() {
