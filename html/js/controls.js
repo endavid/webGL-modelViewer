@@ -3,7 +3,7 @@
 
   function populateControls() {
     var AnimationSettings = {
-      hideDelay: 250
+      hideDelay: 0
     };
     var createSlider = function(id, value, min, max, step, callback) {
       var numberId = id + "_number";
@@ -146,22 +146,22 @@
     };
 
     window.ViewParameters.onRotation = function() {
-      if (window.ViewParameters.modelRotationTheta < 0) {
-        window.ViewParameters.modelRotationTheta += 2 * Math.PI;
+      if (ViewParameters.modelRotationTheta < 0) {
+        ViewParameters.modelRotationTheta += 2 * Math.PI;
       }
-      if (window.ViewParameters.modelRotationTheta > 2 * Math.PI) {
-        window.ViewParameters.modelRotationTheta -= 2 * Math.PI;
+      if (ViewParameters.modelRotationTheta > 2 * Math.PI) {
+        ViewParameters.modelRotationTheta -= 2 * Math.PI;
       }
-      if (window.ViewParameters.modelRotationPhi < 0) {
-        window.ViewParameters.modelRotationPhi += 2 * Math.PI;
+      if (ViewParameters.modelRotationPhi < 0) {
+        ViewParameters.modelRotationPhi += 2 * Math.PI;
       }
-      if (window.ViewParameters.modelRotationPhi > 2 * Math.PI) {
-        window.ViewParameters.modelRotationPhi -= 2 * Math.PI;
+      if (ViewParameters.modelRotationPhi > 2 * Math.PI) {
+        ViewParameters.modelRotationPhi -= 2 * Math.PI;
       }
-      $("#modelRotationTheta").attr('value', window.ViewParameters.modelRotationTheta);
-      $("#modelRotationTheta_number").attr('value', window.ViewParameters.modelRotationTheta);
-      $("#modelRotationPhi").attr('value', window.ViewParameters.modelRotationPhi);
-      $("#modelRotationPhi_number").attr('value', window.ViewParameters.modelRotationPhi);
+      $("#modelRotationTheta").attr('value', ViewParameters.modelRotationTheta);
+      $("#modelRotationTheta_number").attr('value', ViewParameters.modelRotationTheta);
+      $("#modelRotationPhi").attr('value', ViewParameters.modelRotationPhi);
+      $("#modelRotationPhi_number").attr('value', ViewParameters.modelRotationPhi);
     };
 
 
@@ -172,14 +172,14 @@
         if (ext === "Json" || ext === "Obj" || ext === "Dae") {
           models.push(values[i]);
         } else if (ext === "Mtl") {
-          window.ViewParameters.materialUris[values[i].name] = values[i].uri;
+          ViewParameters.materialUris[values[i].name] = values[i].uri;
         } else { // the rest should be images!
-          window.ViewParameters.imageUris[values[i].name] = values[i].uri;
+          ViewParameters.imageUris[values[i].name] = values[i].uri;
         }
       }
       // add models to preset list
       if (models.length > 0) {
-        window.ViewParameters.model = models[0];
+        ViewParameters.model = models[0];
         addUrisToDropdownList("Presets", models);
       }
     }
@@ -201,45 +201,53 @@
     addGroup("File", [
       createFileBrowser("fileBrowser", onChangeFileBrowser),
       createDropdownList("Presets", modelPresets, function(obj) {
-        window.ViewParameters.model = obj;
+        ViewParameters.model = obj;
       }),
       createButtonWithOptions("saveFile", "Save", " as ", [{name: "OBJ Wavefront", value:".obj"}, {name: "Json", value:".json"}], function (e) {
         var modelType = $("#"+e.target.id+"_select").attr("value");
         console.log(modelType);
-        window.GFX.exportModel(window.ViewParameters, modelType);
+        GFX.exportModel(window.ViewParameters, modelType);
       }),
     ]);
     addGroup("Model Settings", [
       createCheckbox("lockRotationY", window.ViewParameters.isLockRotationY, function(value) {
-        window.ViewParameters.isLockRotationY = value;
+        ViewParameters.isLockRotationY = value;
       }),
       createCheckbox("z_up", window.ViewParameters.isZAxisUp, function(value) {
-        window.ViewParameters.isZAxisUp = value;
-        window.ViewParameters.needsReload = true;
+        ViewParameters.isZAxisUp = value;
+        ViewParameters.needsReload = true;
       }),
       createSlider("modelScaleExp10", 0, -3, 3, 0.2, function(value) {
-        window.ViewParameters.modelScale = Math.pow(10, parseFloat(value));
+        ViewParameters.modelScale = Math.pow(10, parseFloat(value));
       }),
       createSlider("modelRotationTheta",
-        window.ViewParameters.modelRotationTheta, 0, 2 * Math.PI, 0.01, function(value) {
-          window.ViewParameters.modelRotationTheta = parseFloat(value);
+        ViewParameters.modelRotationTheta, 0, 2 * Math.PI, 0.01, function(value) {
+          ViewParameters.modelRotationTheta = parseFloat(value);
       }),
       createCheckbox("lockRotationX", window.ViewParameters.isLockRotationX, function(value) {
-        window.ViewParameters.isLockRotationX = value;
+        ViewParameters.isLockRotationX = value;
       }),
       createSlider("modelRotationPhi",
-        window.ViewParameters.modelRotationPhi, 0, 2 * Math.PI, 0.01, function(value) {
-          window.ViewParameters.modelRotationPhi = parseFloat(value);
+        ViewParameters.modelRotationPhi, 0, 2 * Math.PI, 0.01, function(value) {
+          ViewParameters.modelRotationPhi = parseFloat(value);
       })
     ]);
     addGroup("Camera Settings", [
       createSlider("cameraDistance",
-        window.ViewParameters.cameraDistance, -10, -0.9, 0.01, function(value) {
-          window.ViewParameters.cameraDistance = parseFloat(value);
+        ViewParameters.cameraDistance, 0.2, 10, 0.01, function(value) {
+          ViewParameters.cameraDistance = parseFloat(value);
       }),
       createSlider("cameraHeight",
-        window.ViewParameters.cameraHeight, -2, 2, 0.01, function(value) {
-          window.ViewParameters.cameraHeight = parseFloat(value);
+        ViewParameters.cameraHeight, -2, 2, 0.01, function(value) {
+          ViewParameters.cameraHeight = parseFloat(value);
+      }),
+      createSlider("cameraPitch",
+        ViewParameters.cameraPitch, -90, 90, 1, function(value) {
+          ViewParameters.cameraPitch = parseFloat(value);
+      }),
+      createSlider("cameraFOV",
+        ViewParameters.cameraFOV, 1, 90, 1, function(value) {
+          ViewParameters.cameraFOV = parseFloat(value);
       })
     ]);
     addGroup("Shader Settings", [

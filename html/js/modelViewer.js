@@ -27,8 +27,10 @@
     modelRotationTheta: 0,
     modelRotationPhi: 0,
     modelScale: 1,
-    cameraDistance: -6,
-    cameraHeight: -0.7,
+    cameraDistance: 6,
+    cameraHeight: 0.7,
+    cameraPitch: 0,
+    cameraFOV: 33.4,
     lightDirection: [0.072, 0.71, 0.21],
     needsReload: false,
     onRotation: function() {},
@@ -255,7 +257,11 @@
     // ------------------------------------
     // matrices
     // ------------------------------------
-    var projectionMatrix = MATH.getProjection(40, canvas.width/canvas.height, 0.1, 500);
+    var fov = ViewParameters.cameraFOV;
+    var near = 0.1;
+    var far = 500;
+    var aspect = canvas.width / canvas.height;
+    var projectionMatrix = MATH.getProjection(fov, aspect, near, far);
     var modelMatrix = MATH.getI4();
     var viewMatrix = MATH.getI4();
 
@@ -282,18 +288,22 @@
           console.log("Loaded: "+modelData.modelURL);
         });
       }
-
       if (!drag) {
         dX*=amortization;
         dY*=amortization;
         updateViewRotation(dX, dY);
       }
+      if (Math.abs(ViewParameters.cameraFOV - fov) > 0.001) {
+        fov = ViewParameters.cameraFOV;
+        projectionMatrix = MATH.getProjection(fov, aspect, near, far);
+      }
       MATH.setScale4(modelMatrix, ViewParameters.modelScale);
       MATH.rotateY(modelMatrix, ViewParameters.modelRotationTheta);
       MATH.rotateX(modelMatrix, ViewParameters.modelRotationPhi);
       MATH.setI4(viewMatrix);
-      MATH.translateZ(viewMatrix, ViewParameters.cameraDistance);
-      MATH.translateY(viewMatrix, ViewParameters.cameraHeight);
+      MATH.translateZ(viewMatrix, -ViewParameters.cameraDistance);
+      MATH.translateY(viewMatrix, -ViewParameters.cameraHeight);
+      MATH.rotateX(viewMatrix, MATH.degToRad(ViewParameters.cameraPitch));
 
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
