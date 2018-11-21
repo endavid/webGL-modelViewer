@@ -127,6 +127,18 @@
         }
         anims[joint][k][frame] = pose[joint][i];
       });
+      if (pose[joint][5]) {
+        if (!anims[joint].scale) {
+          anims[joint].scale = [];
+        }
+        anims[joint].scale[frame] = pose[joint].slice(3, 6);
+      }
+      if (pose[joint][8]) {
+        if (!anims[joint].translation) {
+          anims[joint].translation = [];
+        }
+        anims[joint].translation[frame] = pose[joint].slice(7, 9);
+      }
     });
     this.keyframeCount += 1;
   };
