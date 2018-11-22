@@ -70,8 +70,8 @@
       return jointAnim.transform[keyframe];
     }
     var transform = this.skeleton[name].transform;
-    var s = jointAnim.scale ? jointAnim.scale[keyframe] : [1, 1, 1];
-    var t = jointAnim.translation ? jointAnim.translation[keyframe] : [transform[3], transform[7], transform[11]];
+    var s = arrayValueOrDefault(jointAnim.scale, keyframe, [1, 1, 1]);
+    var t = arrayValueOrDefault(jointAnim.translation, keyframe,  [transform[3], transform[7], transform[11]]);
     var rx = MATH.degToRad(arrayValueOrDefault(jointAnim["rotateX.ANGLE"], keyframe, 0));
     var ry = MATH.degToRad(arrayValueOrDefault(jointAnim["rotateY.ANGLE"], keyframe, 0));
     var rz = MATH.degToRad(arrayValueOrDefault(jointAnim["rotateZ.ANGLE"], keyframe, 0));

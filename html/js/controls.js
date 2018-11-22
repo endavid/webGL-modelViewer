@@ -103,7 +103,7 @@
       return $('<tr>').append($('<td>').attr('class', "selected").append(id));
     };
 
-    var createFileBrowser = function(id, callback) {
+    var createFileBrowser = function(id, text, callback) {
       var updateFunction = function(event) {
         var fileArray = [];
         for (var i = 0; i < event.target.files.length; i++) {
@@ -116,6 +116,7 @@
         callback(fileArray);
       };
       return $('<tr>').attr('id', id+"_parent").append($('<td>')
+        .append(text+": <br/>")
         .append($("<input>")
           .attr('id', id)
           .attr('type', 'file')
@@ -174,7 +175,7 @@
     function onChangeFileBrowser(values) {
       var models = [];
       for (var i = 0 ; i < values.length; i++) {
-        var ext = window.GFX.getFileExtension(values[i].name);
+        var ext = GFX.getFileExtension(values[i].name);
         if (ext === "Json" || ext === "Obj" || ext === "Dae") {
           models.push(values[i]);
         } else if (ext === "Mtl") {
@@ -190,6 +191,36 @@
       }
     }
 
+    function onAddPoseFiles(values) {
+      function readPoseFile(i) {
+        if (i >= values.length) {
+          return;
+        }
+        var ext = GFX.getFileExtension(values[i].name);
+        if (ext === "Json") {
+          $.getJSON(values[i].uri, function(pose) {
+            ViewParameters.addPose(pose.pose);
+            readPoseFile(i+1);
+          });
+        } else {
+          console.warn("Unknown extension: " + values[i].name);
+          readPoseFile(i+1);
+        }
+      }
+      readPoseFile(0);
+    }
+
+    function onAddJroFile(values) {
+      var f = values[0];
+      var ext = GFX.getFileExtension(f.name);
+      if (ext === "Json") {
+        $.getJSON(f.uri, function(jro) {
+          ViewParameters.addJointRotationOrder(jro);
+        });
+      } else {
+        console.warn("Unknown extension: " + f.name);
+      }
+    }
 
     var modelPresets = [
       "pear.json",
@@ -205,7 +236,7 @@
       {name: "white", value: "resources/white.png"}];
     // Create the UI controls
     addGroup("File", [
-      createFileBrowser("fileBrowser", onChangeFileBrowser),
+      createFileBrowser("fileBrowser", "load models & textures", onChangeFileBrowser),
       createDropdownList("Presets", modelPresets, function(obj) {
         ViewParameters.model = obj;
       }),
@@ -274,7 +305,9 @@
       createSlider("keyframe",
       ViewParameters.keyframe, -1, -1, 1, function(value) {
         ViewParameters.keyframe = parseInt(value);
-      })
+      }),
+      createFileBrowser("posefileBrowser", "load keyframe/pose", onAddPoseFiles),
+      createFileBrowser("jrofileBrowser", "load joint rotation order", onAddJroFile)
     ], "#controlsRight");
   }
 

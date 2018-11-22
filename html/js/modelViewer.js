@@ -45,6 +45,21 @@
     setSunEastWest: function(value) {
       Light.eastWest = value;
       Light.updateDirection();
+    },
+    addPose: function(pose) {
+      if (modelData.skinnedModel) {
+        modelData.skinnedModel.addPose(pose);
+        ViewParameters.onModelLoad(modelData);
+      } else {
+        console.warn("No skinned model");
+      }
+    },
+    addJointRotationOrder: function(jro) {
+      if (modelData.skinnedModel) {
+        modelData.skinnedModel.updateJointRotationOrder(jro.jointRotationOrder);
+      } else {
+        console.warn("No skinned model");
+      }
     }
   };
 
@@ -56,6 +71,14 @@
     },
   };
   Light.updateDirection();
+  // ------------------------------------
+  // model data
+  // ------------------------------------
+  var modelData = {
+    modelURL: "",
+    vertexBuffer: false,
+    meshes: false
+  };
 
   function Shader(gl, vs, fs, attribs, uniforms) {
     var self = this;
@@ -265,14 +288,7 @@
     // ------------------------------------
     var res = new Resources(gl, canvas.width, canvas.height);
     var whiteTexture = GFX.loadTexture(gl, ViewParameters.imageUris.white, true /* keep in textureCache forever */);
-    // ------------------------------------
-    // model data
-    // ------------------------------------
-    var modelData = {
-      modelURL: "",
-      vertexBuffer: false,
-      meshes: false
-    };
+
     GFX.loadModel(gl, ViewParameters, modelData, function() {animate(0);});
 
     // ------------------------------------
