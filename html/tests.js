@@ -109,6 +109,8 @@ QUnit.test("add pose keyframe", function(assert) {
         0, 0.6807694000000009, 4.822213, 1
       ];
       assert.deepEqual(skinnedModel.joints.splice(0, 16), expectedJM);
+      var outputPose = skinnedModel.getPoseFile(5);
+      assert.deepEqual(outputPose, posefile);
       done();
     }
   });

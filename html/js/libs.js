@@ -332,7 +332,7 @@
       };
       GFX.modelFileToJson(params, function(model) {
         if (modelType === ".obj") {
-          window.WavefrontUtils.exportObjModel(model, onExportSuccess);
+          WavefrontUtils.exportObjModel(model, onExportSuccess);
         } else if (modelType === ".json") {
           var out = GFX.modelStringify(model);
           onExportSuccess(out);
@@ -340,6 +340,14 @@
           console.error("Unsupported model type: "+modelType);
         }
       });
+    },
+
+    exportPose: function(pose, filename) {
+      var text = JSON.stringify(pose, null, "  ");
+      saveAs(
+        new Blob([text], {type: "text/plain;charset=" + document.characterSet}),
+        filename + ".json"
+      );
     },
 
     // JSON.stringify generates array that are difficult to read...

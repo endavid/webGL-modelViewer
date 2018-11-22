@@ -127,17 +127,17 @@
         }
         anims[joint][k][frame] = pose[joint][i];
       });
-      if (pose[joint][5]) {
+      if (pose[joint][5] !== undefined) {
         if (!anims[joint].scale) {
           anims[joint].scale = [];
         }
         anims[joint].scale[frame] = pose[joint].slice(3, 6);
       }
-      if (pose[joint][8]) {
+      if (pose[joint][8] !== undefined) {
         if (!anims[joint].translation) {
           anims[joint].translation = [];
         }
-        anims[joint].translation[frame] = pose[joint].slice(7, 9);
+        anims[joint].translation[frame] = pose[joint].slice(6, 9);
       }
     });
     this.keyframeCount += 1;
@@ -151,6 +151,40 @@
         skeleton[joint].rotationOrder = jro[joint];
       }
     });
+  };
+
+  SkinnedModel.prototype.getPoseFile = function(keyframe) {
+    var joints = Object.keys(this.anims);
+    var anims = this.anims;
+    var pose = {};
+    joints.forEach(function (joint) {
+      var jointAnim = anims[joint];
+      var hasRotation = false;
+      ["X", "Y", "Z"].forEach(function (axis) {
+        var k = "rotate"+axis+".ANGLE";
+        hasRotation |= jointAnim[k] && jointAnim[k][keyframe];
+      });
+      var hasScale = jointAnim.scale && jointAnim.scale[keyframe];
+      var hasTranslation = jointAnim.translation && jointAnim.translation[keyframe];
+      if (hasRotation || hasScale || hasTranslation) {
+        var t = [];
+        ["X", "Y", "Z"].forEach(function (axis) {
+          var k = "rotate"+axis+".ANGLE";
+          var r = arrayValueOrDefault(jointAnim[k], keyframe, 0);
+          t.push(r);
+        });
+        if (hasScale || hasTranslation) {
+          var s = arrayValueOrDefault(jointAnim.scale, keyframe, [1, 1, 1]);
+          s.forEach(function(v) {t.push(v);});
+          if (hasTranslation) {
+            var x = arrayValueOrDefault(jointAnim.translation, keyframe, [0, 0, 0]);
+            x.forEach(function(v) {t.push(v);});
+          }
+        }
+        pose[joint] = t;
+      }
+    });
+    return { pose: pose };
   };
 
   // export

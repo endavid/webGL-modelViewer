@@ -60,6 +60,16 @@
       } else {
         console.warn("No skinned model");
       }
+    },
+    saveCurrentPose: function() {
+      if (modelData.skinnedModel) {
+        var frame = ViewParameters.keyframe;
+        var pose = modelData.skinnedModel.getPoseFile(frame);
+        var fn = GFX.getFileNameWithoutExtension(ViewParameters.model.name);
+        GFX.exportPose(pose, fn + "_" + frame);
+      } else {
+        console.warn("No skinned model");
+      }
     }
   };
 

@@ -5,7 +5,7 @@
     var AnimationSettings = {
       hideDelay: 0
     };
-    var createSlider = function(id, value, min, max, step, callback) {
+    function createSlider(id, value, min, max, step, callback) {
       var numberId = id + "_number";
       var sliderUpdateFunction = function(event) {
         $("#"+numberId).attr('value', event.target.value);
@@ -34,9 +34,9 @@
                   .change(sliderUpdateFunction)
               )
       );
-    };
+    }
 
-    var createCheckbox = function(id, checked, callback) {
+    function createCheckbox(id, checked, callback) {
       var updateFunction = function(event) {
         callback(event.target.checked);
       };
@@ -48,7 +48,7 @@
                 .prop('checked', checked)
                 .change(updateFunction))
       );
-    };
+    }
 
     function createDropdownList(id, list, callback) {
       var updateFunction = function(event) {
@@ -72,7 +72,7 @@
       });
     }
 
-    var createButton = function(id, text, callback) {
+    function createButton(id, text, callback) {
       return $('<tr>').attr('id',id+"_parent").append($('<td>')
               .append($("<button>")
                 .attr('id', id)
@@ -80,13 +80,18 @@
                 .click(callback)
                 .append(text))
               );
-    };
+    }
 
     function createButtonWithOptions(id, buttonText, midText, options, callback) {
-      var select = $('<select>').attr('id', id+"_select");
-      options.forEach(function (obj) {
-        select.append($('<option>').attr('value', obj.value).append(obj.name));
-      });
+      var select = null;
+      if (Array.isArray(options)) {
+        select = $('<select>').attr('id', id+"_select");
+        options.forEach(function (obj) {
+          select.append($('<option>').attr('value', obj.value).append(obj.name));
+        });
+      } else {
+        select = options;
+      }
       return $('<tr>').attr('id',id+"_parent").append($('<td>')
               .append($("<button>")
                 .attr('id', id)
@@ -99,11 +104,11 @@
               );
     }
 
-    var createTitle = function(id) {
+    function createTitle(id) {
       return $('<tr>').append($('<td>').attr('class', "selected").append(id));
-    };
+    }
 
-    var createFileBrowser = function(id, text, callback) {
+    function createFileBrowser(id, text, multiple, callback) {
       var updateFunction = function(event) {
         var fileArray = [];
         for (var i = 0; i < event.target.files.length; i++) {
@@ -122,13 +127,13 @@
           .attr('type', 'file')
           // .obj, .json doesn't work in Safari...
           //.attr('accept', '.obj,.json,.dae,.mtl,image/*')
-          .attr('multiple', '')
+          .attr('multiple', multiple? '' : false)
           .change(updateFunction)
         )
       );
-    };
+    }
 
-    var addGroup = function(id, elements, parent) {
+    function addGroup(id, elements, parent) {
       var elementIds = [];
       elements.forEach(function(element) {
         // *_parent ids
@@ -144,7 +149,7 @@
       elements.forEach(function(element) {
         tbody.append(element);
       });
-    };
+    }
 
     ViewParameters.onRotation = function() {
       if (ViewParameters.modelRotationTheta < 0) {
@@ -236,14 +241,14 @@
       {name: "white", value: "resources/white.png"}];
     // Create the UI controls
     addGroup("File", [
-      createFileBrowser("fileBrowser", "load models & textures", onChangeFileBrowser),
+      createFileBrowser("fileBrowser", "load models & textures", true, onChangeFileBrowser),
       createDropdownList("Presets", modelPresets, function(obj) {
         ViewParameters.model = obj;
       }),
       createButtonWithOptions("saveFile", "Save", " as ", [{name: "OBJ Wavefront", value:".obj"}, {name: "Json", value:".json"}], function (e) {
         var modelType = $("#"+e.target.id+"_select").attr("value");
         console.log(modelType);
-        GFX.exportModel(window.ViewParameters, modelType);
+        GFX.exportModel(ViewParameters, modelType);
       }),
     ]);
     addGroup("Model Settings", [
@@ -306,8 +311,9 @@
       ViewParameters.keyframe, -1, -1, 1, function(value) {
         ViewParameters.keyframe = parseInt(value);
       }),
-      createFileBrowser("posefileBrowser", "load keyframe/pose", onAddPoseFiles),
-      createFileBrowser("jrofileBrowser", "load joint rotation order", onAddJroFile)
+      createFileBrowser("posefileBrowser", "load keyframe/pose", true, onAddPoseFiles),
+      createFileBrowser("jrofileBrowser", "load joint rotation order", false, onAddJroFile),
+      createButtonWithOptions("savePose", "Save Pose", " as ", "Json", ViewParameters.saveCurrentPose)
     ], "#controlsRight");
   }
 
