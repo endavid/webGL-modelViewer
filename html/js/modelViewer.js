@@ -36,6 +36,7 @@
     backgroundColor: 0x3d4d4d,
     onRotation: function() {},
     onModelLoad: function() {},
+    onChangeKeyframe: function() {},
     getSunAltitude: function() { return Light.altitude; },
     getSunEastWest: function() { return Light.eastWest; },
     setSunAltitude: function(value) {
@@ -368,6 +369,7 @@
           } else {
             skinned.applyPose(keyframe);
           }
+          ViewParameters.onChangeKeyframe(skinned);
         }
         var shader = skinned ? res.shaders.litSkin : res.shaders.lit;
         var stride = 4 * modelData.stride; // in bytes

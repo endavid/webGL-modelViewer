@@ -187,6 +187,14 @@
     return { pose: pose };
   };
 
+  SkinnedModel.prototype.setAnimValue = function(joint, frame, key, value) {
+    var jointAnim = this.anims[joint];
+    if (!jointAnim[key]) {
+      jointAnim[key] = [];
+    }
+    jointAnim[key][frame] = value;
+  };
+
   // export
   global.SkinnedModel = (global.module || {}).exports = SkinnedModel;
 })(this);

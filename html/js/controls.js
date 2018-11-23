@@ -5,7 +5,7 @@
     var AnimationSettings = {
       hideDelay: 0
     };
-    function createSlider(id, value, min, max, step, callback) {
+    function createSlider(id, text, value, min, max, step, callback) {
       var numberId = id + "_number";
       var sliderUpdateFunction = function(event) {
         $("#"+numberId).attr('value', event.target.value);
@@ -16,7 +16,7 @@
         callback(event.target.value);
       };
       return $('<tr>').attr('id',id+"_parent").append($('<td>')
-              .append(id+": <br/>")
+              .append(text+": <br/>")
               .append($('<input>')
                 .attr('id', numberId)
                 .attr('type', 'number')
@@ -104,8 +104,8 @@
               );
     }
 
-    function createTitle(id) {
-      return $('<tr>').append($('<td>').attr('class', "selected").append(id));
+    function createTitle(id, text, cssclass) {
+      return $('<tr>').attr('id', id).append($('<td>').attr('class', cssclass || "selected").append(text));
     }
 
     function createFileBrowser(id, text, multiple, callback) {
@@ -133,7 +133,11 @@
       );
     }
 
-    function addGroup(id, elements, parent) {
+    function createSubGroup(id, text, elements) {
+      return createGroup(id, text, elements, "subgroup");
+    }
+
+    function createGroup(id, text, elements, cssclass) {
       var elementIds = [];
       elements.forEach(function(element) {
         // *_parent ids
@@ -144,12 +148,22 @@
           $("#"+elementId).toggle(AnimationSettings.hideDelay);
         });
       };
+      var title = createTitle(id, text, cssclass).click(toggle);
+      return [title].concat(elements);
+    }
+
+    function addGroup(id, text, elements, parent) {
+      var group = createGroup(id, text, elements);
+      addToTable(group, parent);
+    }
+
+    function addToTable(group, parent) {
       var tbody = $(parent || "#controls").find('tbody');
-      tbody.append(createTitle(id).click(toggle));
-      elements.forEach(function(element) {
+      group.forEach(function(element) {
         tbody.append(element);
       });
     }
+
 
     ViewParameters.onRotation = function() {
       if (ViewParameters.modelRotationTheta < 0) {
@@ -171,11 +185,19 @@
     };
 
     ViewParameters.onModelLoad = function(modelData) {
+      removePoseGroup();
       if (modelData.skinnedModel) {
         $("#keyframe").attr('max', modelData.skinnedModel.keyframeCount - 1);
+        $("#keyframe_number").attr('value', -1);
+        ViewParameters.keyframe = -1;
+        addPoseGroup(modelData.skinnedModel);
       }
     };
 
+    ViewParameters.onChangeKeyframe = function(skinnedModel) {
+      removePoseGroup();
+      addPoseGroup(skinnedModel);
+    };
 
     function onChangeFileBrowser(values) {
       var models = [];
@@ -227,6 +249,39 @@
       }
     }
 
+    function removePoseGroup() {
+      $("tr[id^=gPose]").remove();
+    }
+
+    function addPoseGroup(skinnedModel) {
+      var id = "gPose";
+      var animKeys = Object.keys(skinnedModel.anims);
+      var frame = ViewParameters.keyframe;
+      var pose = skinnedModel.getPoseFile(frame).pose;
+      var controls = [];
+      function updateJointWithValue(joint, key, value) {
+        skinnedModel.setAnimValue(joint, frame, key, parseFloat(value));
+        skinnedModel.applyPose(frame);
+      }
+      function angleSlider(s, joint, axis, value) {
+        return createSlider(s+"_angle"+axis, "rotation "+axis, value, 0, 360, 0.1, updateJointWithValue.bind(null, joint, "rotate"+axis+".ANGLE"));
+      }
+      animKeys.forEach(function (joint) {
+        var transform = pose[joint] || [];
+        var rx = transform[0] || 0;
+        var ry = transform[1] || 0;
+        var rz = transform[2] || 0;
+        var subId = id+"_"+joint;
+        var jointGroup = createSubGroup(subId, joint, [
+          angleSlider(subId, joint, "X", rx),
+          angleSlider(subId, joint, "Y", ry),
+          angleSlider(subId, joint, "Z", rz)
+        ]);
+        controls = controls.concat(jointGroup);
+      });
+      addGroup(id, "Pose Controls", controls, "#controlsRight");
+    }
+
     var modelPresets = [
       "pear.json",
       "banana.json",
@@ -240,7 +295,7 @@
       {name: "uvChecker", value: "resources/UVTextureChecker4096.png"},
       {name: "white", value: "resources/white.png"}];
     // Create the UI controls
-    addGroup("File", [
+    addGroup("gFile", "File", [
       createFileBrowser("fileBrowser", "load models & textures", true, onChangeFileBrowser),
       createDropdownList("Presets", modelPresets, function(obj) {
         ViewParameters.model = obj;
@@ -251,7 +306,7 @@
         GFX.exportModel(ViewParameters, modelType);
       }),
     ]);
-    addGroup("Model Settings", [
+    addGroup("gModel", "Model Settings", [
       createCheckbox("lockRotationY", window.ViewParameters.isLockRotationY, function(value) {
         ViewParameters.isLockRotationY = value;
       }),
@@ -259,55 +314,55 @@
         ViewParameters.isZAxisUp = value;
         ViewParameters.needsReload = true;
       }),
-      createSlider("modelScaleExp10", 0, -3, 3, 0.2, function(value) {
+      createSlider("modelScaleExp10", "scale", 0, -3, 3, 0.2, function(value) {
         ViewParameters.modelScale = Math.pow(10, parseFloat(value));
       }),
-      createSlider("modelRotationTheta",
+      createSlider("modelRotationTheta", "rotation Y axis",
         ViewParameters.modelRotationTheta, 0, 2 * Math.PI, 0.01, function(value) {
           ViewParameters.modelRotationTheta = parseFloat(value);
       }),
       createCheckbox("lockRotationX", window.ViewParameters.isLockRotationX, function(value) {
         ViewParameters.isLockRotationX = value;
       }),
-      createSlider("modelRotationPhi",
+      createSlider("modelRotationPhi", "rotation X axis",
         ViewParameters.modelRotationPhi, 0, 2 * Math.PI, 0.01, function(value) {
           ViewParameters.modelRotationPhi = parseFloat(value);
       })
     ]);
-    addGroup("Camera Settings", [
-      createSlider("cameraDistance",
+    addGroup("gCamera", "Camera Settings", [
+      createSlider("cameraDistance", "distance",
         ViewParameters.cameraDistance, 0.2, 10, 0.01, function(value) {
           ViewParameters.cameraDistance = parseFloat(value);
       }),
-      createSlider("cameraHeight",
+      createSlider("cameraHeight", "height",
         ViewParameters.cameraHeight, -2, 2, 0.01, function(value) {
           ViewParameters.cameraHeight = parseFloat(value);
       }),
-      createSlider("cameraPitch",
+      createSlider("cameraPitch", "pitch",
         ViewParameters.cameraPitch, -90, 90, 1, function(value) {
           ViewParameters.cameraPitch = parseFloat(value);
       }),
-      createSlider("cameraFOV",
+      createSlider("cameraFOV", "Field of View",
         ViewParameters.cameraFOV, 1, 90, 1, function(value) {
           ViewParameters.cameraFOV = parseFloat(value);
       })
     ]);
-    addGroup("Light Settings", [
-      createSlider("SunAltitude", ViewParameters.getSunAltitude(), -1, 1, 0.05, function(value) {
+    addGroup("gLight", "Light Settings", [
+      createSlider("SunAltitude", "sun altitude", ViewParameters.getSunAltitude(), -1, 1, 0.05, function(value) {
         ViewParameters.setSunAltitude(value);
       }),
-      createSlider("SunEastWest", ViewParameters.getSunEastWest(), -1, 1, 0.05, function(value) {
+      createSlider("SunEastWest", "sun east-west", ViewParameters.getSunEastWest(), -1, 1, 0.05, function(value) {
         ViewParameters.setSunEastWest(value);
       })
     ]);
-    addGroup("Shader Settings", [
+    addGroup("gShader", "Shader Settings", [
       createDropdownList("missingTexture", missingTexturePresets, function(obj) {
         ViewParameters.imageUris.missing = obj.uri;
         ViewParameters.needsReload = true;
       })
     ]);
-    addGroup("Animation Controls", [
-      createSlider("keyframe",
+    addGroup("gAnim", "Animation Controls", [
+      createSlider("keyframe", "keyframe",
       ViewParameters.keyframe, -1, -1, 1, function(value) {
         ViewParameters.keyframe = parseInt(value);
       }),

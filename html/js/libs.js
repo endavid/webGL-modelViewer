@@ -182,6 +182,8 @@
       console.log("#vertices: " + (model.vertices.length/model.stride));
       if (model.skin) {
         modelData.skinnedModel = new SkinnedModel(model.skin, model.skeleton, model.anims);
+      } else {
+        modelData.skinnedModel = null;
       }
       gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexBuffer);
       // atm, only floats allowed ...

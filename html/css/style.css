@@ -172,8 +172,8 @@ td {
   color: #e6e6e6;
   background-color: #005252;
   padding: 5px 10px 5px 10px;
-  border-radius: 8px;
-  -moz-border-radius: 8px;
+  border-radius: 4px;
+  -moz-border-radius: 4px;
 }
 
 td.selected {
@@ -182,8 +182,19 @@ td.selected {
   background-color: #009999;
   border: 2px dotted #d3d3d3;
   padding: 5px 10px 5px 10px;
-  border-radius: 8px;
-  -moz-border-radius: 8px;
+  border-radius: 4px;
+  -moz-border-radius: 4px;
+  cursor: pointer;
+}
+
+td.subgroup {
+  font-size: 8pt;
+  color: #e6e6e6;
+  background-color: #006464;
+  border: 1px dotted #009999;
+  padding: 1px 10px 1px 10px;
+  border-radius: 4px;
+  -moz-border-radius: 4px;
   cursor: pointer;
 }
 
