@@ -144,9 +144,18 @@
         elementIds.push(element.attr('id'));
       });
       var toggle = function() {
-        elementIds.forEach(function(elementId) {
-          $("#"+elementId).toggle(AnimationSettings.hideDelay);
-        });
+        if (elementIds.length > 0) {
+          // based on the first element so subgroups are collapsed as well
+          var hidden = $("#"+elementIds[0]).is(":hidden");
+          var d = AnimationSettings.hideDelay;
+          elementIds.forEach(function(elementId) {
+            if (hidden) {
+              $("#"+elementId).show(d);
+            } else {
+              $("#"+elementId).hide(d);
+            }
+          });
+        }
       };
       var title = createTitle(id, text, cssclass).click(toggle);
       return [title].concat(elements);
@@ -264,7 +273,7 @@
         skinnedModel.applyPose(frame);
       }
       function angleSlider(s, joint, axis, value) {
-        return createSlider(s+"_angle"+axis, "rotation "+axis, value, 0, 360, 0.1, updateJointWithValue.bind(null, joint, "rotate"+axis+".ANGLE"));
+        return createSlider(s+"_angle"+axis, "rotation "+axis, value, -180, 180, 0.1, updateJointWithValue.bind(null, joint, "rotate"+axis+".ANGLE"));
       }
       animKeys.forEach(function (joint) {
         var transform = pose[joint] || [];
@@ -280,6 +289,8 @@
         controls = controls.concat(jointGroup);
       });
       addGroup(id, "Pose Controls", controls, "#controlsRight");
+      // hide the sliders, but show the names of the joints
+      $("tr[id^=gPose_][id$=_parent]").hide();
     }
 
     var modelPresets = [
