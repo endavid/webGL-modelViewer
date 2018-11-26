@@ -187,12 +187,16 @@
     return { pose: pose };
   };
 
-  SkinnedModel.prototype.setAnimValue = function(joint, frame, key, value) {
+  SkinnedModel.prototype.setAnimValue = function(joint, frame, key, value, index) {
     var jointAnim = this.anims[joint];
     if (!jointAnim[key]) {
       jointAnim[key] = [];
     }
-    jointAnim[key][frame] = value;
+    if (index) {
+      jointAnim[key][frame][index] = value;
+    } else {
+      jointAnim[key][frame] = value;
+    }
   };
 
   SkinnedModel.prototype.getSkeletonTopology = function(parentJoint) {

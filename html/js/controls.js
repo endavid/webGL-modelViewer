@@ -298,6 +298,16 @@
         slider.attr('parent', id+"_"+joint);
         return slider;
       }
+      function updateJointTrWithValue(joint, value, sub) {
+        var indices = {X: 0, Y: 1, Z: 2};
+        skinnedModel.setAnimValue(joint, frame, "translation", parseFloat(value), indices[sub]);
+        skinnedModel.applyPose(frame);
+      }
+      function translationSlider(s, joint, values) {
+        var slider = createMultiSlider(s+"_translation", ["X", "Y", "Z"], "translation XYZ", values, -10, 10, 0.1, updateJointTrWithValue.bind(null, joint));
+        slider.attr('parent', id+"_"+joint);
+        return slider;
+      }
       function createControls(skeleton, parent) {
         var joints = Object.keys(skeleton);
         var controls = [];
@@ -306,9 +316,13 @@
           var rx = transform[0] || 0;
           var ry = transform[1] || 0;
           var rz = transform[2] || 0;
+          var tx = transform[6] || 0;
+          var ty = transform[7] || 0;
+          var tz = transform[8] || 0;
           var subId = id+"_"+joint;
           var subcontrols = [
-            angleSlider(subId, joint, [rx, ry, rz])
+            angleSlider(subId, joint, [rx, ry, rz]),
+            translationSlider(subId, joint, [tx, ty, tz])
           ];
           var jointControls = createControls(skeleton[joint], subId);
           subcontrols = subcontrols.concat(jointControls);
