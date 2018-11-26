@@ -399,7 +399,23 @@
     ], "#controlsRight");
   }
 
+  function makeCanvasFollowScroll() {
+    // https://stackoverflow.com/a/14194805
+    var el = $('.container');
+    var originalelpos = el.offset().top; // take it where it originally is on the page
+
+    //run on scroll
+    $(window).scroll(function () {
+       var el = $('.container'); // important! (local)
+       var elpos = el.offset().top; // take current situation
+       var windowpos = $(window).scrollTop();
+       var finaldestination = windowpos + originalelpos;
+       el.stop().animate({ 'top': finaldestination }, 100);
+     });
+  }
+
   $( document ).ready(function() {
     populateControls();
+    makeCanvasFollowScroll();
   });
 })();
