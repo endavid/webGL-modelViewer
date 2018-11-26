@@ -205,7 +205,8 @@
     var parent = parentJoint || null;
     var topo = {};
     joints.forEach(function (joint) {
-      if (self.skeleton[joint].parent === parent) {
+      var j = self.skeleton[joint];
+      if (j && j.parent === parent) {
         topo[joint] = self.getSkeletonTopology(joint);
       }
     });
