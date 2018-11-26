@@ -195,6 +195,19 @@
     jointAnim[key][frame] = value;
   };
 
+  SkinnedModel.prototype.getSkeletonTopology = function(parentJoint) {
+    var self = this;
+    var joints = Object.keys(this.anims);
+    var parent = parentJoint || null;
+    var topo = {};
+    joints.forEach(function (joint) {
+      if (self.skeleton[joint].parent === parent) {
+        topo[joint] = self.getSkeletonTopology(joint);
+      }
+    });
+    return topo;
+  };
+
   // export
   global.SkinnedModel = (global.module || {}).exports = SkinnedModel;
 })(this);

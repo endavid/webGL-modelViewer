@@ -133,11 +133,11 @@
       );
     }
 
-    function createSubGroup(id, text, elements) {
-      return createGroup(id, text, elements, "subgroup");
+    function createSubGroup(id, text, elements, parent) {
+      return createGroup(id, text, elements, "subgroup", parent);
     }
 
-    function createGroup(id, text, elements, cssclass) {
+    function createGroup(id, text, elements, cssclass, parent) {
       var elementIds = [];
       elements.forEach(function(element) {
         // *_parent ids
@@ -150,7 +150,10 @@
           var d = AnimationSettings.hideDelay;
           elementIds.forEach(function(elementId) {
             if (hidden) {
-              $("#"+elementId).show(d);
+              var p = $("#"+elementId).attr('parent');
+              if (!p || p === id) {
+                $("#"+elementId).show(d);
+              }
             } else {
               $("#"+elementId).hide(d);
             }
@@ -158,6 +161,9 @@
         }
       };
       var title = createTitle(id, text, cssclass).click(toggle);
+      if (parent) {
+        title.attr('parent', parent);
+      }
       return [title].concat(elements);
     }
 
@@ -264,33 +270,43 @@
 
     function addPoseGroup(skinnedModel) {
       var id = "gPose";
-      var animKeys = Object.keys(skinnedModel.anims);
       var frame = ViewParameters.keyframe;
       var pose = skinnedModel.getPoseFile(frame).pose;
-      var controls = [];
       function updateJointWithValue(joint, key, value) {
         skinnedModel.setAnimValue(joint, frame, key, parseFloat(value));
         skinnedModel.applyPose(frame);
       }
       function angleSlider(s, joint, axis, value) {
-        return createSlider(s+"_angle"+axis, "rotation "+axis, value, -180, 180, 0.1, updateJointWithValue.bind(null, joint, "rotate"+axis+".ANGLE"));
+        var slider = createSlider(s+"_angle"+axis, "rotation "+axis, value, -180, 180, 0.1, updateJointWithValue.bind(null, joint, "rotate"+axis+".ANGLE"));
+        slider.attr('parent', id+"_"+joint);
+        return slider;
       }
-      animKeys.forEach(function (joint) {
-        var transform = pose[joint] || [];
-        var rx = transform[0] || 0;
-        var ry = transform[1] || 0;
-        var rz = transform[2] || 0;
-        var subId = id+"_"+joint;
-        var jointGroup = createSubGroup(subId, joint, [
-          angleSlider(subId, joint, "X", rx),
-          angleSlider(subId, joint, "Y", ry),
-          angleSlider(subId, joint, "Z", rz)
-        ]);
-        controls = controls.concat(jointGroup);
-      });
+      function createControls(skeleton, parent) {
+        var joints = Object.keys(skeleton);
+        var controls = [];
+        joints.forEach(function (joint) {
+          var transform = pose[joint] || [];
+          var rx = transform[0] || 0;
+          var ry = transform[1] || 0;
+          var rz = transform[2] || 0;
+          var subId = id+"_"+joint;
+          var subcontrols = [
+            angleSlider(subId, joint, "X", rx),
+            angleSlider(subId, joint, "Y", ry),
+            angleSlider(subId, joint, "Z", rz)
+          ];
+          var jointControls = createControls(skeleton[joint], subId);
+          subcontrols = subcontrols.concat(jointControls);
+          var jointGroup = createSubGroup(subId, joint, subcontrols, parent);
+          controls = controls.concat(jointGroup);
+        });
+        return controls;
+      }
+      var controls = createControls(skinnedModel.getSkeletonTopology());
       addGroup(id, "Pose Controls", controls, "#controlsRight");
-      // hide the sliders, but show the names of the joints
-      $("tr[id^=gPose_][id$=_parent]").hide();
+      // hide the sliders by clicking twice to toggle controls
+      $("#gPose").click();
+      $("#gPose").click();
     }
 
     var modelPresets = [
