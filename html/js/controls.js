@@ -6,34 +6,50 @@
       hideDelay: 0
     };
     function createSlider(id, text, value, min, max, step, callback) {
-      var numberId = id + "_number";
-      var sliderUpdateFunction = function(event) {
-        $("#"+numberId).attr('value', event.target.value);
-        callback(event.target.value);
-      };
-      var numberUpdateFunction = function(event) {
-        $("#"+id).attr('value', event.target.value);
-        callback(event.target.value);
-      };
-      return $('<tr>').attr('id',id+"_parent").append($('<td>')
-              .append(text+": <br/>")
-              .append($('<input>')
-                .attr('id', numberId)
-                .attr('type', 'number')
-                .attr('value', value)
-                .change(numberUpdateFunction)
-              )
-              .append($('<input>')
-                  .attr('id', id)
-                  .attr('type', 'range')
-                  .attr('min', min)
-                  .attr('max', max)
-                  .attr('step', step)
-                  .attr('value', value)
-                  .on('input', sliderUpdateFunction)
-                  .change(sliderUpdateFunction)
-              )
-      );
+      return createMultiSlider(id, [""], text, [value], min, max, step, callback);
+    }
+    function createMultiSlider(id, subIds, text, values, min, max, step, callback) {
+      var controls = [];
+      var sliderClass;
+      if (subIds.length > 1) {
+        sliderClass = "three";
+      }
+      subIds.forEach(function(sub, i) {
+        var sliderId = id + sub;
+        var numberId = sliderId + "_number";
+        var value = values[i];
+        var sliderUpdateFunction = function(event) {
+          $("#"+numberId).attr('value', event.target.value);
+          callback(event.target.value, sub);
+        };
+        var numberUpdateFunction = function(event) {
+          $("#"+sliderId).attr('value', event.target.value);
+          callback(event.target.value, sub);
+        };
+        var numberInput = $('<input>')
+          .attr('id', numberId)
+          .attr('type', 'number')
+          .attr('value', value)
+          .attr('class', "range")
+          .change(numberUpdateFunction);
+        var sliderInput = $('<input>')
+            .attr('id', sliderId)
+            .attr('type', 'range')
+            .attr('min', min)
+            .attr('max', max)
+            .attr('step', step)
+            .attr('value', value)
+            .on('input', sliderUpdateFunction)
+            .change(sliderUpdateFunction);
+        if (sliderClass) {
+          sliderInput.attr('class', sliderClass);
+        }
+        controls.push(numberInput);
+        controls.push(sliderInput);
+      });
+      var td = $('<td>').append(text+": <br/>");
+      controls.forEach(function(c) {td.append(c);});
+      return $('<tr>').attr('id',id+"_parent").append(td);
     }
 
     function createCheckbox(id, checked, callback) {
@@ -272,12 +288,13 @@
       var id = "gPose";
       var frame = ViewParameters.keyframe;
       var pose = skinnedModel.getPoseFile(frame).pose;
-      function updateJointWithValue(joint, key, value) {
+      function updateJointWithValue(joint, value, sub) {
+        var key = "rotate"+sub+".ANGLE";
         skinnedModel.setAnimValue(joint, frame, key, parseFloat(value));
         skinnedModel.applyPose(frame);
       }
-      function angleSlider(s, joint, axis, value) {
-        var slider = createSlider(s+"_angle"+axis, "rotation "+axis, value, -180, 180, 0.1, updateJointWithValue.bind(null, joint, "rotate"+axis+".ANGLE"));
+      function angleSlider(s, joint, values) {
+        var slider = createMultiSlider(s+"_angle", ["X", "Y", "Z"], "rotation XYZ", values, -180, 180, 0.1, updateJointWithValue.bind(null, joint));
         slider.attr('parent', id+"_"+joint);
         return slider;
       }
@@ -291,9 +308,7 @@
           var rz = transform[2] || 0;
           var subId = id+"_"+joint;
           var subcontrols = [
-            angleSlider(subId, joint, "X", rx),
-            angleSlider(subId, joint, "Y", ry),
-            angleSlider(subId, joint, "Z", rz)
+            angleSlider(subId, joint, [rx, ry, rz])
           ];
           var jointControls = createControls(skeleton[joint], subId);
           subcontrols = subcontrols.concat(jointControls);

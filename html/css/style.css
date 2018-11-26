@@ -12,7 +12,7 @@ body {
 
 #page {
   background-color: #2b2626;
-  width: 1240px;
+  width: 1295px;
   margin:auto;
   margin-top: 10px;
   padding: auto;
@@ -34,7 +34,7 @@ body {
 #sidemenuRight {
   color: #e6e6e6;
   float:right;
-  width:285px;
+  width:340px;
   padding-left: 10px;
   padding-right: 10px;
   padding-top: 20px;
@@ -211,8 +211,36 @@ td.subgroup {
   -moz-border-radius: 8px;
 }
 
-input[type="number"] {
-   width:50px;
+input[type=number] {
+  width: 8ex;
+  padding: 4px;
+}
+input[type=text] {
+  width: 8ex;
+  padding: 4px;
+}
+input.range[type=number] {
+  font-size: xx-small;
+  width: 6ex;
+  padding: 0px;
+  border-style: none;
+  text-align: center;
+  vertical-align: super;
+  color: #99AAAA;
+  background: none;
+}
+input.range[type=number]::-webkit-inner-spin-button,
+input.range[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+input[type=range] {
+  width: 200px;
+}
+input.three[type=range] {
+  width: 72px;
 }
 
 .container {
