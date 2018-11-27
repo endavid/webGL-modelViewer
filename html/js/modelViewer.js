@@ -21,6 +21,8 @@
     },
     materialUris: {
     },
+    overlayImage: null,
+    overlayAlpha: 1,
     isZAxisUp: false,
     isLockRotationY: false,
     isLockRotationX: false,
@@ -136,6 +138,7 @@
     this.gl = gl;
     this.width = width;
     this.height = height;
+    this.quad = GFX.createQuad(gl);
     this.initExtensions(["OES_element_index_uint"]);
     this.initShaders();
   }
@@ -170,6 +173,11 @@
         "shaders/skinning.vs", "shaders/lighting.fs",
         ["uv", "position", "normal", "boneWeights", "boneIndices"],
         ["Pmatrix", "Vmatrix", "Mmatrix", "lightDirection", "sampler", "joints"]
+      ),
+      colour: new Shader(this.gl,
+        "shaders/fullscreen.vs", "shaders/colour.fs",
+        ["position"],
+        ["scale", "offset", "colourTransform", "colourBias"]
       )
     };
   };
@@ -181,6 +189,43 @@
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,     gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,     gl.CLAMP_TO_EDGE);
+  };
+
+  Resources.prototype.setOverlayParameters = function() {
+    var gl = this.gl;
+    var shader = this.shaders.colour;
+    gl.uniform2f(shader.uniforms.scale, 1, 1);
+    gl.uniform2f(shader.uniforms.offset, 0, 0);
+    gl.uniform4f(shader.uniforms.colourBias, 0, 0, 0, 0);
+    var t = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, ViewParameters.overlayAlpha];
+    gl.uniformMatrix4fv(shader.uniforms.colourTransform, false, t);
+  };
+
+  Resources.prototype.drawFullScreenQuad = function() {
+    var gl = this.gl;
+    var shader = this.shaders.colour;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.quad.vertexBuffer);
+    gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, 4 * 3, 0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.quad.indexBuffer);
+    gl.drawElements(gl.TRIANGLE_STRIP, this.quad.faces.length, gl.UNSIGNED_SHORT, 0);
+  };
+
+  Resources.prototype.setOpaquePass = function() {
+    var gl = this.gl;
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.clearDepth(1.0);
+    gl.enable(gl.CULL_FACE); // cull back faces
+  };
+
+  Resources.prototype.setBlendPass = function() {
+    var gl = this.gl;
+    gl.disable(gl.DEPTH_TEST);
+    gl.depthMask(false); // disable ZWRITE
+    gl.disable(gl.CULL_FACE);
+    gl.enable(gl.BLEND);
+    gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   };
 
   // https://webglfundamentals.org/webgl/lessons/webgl-text-canvas2d.html
@@ -299,6 +344,10 @@
     // ------------------------------------
     var res = new Resources(gl, canvas.width, canvas.height);
     var whiteTexture = GFX.loadTexture(gl, ViewParameters.imageUris.white, true /* keep in textureCache forever */);
+    var overlay = {
+      uri: null,
+      texture: null
+    };
 
     GFX.loadModel(gl, ViewParameters, modelData, function() {animate(0);});
 
@@ -321,10 +370,6 @@
     ctx.strokeStyle = "#ffffff";
     var clearColor = MATH.rgbToFloat(ViewParameters.backgroundColor);
     gl.clearColor(clearColor[0], clearColor[1], clearColor[2], 1);
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
-    gl.clearDepth(1.0);
-    gl.enable(gl.CULL_FACE); // cull back faces
     var time_old=0;
     var keyframe = -1;
     var animate = function(time)
@@ -337,6 +382,12 @@
         GFX.loadModel(gl, ViewParameters, modelData, function() {
           console.log("Loaded: "+modelData.modelURL);
           ViewParameters.onModelLoad(modelData);
+        });
+      }
+      if (ViewParameters.overlayImage !== overlay.uri) {
+        GFX.loadTexture(gl, ViewParameters.overlayImage, true, function(img) {
+          overlay.uri = ViewParameters.overlayImage;
+          overlay.texture = img;
         });
       }
       if (!drag) {
@@ -361,6 +412,7 @@
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
       if (modelData.vertexBuffer && res.ready() && whiteTexture.webglTexture) {
+        res.setOpaquePass();
         var skinned = modelData.skinnedModel;
         if (skinned && keyframe !== ViewParameters.keyframe) {
           keyframe = ViewParameters.keyframe;
@@ -403,6 +455,14 @@
           gl.drawElements(gl.TRIANGLES, mesh.numPoints, gl.UNSIGNED_INT, 0);
         });
         shader.disable(gl);
+      }
+      if (res.ready() && overlay.texture) {
+        res.setBlendPass();
+        res.shaders.colour.use(gl);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, overlay.texture.webglTexture);
+        res.setOverlayParameters();
+        res.drawFullScreenQuad();
       }
       drawAllLabels(ctx, projectionMatrix, viewMatrix, modelMatrix, gl.canvas.width, gl.canvas.height);
       gl.flush();

@@ -404,6 +404,29 @@
       s += "]\n";
       s +="}";
       return s;
+    },
+
+    createQuad: function (gl) {
+      var modelData = {
+        vertices: false,
+        faces: false,
+        vertexBuffer: false,
+        indexBuffer: false
+      };
+      modelData.vertices = [ // xyz, uv is computed in the shader from xy
+      -1, -1, 0,
+      -1,  1, 0,
+       1, -1, 0,
+       1,  1, 0
+      ];
+      modelData.faces = [0, 2, 1, 3];
+      modelData.vertexBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelData.vertices), gl.STATIC_DRAW);
+      modelData.indexBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelData.indexBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(modelData.faces), gl.STATIC_DRAW);
+      return modelData;
     }
   };
   // export

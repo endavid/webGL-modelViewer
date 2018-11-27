@@ -338,6 +338,11 @@
       $("#gPose").click();
     }
 
+    function onAddOverlay(values) {
+      var f = values[0];
+      ViewParameters.overlayImage = f.uri;
+    }
+
     var modelPresets = [
       "pear.json",
       "banana.json",
@@ -415,6 +420,10 @@
       createDropdownList("missingTexture", missingTexturePresets, function(obj) {
         ViewParameters.imageUris.missing = obj.uri;
         ViewParameters.needsReload = true;
+      }),
+      createFileBrowser("overlayFileBrowser", "load overlay", false, onAddOverlay),
+      createSlider("overlayAlpha", "overlay opacity", ViewParameters.overlayAlpha, 0, 1, 1/255, function(value) {
+        ViewParameters.overlayAlpha = parseFloat(value);
       })
     ]);
     addGroup("gAnim", "Animation Controls", [
