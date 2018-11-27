@@ -188,11 +188,17 @@
   };
 
   SkinnedModel.prototype.setAnimValue = function(joint, frame, key, value, index) {
+    if (!this.anims[joint]) {
+      this.anims[joint] = {};
+    }
     var jointAnim = this.anims[joint];
     if (!jointAnim[key]) {
       jointAnim[key] = [];
     }
-    if (index) {
+    if (index !== undefined) {
+      if (!jointAnim[key][frame]) {
+        jointAnim[key][frame] = [0, 0, 0];
+      }
       jointAnim[key][frame][index] = value;
     } else {
       jointAnim[key][frame] = value;
@@ -201,7 +207,7 @@
 
   SkinnedModel.prototype.getSkeletonTopology = function(parentJoint) {
     var self = this;
-    var joints = Object.keys(this.anims);
+    var joints = Object.keys(this.skeleton);
     var parent = parentJoint || null;
     var topo = {};
     joints.forEach(function (joint) {
