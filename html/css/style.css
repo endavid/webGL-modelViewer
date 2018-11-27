@@ -115,6 +115,18 @@ body {
   float: right;
 }
 
+#infoDiv {
+  background-color: #070704;
+  border-left: solid;
+  border-width: 5px;
+  border-color: #AA9F9B;
+  padding: 4px;
+  margin: auto;
+  margin-bottom: 8px;
+  margin-top: 8px;
+  width: 90%;
+}
+
 canvas {
   border:1px solid #d3d3d3;
   background-color: gray;

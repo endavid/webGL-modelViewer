@@ -230,6 +230,17 @@
       addPoseGroup(skinnedModel);
     };
 
+    ViewParameters.warn = setWarning;
+    ViewParameters.info = setInfo;
+
+    function setInfo(text) {
+      $("#infoDiv").text(text);
+    }
+
+    function setWarning(text) {
+      setInfo("[WARNING] " + text);
+    }
+
     function onChangeFileBrowser(values) {
       var models = [];
       for (var i = 0 ; i < values.length; i++) {
@@ -372,8 +383,7 @@
         var modelType = $("#"+e.target.id+"_select").attr("value");
         console.log(modelType);
         GFX.exportModel(ViewParameters, modelType);
-      }),
-      createButtonWithOptions("saveScreenshot", "Screenshot", " as ", "PNG", saveScreenshot)
+      })
     ]);
     addGroup("gModel", "Model Settings", [
       createCheckbox("lockRotationY", window.ViewParameters.isLockRotationY, function(value) {

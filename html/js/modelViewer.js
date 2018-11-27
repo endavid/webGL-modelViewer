@@ -54,14 +54,14 @@
         modelData.skinnedModel.addPose(pose);
         ViewParameters.onModelLoad(modelData);
       } else {
-        console.warn("No skinned model");
+        ViewParameters.warn("No skinned model");
       }
     },
     addJointRotationOrder: function(jro) {
       if (modelData.skinnedModel) {
         modelData.skinnedModel.updateJointRotationOrder(jro.jointRotationOrder);
       } else {
-        console.warn("No skinned model");
+        ViewParameters.warn("No skinned model");
       }
     },
     saveCurrentPose: function() {
@@ -71,8 +71,14 @@
         var fn = GFX.getFileNameWithoutExtension(ViewParameters.model.name);
         GFX.exportPose(pose, fn + "_" + frame);
       } else {
-        console.warn("No skinned model");
+        ViewParameters.warn("No skinned model");
       }
+    },
+    warn: function(text) {
+      console.warn(text);
+    },
+    info: function(text) {
+      console.log(text);
     }
   };
 
@@ -214,7 +220,9 @@
     var gl = this.gl;
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
+    gl.depthMask(true); // enable ZWRITE
     gl.enable(gl.CULL_FACE); // cull back faces
+    gl.disable(gl.BLEND);
   };
 
   Resources.prototype.setBlendPass = function() {
@@ -335,7 +343,8 @@
     try {
       gl = canvas.getContext("experimental-webgl", {
         antialias: true,
-        preserveDrawingBuffer: true // this is so we can take screen captures
+        // set it to true to be able to take screen captures
+        preserveDrawingBuffer: false
       });
     } catch (e) {
       alert("Your browser is not WebGL compatible :(");
@@ -391,6 +400,13 @@
         GFX.loadTexture(gl, ViewParameters.overlayImage, true, function(img) {
           overlay.uri = ViewParameters.overlayImage;
           overlay.texture = img;
+          var aspect = img.height / img.width;
+          var sizeinfo = img.width + "×" + img.height;
+          if (Math.abs(aspect - 1.5) > 0.01) {
+            ViewParameters.warn("Overlay aspect should be 2:3 but loaded image is " + sizeinfo);
+          } else {
+            ViewParameters.info("Overlay size: " + sizeinfo);
+          }
         });
       }
       if (!drag) {
