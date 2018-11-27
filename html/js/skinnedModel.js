@@ -10,6 +10,22 @@
     return def;
   }
 
+  function substractJointTranslationsFromAnims(skeleton, anims) {
+    var animKeys = Object.keys(anims);
+    animKeys.forEach(function (joint) {
+      if (anims[joint].translation) {
+        for (var i = 0; i < anims[joint].translation.length; i++) {
+          if (anims[joint].translation[i]) {
+            anims[joint].translation[i][0] -= skeleton[joint].transform[3];
+            anims[joint].translation[i][1] -= skeleton[joint].transform[7];
+            anims[joint].translation[i][2] -= skeleton[joint].transform[11];
+          }
+        }
+      }
+    });
+    return anims;
+  }
+
   function SkinnedModel(skin, skeleton, anims) {
     this.joints = new Array(MAX_JOINTS * 16);
     for (var offset = 0; offset < 16 * MAX_JOINTS; offset+=16) {
@@ -25,7 +41,7 @@
     this.applyDefaultPose();
     var animKeys = Object.keys(anims);
     this.keyframeCount = animKeys.length > 0 ? anims[animKeys[0]].keyframes.length : 0;
-    this.anims = anims;
+    this.anims = substractJointTranslationsFromAnims(skeleton, anims);
     //this.applyPose(0);
   }
 
@@ -71,7 +87,7 @@
     }
     var transform = this.skeleton[name].transform;
     var s = arrayValueOrDefault(jointAnim.scale, keyframe, [1, 1, 1]);
-    var t = arrayValueOrDefault(jointAnim.translation, keyframe,  [transform[3], transform[7], transform[11]]);
+    var t = arrayValueOrDefault(jointAnim.translation, keyframe,  [0, 0, 0]);
     var rx = MATH.degToRad(arrayValueOrDefault(jointAnim["rotateX.ANGLE"], keyframe, 0));
     var ry = MATH.degToRad(arrayValueOrDefault(jointAnim["rotateY.ANGLE"], keyframe, 0));
     var rz = MATH.degToRad(arrayValueOrDefault(jointAnim["rotateZ.ANGLE"], keyframe, 0));
@@ -79,7 +95,9 @@
     ms[0] = s[0]; ms[5] = s[1]; ms[10] = s[2];
     var mt = MATH.getI4();
     // row-major
-    mt[3] = t[0]; mt[7] = t[1]; mt[11] = t[2];
+    mt[3] = transform[3] + t[0];
+    mt[7] = transform[7] + t[1];
+    mt[11] = transform[11] + t[2];
     var mr = {
       x: MATH.rotateX(MATH.getI4(), rx),
       y: MATH.rotateY(MATH.getI4(), ry),
