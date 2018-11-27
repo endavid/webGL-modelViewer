@@ -22,7 +22,7 @@
     materialUris: {
     },
     overlayImage: null,
-    overlayAlpha: 1,
+    overlayAlpha: 0.5,
     isZAxisUp: false,
     isLockRotationY: false,
     isLockRotationX: false,
@@ -214,7 +214,6 @@
     var gl = this.gl;
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
-    gl.clearDepth(1.0);
     gl.enable(gl.CULL_FACE); // cull back faces
   };
 
@@ -334,7 +333,10 @@
     // -------------------------------------------------
     var gl;
     try {
-      gl = canvas.getContext("experimental-webgl", {antialias: true});
+      gl = canvas.getContext("experimental-webgl", {
+        antialias: true,
+        preserveDrawingBuffer: true // this is so we can take screen captures
+      });
     } catch (e) {
       alert("Your browser is not WebGL compatible :(");
       return false;
@@ -370,6 +372,7 @@
     ctx.strokeStyle = "#ffffff";
     var clearColor = MATH.rgbToFloat(ViewParameters.backgroundColor);
     gl.clearColor(clearColor[0], clearColor[1], clearColor[2], 1);
+    gl.clearDepth(1.0);
     var time_old=0;
     var keyframe = -1;
     var animate = function(time)
@@ -463,6 +466,7 @@
         gl.bindTexture(gl.TEXTURE_2D, overlay.texture.webglTexture);
         res.setOverlayParameters();
         res.drawFullScreenQuad();
+        res.shaders.colour.disable(gl);
       }
       drawAllLabels(ctx, projectionMatrix, viewMatrix, modelMatrix, gl.canvas.width, gl.canvas.height);
       gl.flush();

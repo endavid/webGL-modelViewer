@@ -343,6 +343,13 @@
       ViewParameters.overlayImage = f.uri;
     }
 
+    function saveScreenshot() {
+      var save = document.createElement("a");
+      save.href = $("#glCanvas")[0].toDataURL("image/png");
+      save.download = "screenshot.png";
+      save.click();
+    }
+
     var modelPresets = [
       "pear.json",
       "banana.json",
@@ -366,6 +373,7 @@
         console.log(modelType);
         GFX.exportModel(ViewParameters, modelType);
       }),
+      createButtonWithOptions("saveScreenshot", "Screenshot", " as ", "PNG", saveScreenshot)
     ]);
     addGroup("gModel", "Model Settings", [
       createCheckbox("lockRotationY", window.ViewParameters.isLockRotationY, function(value) {
