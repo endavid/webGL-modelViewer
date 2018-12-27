@@ -99,141 +99,118 @@
     meshes: false
   };
 
-  function Shader(gl, vs, fs, attribs, uniforms) {
-    var self = this;
-    self.attribs = {};
-    self.uniforms = {};
-    GFX.useShader(gl, vs, fs, function(shaderProgram) {
-      self.program = shaderProgram;
-      attribs.forEach(function (a) {
-        self.attribs[a] = gl.getAttribLocation(self.program, a);
+  class Shader {
+    constructor(gl, vs, fs, attribs, uniforms) {
+      var self = this;
+      self.attribs = {};
+      self.uniforms = {};
+      GFX.useShader(gl, vs, fs, function (shaderProgram) {
+        self.program = shaderProgram;
+        attribs.forEach(function (a) {
+          self.attribs[a] = gl.getAttribLocation(self.program, a);
+        });
+        uniforms.forEach(function (u) {
+          self.uniforms[u] = gl.getUniformLocation(self.program, u);
+        });
       });
-      uniforms.forEach(function (u) {
-        self.uniforms[u] = gl.getUniformLocation(self.program, u);
-      });
-    });
+    }
+    enableVertexAttributes(gl) {
+      const attribKeys = Object.keys(this.attribs);
+      for (let i = 0; i < attribKeys.length; i++) {
+        gl.enableVertexAttribArray(this.attribs[attribKeys[i]]);
+      }
+    }
+    disableVertexAttributes(gl) {
+      const attribKeys = Object.keys(this.attribs);
+      for (let i = 0; i < attribKeys.length; i++) {
+        gl.disableVertexAttribArray(this.attribs[attribKeys[i]]);
+      }
+    }
+    use(gl) {
+      gl.useProgram(this.program);
+      this.enableVertexAttributes(gl);
+    }
+    disable(gl) {
+      this.disableVertexAttributes(gl);
+    }
   }
-
-  Shader.prototype.enableVertexAttributes = function(gl) {
-    var attribKeys = Object.keys(this.attribs);
-    for (var i = 0; i < attribKeys.length; i++ ) {
-      gl.enableVertexAttribArray(this.attribs[attribKeys[i]]);
-    }
-  };
-
-  Shader.prototype.disableVertexAttributes = function(gl) {
-    var attribKeys = Object.keys(this.attribs);
-    for (var i = 0; i < attribKeys.length; i++ ) {
-      gl.disableVertexAttribArray(this.attribs[attribKeys[i]]);
-    }
-  };
-
-  Shader.prototype.use = function(gl) {
-    gl.useProgram(this.program);
-    this.enableVertexAttributes(gl);
-  };
-
-  Shader.prototype.disable = function(gl) {
-    this.disableVertexAttributes(gl);
-  };
 
   // ============================================
   /// Class to init resources
-  function Resources(gl, width, height)
-  {
-    this.gl = gl;
-    this.width = width;
-    this.height = height;
-    this.quad = GFX.createQuad(gl);
-    this.initExtensions(["OES_element_index_uint"]);
-    this.initShaders();
+  class Resources {
+    constructor(gl, width, height) {
+      this.gl = gl;
+      this.width = width;
+      this.height = height;
+      this.quad = GFX.createQuad(gl);
+      this.initExtensions(["OES_element_index_uint"]);
+      this.initShaders();
+    }
+    ready() {
+      return this.shaders.lit.program;
+    }
+    initExtensions(list) {
+      var self = this;
+      this.extensions = {};
+      list.forEach(function (e) {
+        const ext = self.gl.getExtension(e);
+        if (!ext) {
+          console.error("Failed to get extension: " + e);
+        }
+        else {
+          self.extensions[e] = ext;
+        }
+      });
+    }
+    initShaders() {
+      this.shaders = {
+        lit: new Shader(this.gl, "shaders/geometry.vs", "shaders/lighting.fs", ["uv", "position", "normal"], ["Pmatrix", "Vmatrix", "Mmatrix", "lightDirection", "sampler"]),
+        litSkin: new Shader(this.gl, "shaders/skinning.vs", "shaders/lighting.fs", ["uv", "position", "normal", "boneWeights", "boneIndices"], ["Pmatrix", "Vmatrix", "Mmatrix", "lightDirection", "sampler", "joints"]),
+        colour: new Shader(this.gl, "shaders/fullscreen.vs", "shaders/colour.fs", ["position"], ["scale", "offset", "colourTransform", "colourBias"])
+      };
+    }
+    setDefaultTextureParameters() {
+      const gl = this.gl;
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); // can't use LINEAR with FLOAT textures :(
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    }
+    setOverlayParameters() {
+      const gl = this.gl;
+      const shader = this.shaders.colour;
+      gl.uniform2f(shader.uniforms.scale, 1, 1);
+      gl.uniform2f(shader.uniforms.offset, 0, 0);
+      gl.uniform4f(shader.uniforms.colourBias, 0, 0, 0, 0);
+      const t = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, ViewParameters.overlayAlpha];
+      gl.uniformMatrix4fv(shader.uniforms.colourTransform, false, t);
+    }
+    drawFullScreenQuad() {
+      const gl = this.gl;
+      const shader = this.shaders.colour;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.quad.vertexBuffer);
+      gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, 4 * 3, 0);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.quad.indexBuffer);
+      gl.drawElements(gl.TRIANGLE_STRIP, this.quad.faces.length, gl.UNSIGNED_SHORT, 0);
+    }
+    setOpaquePass() {
+      const gl = this.gl;
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+      gl.depthMask(true); // enable ZWRITE
+      gl.enable(gl.CULL_FACE); // cull back faces
+      gl.disable(gl.BLEND);
+    }
+    setBlendPass() {
+      const gl = this.gl;
+      gl.disable(gl.DEPTH_TEST);
+      gl.depthMask(false); // disable ZWRITE
+      gl.disable(gl.CULL_FACE);
+      gl.enable(gl.BLEND);
+      gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
+      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    }
   }
-
-  Resources.prototype.ready = function() {
-    return this.shaders.lit.program;
-  };
-
-  Resources.prototype.initExtensions = function(list)
-  {
-    var self = this;
-    this.extensions = {};
-    list.forEach(function (e){
-      var ext = self.gl.getExtension(e);
-      if (!ext) {
-        console.error("Failed to get extension: " + e);
-      } else {
-        self.extensions[e] = ext;
-      }
-    });
-  };
-
-  Resources.prototype.initShaders = function()
-  {
-    this.shaders = {
-      lit: new Shader(this.gl,
-        "shaders/geometry.vs", "shaders/lighting.fs",
-        ["uv", "position", "normal"],
-        ["Pmatrix", "Vmatrix", "Mmatrix", "lightDirection", "sampler"]
-      ),
-      litSkin: new Shader(this.gl,
-        "shaders/skinning.vs", "shaders/lighting.fs",
-        ["uv", "position", "normal", "boneWeights", "boneIndices"],
-        ["Pmatrix", "Vmatrix", "Mmatrix", "lightDirection", "sampler", "joints"]
-      ),
-      colour: new Shader(this.gl,
-        "shaders/fullscreen.vs", "shaders/colour.fs",
-        ["position"],
-        ["scale", "offset", "colourTransform", "colourBias"]
-      )
-    };
-  };
-
-  Resources.prototype.setDefaultTextureParameters = function()
-  {
-    var gl = this.gl;
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); // can't use LINEAR with FLOAT textures :(
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,     gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,     gl.CLAMP_TO_EDGE);
-  };
-
-  Resources.prototype.setOverlayParameters = function() {
-    var gl = this.gl;
-    var shader = this.shaders.colour;
-    gl.uniform2f(shader.uniforms.scale, 1, 1);
-    gl.uniform2f(shader.uniforms.offset, 0, 0);
-    gl.uniform4f(shader.uniforms.colourBias, 0, 0, 0, 0);
-    var t = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, ViewParameters.overlayAlpha];
-    gl.uniformMatrix4fv(shader.uniforms.colourTransform, false, t);
-  };
-
-  Resources.prototype.drawFullScreenQuad = function() {
-    var gl = this.gl;
-    var shader = this.shaders.colour;
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.quad.vertexBuffer);
-    gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, 4 * 3, 0);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.quad.indexBuffer);
-    gl.drawElements(gl.TRIANGLE_STRIP, this.quad.faces.length, gl.UNSIGNED_SHORT, 0);
-  };
-
-  Resources.prototype.setOpaquePass = function() {
-    var gl = this.gl;
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
-    gl.depthMask(true); // enable ZWRITE
-    gl.enable(gl.CULL_FACE); // cull back faces
-    gl.disable(gl.BLEND);
-  };
-
-  Resources.prototype.setBlendPass = function() {
-    var gl = this.gl;
-    gl.disable(gl.DEPTH_TEST);
-    gl.depthMask(false); // disable ZWRITE
-    gl.disable(gl.CULL_FACE);
-    gl.enable(gl.BLEND);
-    gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
-    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  };
 
   // https://webglfundamentals.org/webgl/lessons/webgl-text-canvas2d.html
   function drawLabel(ctx, pixelX, pixelY, label) {
