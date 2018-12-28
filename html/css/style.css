@@ -25,6 +25,7 @@ body {
   padding-left: 10px;
   padding-right: 10px;
   padding-top: 20px;
+  padding-bottom: 20px;
   margin-right: 10px;
   background-color: #5c5050;
   border-radius: 15px;
@@ -38,6 +39,7 @@ body {
   padding-left: 10px;
   padding-right: 10px;
   padding-top: 20px;
+  padding-bottom: 20px;
   margin-right: 10px;
   background-color: #5c5050;
   border-radius: 15px;
@@ -89,7 +91,7 @@ body {
   padding-left: 15px;
   padding-right: 15px;
   padding-top: 10px;
-  text-align:left;
+  text-align:center;
   line-height:14pt;
   color: #c8c4a0;
 }
@@ -161,6 +163,12 @@ a:hover {
   text-decoration:underline;
 }
 
+.center {
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
 /* ------------------------- IMAGES ----------------------- */
 
 img {
@@ -176,7 +184,8 @@ img.framed {
 
 table {
 	border: none;
-	font-size: 10pt;
+  font-size: 10pt;
+  align-self: center;
 }
 
 td {
