@@ -1,477 +1,382 @@
-(function() {
-  "use strict";
+import UiUtils from './uiutils.js';
+import Viewer from './viewer.js';
+import Config from './config.js';
+import MATH from './math.js';
+import GFX from './libs.js';
 
-  function populateControls() {
-    var AnimationSettings = {
-      hideDelay: 0
-    };
-    function createSlider(id, text, value, min, max, step, callback) {
-      return createMultiSlider(id, [""], text, [value], min, max, step, callback);
-    }
-    function createMultiSlider(id, subIds, text, values, min, max, step, callback) {
-      var controls = [];
-      var sliderClass;
-      if (subIds.length > 1) {
-        sliderClass = "three";
-      }
-      subIds.forEach(function(sub, i) {
-        var sliderId = id + sub;
-        var numberId = sliderId + "_number";
-        var value = values[i];
-        var sliderUpdateFunction = function(event) {
-          $("#"+numberId).attr('value', event.target.value);
-          callback(event.target.value, sub);
-        };
-        var numberUpdateFunction = function(event) {
-          $("#"+sliderId).attr('value', event.target.value);
-          callback(event.target.value, sub);
-        };
-        var numberInput = $('<input>')
-          .attr('id', numberId)
-          .attr('type', 'number')
-          .attr('value', value)
-          .attr('class', "range")
-          .change(numberUpdateFunction);
-        var sliderInput = $('<input>')
-            .attr('id', sliderId)
-            .attr('type', 'range')
-            .attr('min', min)
-            .attr('max', max)
-            .attr('step', step)
-            .attr('value', value)
-            .on('input', sliderUpdateFunction)
-            .change(sliderUpdateFunction);
-        if (sliderClass) {
-          sliderInput.attr('class', sliderClass);
-        }
-        controls.push(numberInput);
-        controls.push(sliderInput);
-      });
-      var td = $('<td>').append(text+": <br/>");
-      controls.forEach(function(c) {td.append(c);});
-      return $('<tr>').attr('id',id+"_parent").append(td);
-    }
+var ImageUrls = {
+  "banana.png": "resources/banana.png",
+  "orange.png": "resources/orange.png",
+  "pear.png": "resources/pear.png",
+  white: "resources/white.png",
+  missing: "resources/UVTextureChecker4096.png"
+};
 
-    function createCheckbox(id, checked, callback) {
-      var updateFunction = function(event) {
-        callback(event.target.checked);
-      };
-      return $('<tr>').attr('id',id+"_parent").append($('<td>')
-              .append(id+": ")
-              .append($('<input>')
-                .attr('id', id)
-                .attr('type', "checkbox")
-                .prop('checked', checked)
-                .change(updateFunction))
-      );
-    }
+var MaterialUrls = {
 
-    function createDropdownList(id, list, callback) {
-      var updateFunction = function(event) {
-        var i = event.target.selectedIndex;
-        var obj = {name: event.target.options[i].innerHTML, uri: event.target.value};
-        callback(obj);
-      };
-      var select = $('<select>').attr('id', id).change(updateFunction);
-      list.forEach(function (obj) {
-        select.append($('<option>').attr('value', obj.value).append(obj.name));
-      });
-      return $('<tr>').attr('id',id+"_parent").append($('<td>')
-              .append(id+": ").append(select));
-    }
+};
 
-    function addUrisToDropdownList(id, list) {
-      var select = $('#'+id);
-      list.forEach(function (obj) {
-        var option = $('<option>').attr('value', obj.uri).append(obj.name);
-        select.append(option);
-      });
-    }
+function populateControls() {
 
-    function createButton(id, text, callback) {
-      return $('<tr>').attr('id',id+"_parent").append($('<td>')
-              .append($("<button>")
-                .attr('id', id)
-                .attr('type', "button")
-                .click(callback)
-                .append(text))
-              );
-    }
-
-    function createButtonWithOptions(id, buttonText, midText, options, callback) {
-      var select = null;
-      if (Array.isArray(options)) {
-        select = $('<select>').attr('id', id+"_select");
-        options.forEach(function (obj) {
-          select.append($('<option>').attr('value', obj.value).append(obj.name));
-        });
-      } else {
-        select = options;
-      }
-      return $('<tr>').attr('id',id+"_parent").append($('<td>')
-              .append($("<button>")
-                .attr('id', id)
-                .attr('type', "button")
-                .click(callback)
-                .append(buttonText)
-                )
-                .append(midText)
-                .append(select)
-              );
-    }
-
-    function createTitle(id, text, cssclass) {
-      return $('<tr>').attr('id', id).append($('<td>').attr('class', cssclass || "selected").append(text));
-    }
-
-    function createFileBrowser(id, text, multiple, callback) {
-      var updateFunction = function(event) {
-        var fileArray = [];
-        for (var i = 0; i < event.target.files.length; i++) {
-          var f = event.target.files[i];
-          fileArray.push({
-            name: f.name,
-            uri: URL.createObjectURL(f)
-          });
-        }
-        callback(fileArray);
-      };
-      return $('<tr>').attr('id', id+"_parent").append($('<td>')
-        .append(text+": <br/>")
-        .append($("<input>")
-          .attr('id', id)
-          .attr('type', 'file')
-          // .obj, .json doesn't work in Safari...
-          //.attr('accept', '.obj,.json,.dae,.mtl,image/*')
-          .attr('multiple', multiple? '' : false)
-          .change(updateFunction)
-        )
-      );
-    }
-
-    function createSubGroup(id, text, elements, parent) {
-      return createGroup(id, text, elements, "subgroup", parent);
-    }
-
-    function createGroup(id, text, elements, cssclass, parent) {
-      var elementIds = [];
-      elements.forEach(function(element) {
-        // *_parent ids
-        elementIds.push(element.attr('id'));
-      });
-      var toggle = function() {
-        if (elementIds.length > 0) {
-          // based on the first element so subgroups are collapsed as well
-          var hidden = $("#"+elementIds[0]).is(":hidden");
-          var d = AnimationSettings.hideDelay;
-          elementIds.forEach(function(elementId) {
-            if (hidden) {
-              var p = $("#"+elementId).attr('parent');
-              if (!p || p === id) {
-                $("#"+elementId).show(d);
-              }
-            } else {
-              $("#"+elementId).hide(d);
-            }
-          });
-        }
-      };
-      var title = createTitle(id, text, cssclass).click(toggle);
-      if (parent) {
-        title.attr('parent', parent);
-      }
-      return [title].concat(elements);
-    }
-
-    function addGroup(id, text, elements, parent) {
-      var group = createGroup(id, text, elements);
-      addToTable(group, parent);
-    }
-
-    function addToTable(group, parent) {
-      var tbody = $(parent || "#controls").find('tbody');
-      group.forEach(function(element) {
-        tbody.append(element);
-      });
-    }
-
-
-    ViewParameters.onRotation = function() {
-      if (ViewParameters.modelRotationTheta < 0) {
-        ViewParameters.modelRotationTheta += 2 * Math.PI;
-      }
-      if (ViewParameters.modelRotationTheta > 2 * Math.PI) {
-        ViewParameters.modelRotationTheta -= 2 * Math.PI;
-      }
-      if (ViewParameters.modelRotationPhi < 0) {
-        ViewParameters.modelRotationPhi += 2 * Math.PI;
-      }
-      if (ViewParameters.modelRotationPhi > 2 * Math.PI) {
-        ViewParameters.modelRotationPhi -= 2 * Math.PI;
-      }
-      $("#modelRotationTheta").attr('value', ViewParameters.modelRotationTheta);
-      $("#modelRotationTheta_number").attr('value', ViewParameters.modelRotationTheta);
-      $("#modelRotationPhi").attr('value', ViewParameters.modelRotationPhi);
-      $("#modelRotationPhi_number").attr('value', ViewParameters.modelRotationPhi);
-    };
-
-    ViewParameters.onModelLoad = function(modelData) {
-      removePoseGroup();
-      if (modelData.skinnedModel) {
-        $("#keyframe").attr('max', modelData.skinnedModel.keyframeCount - 1);
-        $("#keyframe_number").attr('value', -1);
-        ViewParameters.keyframe = -1;
-        addPoseGroup(modelData.skinnedModel);
-      }
-    };
-
-    ViewParameters.onChangeKeyframe = function(skinnedModel) {
-      removePoseGroup();
-      addPoseGroup(skinnedModel);
-    };
-
-    ViewParameters.warn = setWarning;
-    ViewParameters.info = setInfo;
-
-    function setInfo(text) {
-      $("#infoDiv").text(text);
-    }
-
-    function setWarning(text) {
-      setInfo("[WARNING] " + text);
-    }
-
-    function onChangeFileBrowser(values) {
-      var models = [];
-      for (var i = 0 ; i < values.length; i++) {
-        var ext = GFX.getFileExtension(values[i].name);
-        if (ext === "Json" || ext === "Obj" || ext === "Dae") {
-          models.push(values[i]);
-        } else if (ext === "Mtl") {
-          ViewParameters.materialUris[values[i].name] = values[i].uri;
-        } else { // the rest should be images!
-          ViewParameters.imageUris[values[i].name] = values[i].uri;
-        }
-      }
-      // add models to preset list
-      if (models.length > 0) {
-        ViewParameters.model = models[0];
-        addUrisToDropdownList("Presets", models);
+  function onChangeFileBrowser(values) {
+    var models = [];
+    for (var i = 0 ; i < values.length; i++) {
+      var ext = GFX.getFileExtension(values[i].name);
+      if (ext === "Json" || ext === "Obj" || ext === "Dae") {
+        models.push(values[i]);
+      } else if (ext === "Mtl") {
+        MaterialUris[values[i].name] = values[i].uri;
+      } else { // the rest should be images!
+        ImageUrls[values[i].name] = values[i].uri;
       }
     }
-
-    function onAddPoseFiles(values) {
-      function readPoseFile(i) {
-        if (i >= values.length) {
-          return;
-        }
-        var ext = GFX.getFileExtension(values[i].name);
-        if (ext === "Json") {
-          $.getJSON(values[i].uri, function(pose) {
-            ViewParameters.addPose(pose.pose);
-            readPoseFile(i+1);
-          });
-        } else {
-          console.warn("Unknown extension: " + values[i].name);
-          readPoseFile(i+1);
-        }
-      }
-      readPoseFile(0);
+    // add models to preset list
+    if (models.length > 0) {
+      UiUtils.addUrisToDropdownList("Presets", models);
+      reloadModel();
     }
+  }
 
-    function onAddJroFile(values) {
-      var f = values[0];
-      var ext = GFX.getFileExtension(f.name);
+  function onAddPoseFiles(values) {
+    const model = viewer.scene.models[0];
+    if (!model || !model.skinnedModel) {
+      setWarning("Not a skinned model");
+      return;
+    }
+    var skinnedModel = model.skinnedModel;
+    function readPoseFile(i) {
+      if (i >= values.length) {
+        $("#keyframe").attr('max', skinnedModel.keyframeCount - 1);
+        return;
+      }
+      var ext = GFX.getFileExtension(values[i].name);
       if (ext === "Json") {
-        $.getJSON(f.uri, function(jro) {
-          ViewParameters.addJointRotationOrder(jro);
+        $.getJSON(values[i].uri, pose => {
+          skinnedModel.addPose(pose.pose);
+          readPoseFile(i+1);
         });
       } else {
-        console.warn("Unknown extension: " + f.name);
+        console.warn("Unknown extension: " + values[i].name);
+        readPoseFile(i+1);
       }
     }
-
-    function removePoseGroup() {
-      $("tr[id^=gPose]").remove();
-    }
-
-    function addPoseGroup(skinnedModel) {
-      var id = "gPose";
-      var frame = ViewParameters.keyframe;
-      var pose = skinnedModel.getPoseFile(frame).pose;
-      function updateJointWithValue(joint, value, sub) {
-        var key = "rotate"+sub+".ANGLE";
-        skinnedModel.setAnimValue(joint, frame, key, parseFloat(value));
-        skinnedModel.applyPose(frame);
-      }
-      function angleSlider(s, joint, values) {
-        var slider = createMultiSlider(s+"_angle", ["X", "Y", "Z"], "rotation XYZ", values, -180, 180, 0.1, updateJointWithValue.bind(null, joint));
-        slider.attr('parent', id+"_"+joint);
-        return slider;
-      }
-      function updateJointTrWithValue(joint, value, sub) {
-        var indices = {X: 0, Y: 1, Z: 2};
-        skinnedModel.setAnimValue(joint, frame, "translation", parseFloat(value), indices[sub]);
-        skinnedModel.applyPose(frame);
-      }
-      function translationSlider(s, joint, values) {
-        var slider = createMultiSlider(s+"_translation", ["X", "Y", "Z"], "translation XYZ", values, -10, 10, 0.1, updateJointTrWithValue.bind(null, joint));
-        slider.attr('parent', id+"_"+joint);
-        return slider;
-      }
-      function createControls(skeleton, parent) {
-        var joints = Object.keys(skeleton);
-        var controls = [];
-        joints.forEach(function (joint) {
-          var transform = pose[joint] || [];
-          var rx = transform[0] || 0;
-          var ry = transform[1] || 0;
-          var rz = transform[2] || 0;
-          var tx = transform[6] || 0;
-          var ty = transform[7] || 0;
-          var tz = transform[8] || 0;
-          var subId = id+"_"+joint;
-          var subcontrols = [
-            angleSlider(subId, joint, [rx, ry, rz]),
-            translationSlider(subId, joint, [tx, ty, tz])
-          ];
-          var jointControls = createControls(skeleton[joint], subId);
-          subcontrols = subcontrols.concat(jointControls);
-          var jointGroup = createSubGroup(subId, joint, subcontrols, parent);
-          controls = controls.concat(jointGroup);
-        });
-        return controls;
-      }
-      var controls = createControls(skinnedModel.getSkeletonTopology());
-      addGroup(id, "Pose Controls", controls, "#controlsRight");
-      // hide the sliders by clicking twice to toggle controls
-      $("#gPose").click();
-      $("#gPose").click();
-    }
-
-    function onAddOverlay(values) {
-      var f = values[0];
-      ViewParameters.overlayImage = f.uri;
-    }
-
-    function saveScreenshot() {
-      var save = document.createElement("a");
-      save.href = $("#glCanvas")[0].toDataURL("image/png");
-      save.download = "screenshot.png";
-      save.click();
-    }
-
-    var modelPresets = [
-      "pear.json",
-      "banana.json",
-      "orange.json",
-      "banana.obj",
-      "tree01.dae",
-      "monigote.dae"].map(function(e) {
-      return {name: e, value: "resources/"+e};
-    });
-    var missingTexturePresets = [
-      {name: "uvChecker", value: "resources/UVTextureChecker4096.png"},
-      {name: "white", value: "resources/white.png"}];
-    // Create the UI controls
-    addGroup("gFile", "File", [
-      createFileBrowser("fileBrowser", "load models & textures", true, onChangeFileBrowser),
-      createDropdownList("Presets", modelPresets, function(obj) {
-        ViewParameters.model = obj;
-      }),
-      createButtonWithOptions("saveFile", "Save", " as ", [{name: "OBJ Wavefront", value:".obj"}, {name: "Json", value:".json"}], function (e) {
-        var modelType = $("#"+e.target.id+"_select").attr("value");
-        console.log(modelType);
-        GFX.exportModel(ViewParameters, modelType);
-      })
-    ]);
-    addGroup("gModel", "Model Settings", [
-      createCheckbox("lockRotationY", window.ViewParameters.isLockRotationY, function(value) {
-        ViewParameters.isLockRotationY = value;
-      }),
-      createCheckbox("z_up", window.ViewParameters.isZAxisUp, function(value) {
-        ViewParameters.isZAxisUp = value;
-        ViewParameters.needsReload = true;
-      }),
-      createSlider("modelScaleExp10", "scale", 0, -3, 3, 0.2, function(value) {
-        ViewParameters.modelScale = Math.pow(10, parseFloat(value));
-      }),
-      createSlider("modelRotationTheta", "rotation Y axis",
-        ViewParameters.modelRotationTheta, 0, 2 * Math.PI, 0.01, function(value) {
-          ViewParameters.modelRotationTheta = parseFloat(value);
-      }),
-      createCheckbox("lockRotationX", window.ViewParameters.isLockRotationX, function(value) {
-        ViewParameters.isLockRotationX = value;
-      }),
-      createSlider("modelRotationPhi", "rotation X axis",
-        ViewParameters.modelRotationPhi, 0, 2 * Math.PI, 0.01, function(value) {
-          ViewParameters.modelRotationPhi = parseFloat(value);
-      })
-    ]);
-    addGroup("gCamera", "Camera Settings", [
-      createSlider("cameraDistance", "distance",
-        ViewParameters.cameraDistance, 0.2, 10, 0.01, function(value) {
-          ViewParameters.cameraDistance = parseFloat(value);
-      }),
-      createSlider("cameraHeight", "height",
-        ViewParameters.cameraHeight, -2, 2, 0.01, function(value) {
-          ViewParameters.cameraHeight = parseFloat(value);
-      }),
-      createSlider("cameraPitch", "pitch",
-        ViewParameters.cameraPitch, -90, 90, 1, function(value) {
-          ViewParameters.cameraPitch = parseFloat(value);
-      }),
-      createSlider("cameraFOV", "Field of View",
-        ViewParameters.cameraFOV, 1, 90, 1, function(value) {
-          ViewParameters.cameraFOV = parseFloat(value);
-      })
-    ]);
-    addGroup("gLight", "Light Settings", [
-      createSlider("SunAltitude", "sun altitude", ViewParameters.getSunAltitude(), -1, 1, 0.05, function(value) {
-        ViewParameters.setSunAltitude(value);
-      }),
-      createSlider("SunEastWest", "sun east-west", ViewParameters.getSunEastWest(), -1, 1, 0.05, function(value) {
-        ViewParameters.setSunEastWest(value);
-      })
-    ]);
-    addGroup("gShader", "Shader Settings", [
-      createDropdownList("missingTexture", missingTexturePresets, function(obj) {
-        ViewParameters.imageUris.missing = obj.uri;
-        ViewParameters.needsReload = true;
-      }),
-      createFileBrowser("overlayFileBrowser", "load overlay", false, onAddOverlay),
-      createSlider("overlayAlpha", "overlay opacity", ViewParameters.overlayAlpha, 0, 1, 1/255, function(value) {
-        ViewParameters.overlayAlpha = parseFloat(value);
-      })
-    ]);
-    addGroup("gAnim", "Animation Controls", [
-      createSlider("keyframe", "keyframe",
-      ViewParameters.keyframe, -1, -1, 1, function(value) {
-        ViewParameters.keyframe = parseInt(value);
-      }),
-      createFileBrowser("posefileBrowser", "load keyframe/pose", true, onAddPoseFiles),
-      createFileBrowser("jrofileBrowser", "load joint rotation order", false, onAddJroFile),
-      createButtonWithOptions("savePose", "Save Pose", " as ", "Json", ViewParameters.saveCurrentPose)
-    ], "#controlsRight");
+    readPoseFile(0);
   }
 
-  function makeCanvasFollowScroll() {
-    // https://stackoverflow.com/a/14194805
-    var el = $('.container');
-    var originalelpos = el.offset().top; // take it where it originally is on the page
-
-    //run on scroll
-    $(window).scroll(function () {
-       var el = $('.container'); // important! (local)
-       var elpos = el.offset().top; // take current situation
-       var windowpos = $(window).scrollTop();
-       var finaldestination = windowpos + originalelpos;
-       el.stop().animate({ 'top': finaldestination }, 100);
-     });
+  function onAddJroFile(values) {
+    const model = viewer.scene.models[0];
+    if (!model || !model.skinnedModel) {
+      setWarning("Not a skinned model");
+      return;
+    }
+    var skinnedModel = model.skinnedModel;
+    var f = values[0];
+    var ext = GFX.getFileExtension(f.name);
+    if (ext === "Json") {
+      $.getJSON(f.uri, function(jro) {
+        skinnedModel.updateJointRotationOrder(jro.jointRotationOrder);             
+      });
+    } else {
+      setWarning("Unknown extension: " + f.name);
+    }
   }
 
-  $( document ).ready(function() {
-    populateControls();
-    makeCanvasFollowScroll();
+  function saveScreenshot() {
+    var save = document.createElement("a");
+    save.href = $("#glCanvas")[0].toDataURL("image/png");
+    save.download = "screenshot.png";
+    save.click();
+  }
+
+  var modelPresets = [
+    "pear.json",
+    "banana.json",
+    "orange.json",
+    "banana.obj",
+    "tree01.dae",
+    "monigote.dae"].map(function(e) {
+    return {name: e, value: "resources/"+e};
   });
-})();
+  var missingTexturePresets = [
+    {name: "uvChecker", value: "resources/UVTextureChecker4096.png"},
+    {name: "white", value: "resources/white.png"}];
+  // Create the UI controls
+  UiUtils.addGroup("gFile", "File", [
+    UiUtils.createFileBrowser("fileBrowser", "load models & textures", true, onChangeFileBrowser),
+    UiUtils.createDropdownList("Presets", modelPresets, reloadModel),
+    UiUtils.createButtonWithOptions("saveFile", "Save", " as ", [{name: "OBJ Wavefront", value:".obj"}, {name: "Json", value:".json"}], function (e) {
+      var modelType = $("#"+e.target.id+"_select").val();
+      const url = $("#Presets").val();
+      const name = $("#Presets option:selected").text();
+      GFX.exportModel(name, url, modelType, MaterialUrls)
+      .catch(e => {
+        setError(e);
+      });
+    })
+  ]);
+  UiUtils.addGroup("gModel", "Model Settings", [
+    UiUtils.createCheckbox("lockRotationY", Config.isLockRotationY, function(value) {
+      Config.isLockRotationY = value;
+      updateRotationLock();
+    }),
+    UiUtils.createCheckbox("z_up", Config.isZAxisUp, function(value) {
+      Config.isZAxisUp = value;
+      reloadModel();
+    }),
+    UiUtils.createSlider("modelScaleExp10", "scale", 0, -3, 3, 0.2, function(value) {
+      Config.modelScale = Math.pow(10, parseFloat(value));
+      updateModelTransform();
+    }),
+    UiUtils.createSlider("modelRotationTheta", "rotation Y axis",
+      Config.modelRotationTheta, -180, 180, 0.1, function(value) {
+        Config.modelRotationTheta = parseFloat(value);
+        updateModelTransform();
+    }),
+    UiUtils.createCheckbox("lockRotationX", Config.isLockRotationX, function(value) {
+      Config.isLockRotationX = value;
+      updateRotationLock();
+    }),
+    UiUtils.createSlider("modelRotationPhi", "rotation X axis",
+      Config.modelRotationPhi, -90, 90, 0.1, function(value) {
+        Config.modelRotationPhi = parseFloat(value);
+        updateModelTransform();
+    })
+  ]);
+  UiUtils.addGroup("gCamera", "Camera Settings", [
+    UiUtils.createSlider("cameraDistance", "distance",
+      Config.cameraDistance, 0.2, 10, 0.01, function(value) {
+        Config.cameraDistance = parseFloat(value);
+        updateCamera();
+    }),
+    UiUtils.createSlider("cameraHeight", "height",
+      Config.cameraHeight, -2, 2, 0.01, function(value) {
+        Config.cameraHeight = parseFloat(value);
+        updateCamera();
+    }),
+    UiUtils.createSlider("cameraPitch", "pitch",
+      Config.cameraPitch, -90, 90, 1, function(value) {
+        Config.cameraPitch = parseFloat(value);
+        updateCamera();
+    }),
+    UiUtils.createSlider("cameraFOV", "Field of View",
+      Config.cameraFOV, 1, 90, 1, function(value) {
+        Config.cameraFOV = parseFloat(value);
+        updateCameraFOV();
+    })
+  ]);
+  const sun = viewer.scene.lights[0];
+  UiUtils.addGroup("gLight", "Light Settings", [
+    UiUtils.createSlider("SunAltitude", "sun altitude", sun.altitude, -1, 1, 0.05, function(value) {
+      sun.setAltitude(value);
+    }),
+    UiUtils.createSlider("SunEastWest", "sun east-west", sun.eastWest, -1, 1, 0.05, function(value) {
+      sun.setEastWest(value);
+    })
+  ]);
+  const overlay = viewer.scene.overlay;
+  UiUtils.addGroup("gShader", "Shader Settings", [
+    UiUtils.createDropdownList("missingTexture", missingTexturePresets, function(obj) {
+      ImageUrls.missing = obj.uri;
+      reloadModel();
+    }),
+    UiUtils.createFileBrowser("overlayFileBrowser", "load overlay", false, onAddOverlay),
+    UiUtils.createSlider("overlayAlpha", "overlay opacity", overlay.alpha, 0, 1, 1/255, function(value) {
+      overlay.alpha = parseFloat(value);
+    })
+  ]);
+  UiUtils.addGroup("gAnim", "Animation Controls", [
+    UiUtils.createSlider("keyframe", "keyframe",
+      Config.keyframe, -1, -1, 0, function(value) {
+      Config.keyframe = parseInt(value);
+      onChangeKeyframe();
+    }),
+    UiUtils.createFileBrowser("posefileBrowser", "load keyframe/pose", true, onAddPoseFiles),
+    UiUtils.createFileBrowser("jrofileBrowser", "load joint rotation order", false, onAddJroFile),
+    UiUtils.createButtonWithOptions("savePose", "Save Pose", " as ", "Json", saveCurrentPose)
+  ], "#controlsRight");
+}
+
+function makeCanvasFollowScroll() {
+  // https://stackoverflow.com/a/14194805
+  var el = $('.container');
+  var originalelpos = el.offset().top; // take it where it originally is on the page
+
+  //run on scroll
+  $(window).scroll(function () {
+      var el = $('.container'); // important! (local)
+      var elpos = el.offset().top; // take current situation
+      var windowpos = $(window).scrollTop();
+      var finaldestination = windowpos + originalelpos;
+      el.stop().animate({ 'top': finaldestination }, 100);
+    });
+}
+
+function setInfo(text) {
+  $("#infoDiv").text(text);
+}
+
+function setWarning(text) {
+  setInfo("[WARNING] " + text);
+}
+
+function setError(e) {
+  console.error(e);
+  setInfo("[ERROR] " + e);
+}
+
+function removePoseGroup() {
+  $("tr[id^=gPose]").remove();
+}
+
+function addPoseGroup(skinnedModel) {
+  var id = "gPose";
+  var frame = Config.keyframe;
+  var pose = skinnedModel.getPoseFile(frame).pose;
+  function updateJointWithValue(joint, value, sub) {
+    var key = "rotate"+sub+".ANGLE";
+    skinnedModel.setAnimValue(joint, frame, key, parseFloat(value));
+    skinnedModel.applyPose(frame);
+  }
+  function angleSlider(s, joint, values) {
+    var slider = UiUtils.createMultiSlider(s+"_angle", ["X", "Y", "Z"], "rotation XYZ", values, -180, 180, 0.1, updateJointWithValue.bind(null, joint));
+    slider.attr('parent', id+"_"+joint);
+    return slider;
+  }
+  function updateJointTrWithValue(joint, value, sub) {
+    var indices = {X: 0, Y: 1, Z: 2};
+    skinnedModel.setAnimValue(joint, frame, "translation", parseFloat(value), indices[sub]);
+    skinnedModel.applyPose(frame);
+  }
+  function translationSlider(s, joint, values) {
+    var slider = UiUtils.createMultiSlider(s+"_translation", ["X", "Y", "Z"], "translation XYZ", values, -10, 10, 0.1, updateJointTrWithValue.bind(null, joint));
+    slider.attr('parent', id+"_"+joint);
+    return slider;
+  }
+  function createControls(skeleton, parent) {
+    var joints = Object.keys(skeleton);
+    var controls = [];
+    joints.forEach(function (joint) {
+      var transform = pose[joint] || [];
+      var rx = transform[0] || 0;
+      var ry = transform[1] || 0;
+      var rz = transform[2] || 0;
+      var tx = transform[6] || 0;
+      var ty = transform[7] || 0;
+      var tz = transform[8] || 0;
+      var subId = id+"_"+joint;
+      var subcontrols = [
+        angleSlider(subId, joint, [rx, ry, rz]),
+        translationSlider(subId, joint, [tx, ty, tz])
+      ];
+      var jointControls = createControls(skeleton[joint], subId);
+      subcontrols = subcontrols.concat(jointControls);
+      var jointGroup = UiUtils.createSubGroup(subId, joint, subcontrols, parent);
+      controls = controls.concat(jointGroup);
+    });
+    return controls;
+  }
+  var controls = createControls(skinnedModel.getSkeletonTopology());
+  UiUtils.addGroup(id, "Pose Controls", controls, "#controlsRight");
+  // hide the sliders by clicking twice to toggle controls
+  $("#gPose").click();
+  $("#gPose").click();
+}
+
+function updateCamera() {
+  var camera = viewer.scene.camera;
+  camera.reset();
+  camera.setPosition(0, -Config.cameraHeight, -Config.cameraDistance);
+  camera.setPitch(Config.cameraPitch);
+}
+
+function updateCameraFOV() {
+  var camera = viewer.scene.camera;
+  camera.setFOV(Config.cameraFOV);
+}
+
+function updateModelTransform() {
+  const phi = MATH.degToRad(Config.modelRotationPhi);
+  const theta = MATH.degToRad(Config.modelRotationTheta);
+  viewer.setModelRotationAndScale(0, phi, theta, Config.modelScale);
+}
+
+function updateRotationLock() {
+  viewer.setRotationLock(Config.isLockRotationX, Config.isLockRotationY);
+}
+
+function reloadModel() {
+  const url = $("#Presets").val();
+  const name = $("#Presets option:selected").text();
+  viewer.loadModel(name, url, Config.isZAxisUp, ImageUrls, MaterialUrls)
+  .then(model => {
+    removePoseGroup();
+    if (model.skinnedModel) {
+      $("#keyframe").attr('max', model.skinnedModel.keyframeCount - 1);
+      $("#keyframe_number").val(-1);
+      Config.keyframe = -1;
+      addPoseGroup(model.skinnedModel);
+    }
+  })
+  .catch(e => {
+    setError(e);
+  });
+  setRotation(0, 0);
+}
+
+function onChangeKeyframe() {
+  removePoseGroup();
+  const model = viewer.scene.models[0];
+  if (model && model.skinnedModel) {
+    addPoseGroup(model.skinnedModel);
+    viewer.setKeyframe(0, Config.keyframe);
+  }
+}
+
+function setRotation(phi, theta) {
+  const phiDeg = MATH.radToDeg(phi);
+  const thetaDeg = MATH.radToDeg(theta);
+  $("#modelRotationTheta").val(thetaDeg);
+  $("#modelRotationTheta_number").val(thetaDeg);
+  $("#modelRotationPhi").val(phiDeg);
+  $("#modelRotationPhi_number").val(phiDeg);
+  Config.modelRotationPhi = phiDeg;
+  Config.modelRotationTheta = thetaDeg;
+  updateModelTransform();
+}
+
+function saveCurrentPose() {
+  const model = viewer.scene.models[0];
+  if (model && model.skinnedModel) {
+    const frame = Config.keyframe;
+    const pose = model.skinnedModel.getPoseFile(frame);
+    const fn = GFX.getFileNameWithoutExtension(model.name);
+    GFX.exportPose(pose, fn + "_" + frame);
+  } else {
+    setWarning("No skinned model");
+  }
+}
+
+function onAddOverlay(values) {
+  var f = values[0];
+  viewer.setOverlayImage(f.uri, img => {
+    const aspect = img.height / img.width;
+    const sizeinfo = img.width + "×" + img.height;
+    if (Math.abs(aspect - 1.5) > 0.01) {
+      setWarning("Overlay aspect should be 2:3 but loaded image is " + sizeinfo);
+    } else {
+      setInfo("Overlay size: " + sizeinfo);
+    }
+  });
+}
+
+
+var viewer;
+$( document ).ready(function() {
+  viewer = new Viewer("glCanvas", "canvas2D", ImageUrls.white);
+  viewer.setRotationCallback(setRotation);
+  viewer.setBackgroundColor(0x3d4d4d);
+  updateCamera();
+  populateControls();
+  reloadModel();
+  makeCanvasFollowScroll();
+});

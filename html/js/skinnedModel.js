@@ -1,4 +1,4 @@
-import {MATH} from './math.js';
+import MATH from './math.js';
 
 const MAX_JOINTS = 100;
 
@@ -226,5 +226,5 @@ class SkinnedModel {
     return topo;
   }
 }
-export {SkinnedModel};
+export {SkinnedModel as default};
 

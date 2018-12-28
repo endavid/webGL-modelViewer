@@ -11,7 +11,12 @@ var MATH = {
   
   degToRad: function(angle)
   {
-    return(angle * Math.PI/180);
+    return(angle * Math.PI / 180.0);
+  },
+
+  radToDeg: function(angle)
+  {
+    return(angle * 180.0 / Math.PI);
   },
 
   getProjection: function(angle, a, zMin, zMax)
@@ -170,6 +175,18 @@ var MATH = {
     var g = (rgb >> 8) & 0x0000ff;
     var b = (rgb) & 0x0000ff;
     return [r / 255.0, g / 255.0, b / 255.0];
+  },
+
+  clampAngle: function(a) {
+    while (a < -Math.PI) a += Math.PI * 2;
+    while (a > Math.PI) a -= Math.PI * 2;
+    return a;
+  },
+
+  clamp: function(a, minA, maxA) {
+    if (a < minA) return minA;
+    if (a > maxA) return maxA;
+    return a;
   }
 };
-export {MATH};
+export {MATH as default};

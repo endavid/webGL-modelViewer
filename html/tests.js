@@ -1,5 +1,5 @@
-import {SkinnedModel} from './js/skinnedModel.js';
-import {MATH} from './js/math.js';
+import SkinnedModel from './js/skinnedModel.js';
+import MATH from './js/math.js';
 import {ColladaUtils} from './js/parserCollada.js';
 
 QUnit.test( "matrix × vector", function( assert ) {

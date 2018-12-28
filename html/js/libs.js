@@ -1,5 +1,5 @@
-import {SkinnedModel} from './skinnedModel.js';
-import {MATH} from './math.js';
+import SkinnedModel from './skinnedModel.js';
+import MATH from './math.js';
 import {WavefrontUtils} from './parserWavefront.js';
 import {ColladaUtils} from './parserCollada.js';
 
@@ -17,44 +17,33 @@ var GFX = {
   SHADER_TYPE_FRAGMENT: "x-shader/x-fragment",
   SHADER_TYPE_VERTEX: "x-shader/x-vertex",
 
-  /// Eg. GFX.useShader(gl, "shaders/main.vs", "shaders/main.fs", function(shaderProgram) {});
-  useShader: function(gl, vsPath, fsPath, callback)
+  /// Eg. GFX.useShader(gl, "shaders/main.vs", "shaders/main.fs");
+  /// Returns a promise
+  useShader: function(gl, vsPath, fsPath)
   {
-    GFX.loadShader(vsPath, GFX.SHADER_TYPE_VERTEX, function(vd) {
-      if (vd) {
-        GFX.loadShader(fsPath, GFX.SHADER_TYPE_FRAGMENT, function (fd) {
-          if (fd) {
-            var vertexShader = GFX.getShader(gl, vsPath);
-            var fragmentShader = GFX.getShader(gl, fsPath);
-            var prog = gl.createProgram();
-            gl.attachShader(prog, vertexShader);
-            gl.attachShader(prog, fragmentShader);
-            gl.linkProgram(prog);
-            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-              console.error("Could not initialise shaders: "+vsPath+", "+fsPath);
-            }
-            callback(prog);
-          }
-        });
+    return Promise.all([
+      GFX.loadShader(vsPath, GFX.SHADER_TYPE_VERTEX),
+      GFX.loadShader(fsPath, GFX.SHADER_TYPE_FRAGMENT)
+    ]).then(([vd, fd]) => {
+      var vertexShader = GFX.getShader(gl, vsPath);
+      var fragmentShader = GFX.getShader(gl, fsPath);
+      var prog = gl.createProgram();
+      gl.attachShader(prog, vertexShader);
+      gl.attachShader(prog, fragmentShader);
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        throw new Error("Could not initialise shaders: "+vsPath+", "+fsPath);
       }
+      return prog;
     });
   },
 
-  loadShader: function(file, type, callback)
+  loadShader: function(file, type)
   {
-    $.ajax({
-      async: true,
-      url: file,
-      success: function(data) {
-        // store in cache
-        GFX.shaderCache[file] = {script: data, type: type};
-        callback(data);
-      },
-      error: function(e) {
-        console.log("loadShader: " + e);
-        callback();
-      },
-      dataType: 'text'
+    return $.get(file).then(data => {
+      // store in cache
+      GFX.shaderCache[file] = {script: data, type: type};
+      return data;
     });
   },
 
@@ -74,8 +63,7 @@ var GFX = {
     gl.shaderSource(shader, shaderScript);
     gl.compileShader(shader);
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      alert(gl.getShaderInfoLog(shader));
-      return null;
+      throw new Error(gl.getShaderInfoLog(shader));
     }
     return shader;
   }, // getShader
@@ -112,41 +100,6 @@ var GFX = {
     GFX.textureCache = newCache;
   },
 
-  // tries to get the datatype
-  loadModel: function(gl, params, modelData, callback)
-  {
-    var loaders = {
-      loadModelJson: function() {
-        $.getJSON(params.model.uri, function(model) {
-          if (params.isZAxisUp) {
-            GFX.flipAxisZ(model);
-          }
-          GFX.initModelFromJson(gl, modelData, params.imageUris, model);
-          callback();
-        });
-      },
-      loadModel: function() {
-        GFX.modelFileToJson(params, function(model) {
-          if (params.isZAxisUp) {
-            GFX.flipAxisZ(model);
-          }
-          GFX.initModelFromJson(gl, modelData, params.imageUris, model);
-          callback();
-        });
-      }
-    };
-    var ext = GFX.getModelFileExtension(params.model);
-    var fn = loaders["loadModel" + (ext === "Json" ? ext : "")];
-    if(ext !== "" && typeof fn === 'function') {
-      // free previous resources
-      GFX.destroyBuffers(gl, modelData);
-      modelData.modelURL = params.model.uri;
-      fn();
-    } else {
-      window.alert("Unsupported format: "+ext);
-    }
-  },
-
   flipAxisZ: function(model) {
     var n = model.vertices.length;
     var coordsPerVertex = 8; // position (3), normal (3), uv (2)
@@ -163,102 +116,36 @@ var GFX = {
     }
   },
 
-  // format:
-  // { name: // model name
-  //   materials: {
-  //     "name": {
-  //       albedoMap: "image.png",
-  //     }
-  //   },
-  //   vertices: // float array in this order: position (3), normal (3), uv (2)
-  //         // + weights (4) + joint indices (1 -- 4 bytes) for skinned models
-  //   stride: 8 or 13
-  //   meshes: // array of submeshes
-  //      [ {material: // material reference
-  //         indices: // faces of the submesh
-  //      }]
-  // }
-  initModelFromJson: function(gl, modelData, imageUris, model) {
-    //vertices
-    modelData.vertexBuffer= gl.createBuffer();
-    modelData.stride = model.stride;
-    console.log("#vertices: " + (model.vertices.length/model.stride));
-    if (model.skin) {
-      modelData.skinnedModel = new SkinnedModel(model.skin, model.skeleton, model.anims);
-    } else {
-      modelData.skinnedModel = null;
-    }
-    gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexBuffer);
-    // atm, only floats allowed ...
-    // but we should be able to mix with other datatypes
-    // https://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
-    gl.bufferData(gl.ARRAY_BUFFER,
-                  new Float32Array(model.vertices),
-                  gl.STATIC_DRAW);
-    //submeshes
-    modelData.meshes=[];
-    model.meshes.forEach(function (m){
-      var mat = m.material !== undefined ? model.materials[m.material] || {} : {};
-      var albedoMapName = mat.albedoMap || "missing";
-      // if the .dds texture is missing, try to find equivalent .png
-      var albedoMapUri = imageUris[albedoMapName] || imageUris[GFX.getFileNameWithoutExtension(albedoMapName)+".png"];
-      var mesh = {
-        indexBuffer: gl.createBuffer(),
-        numPoints: m.indices.length,
-        albedoMap: albedoMapUri !== undefined ? GFX.loadTexture(gl, albedoMapUri) : false
-      };
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-                    new Uint32Array(m.indices), // 32-bit for more than 64K verts
-        gl.STATIC_DRAW);
-      modelData.meshes.push(mesh);
-    });
-  },
-
-  modelFileToJson: function(params, callback)
+  modelFileToJson: function(name, url, materialUrls)
   {
-    var ext = GFX.getModelFileExtension(params.model);
+    var ext = GFX.getModelFileExtension(name, url);
     if (ext === "Obj") {
-      $.ajax({
-        async: true,
-        url: params.model.uri,
-        success: function(data) {
-          var model = WavefrontUtils.parseObjWavefront(data);
-          model.name = GFX.getFileNameWithoutExtension(params.model.name) + ".json";
-          if (model.materialFile !== undefined && params.materialUris[model.materialFile] !== undefined) {
-            $.ajax({
-              async: true,
-              url: params.materialUris[model.materialFile],
-              success: function(mtldata) {
-                model.materials = WavefrontUtils.parseMaterial(mtldata);
-                callback(model);
-              },
-              dataType: 'text'
-            });
-          }
-          else {
-            callback(model);
-          }
-        },
-        dataType: 'text'
+      return $.get(url).then(data => {
+        let json = WavefrontUtils.parseObjWavefront(data);
+        json.name = GFX.getFileNameWithoutExtension(name) + ".json";
+        if (json.materialFile !== undefined && materialUrls[json.materialFile] !== undefined) {
+          return $.get(materialUrls[json.materialFile]).then(mtldata => {
+              json.materials = WavefrontUtils.parseMaterial(mtldata);
+              return json;
+          });
+        }
+        else {
+          return json;
+        }
       });
     } else if (ext === "Dae") {
-      $.ajax({
-        async: true,
-        url: params.model.uri,
-        success: function(data) {
-          var filename = GFX.getFileNameWithoutExtension(params.model.name);
-          var model = ColladaUtils.parseCollada(data, filename + ".png");
-          model.name = filename + ".json";
-          callback(model);
-        },
-        dataType: 'text'
+      return $.get(url).then(data => {
+        const filename = GFX.getFileNameWithoutExtension(name);
+        let json = ColladaUtils.parseCollada(data, filename + ".png");
+        json.name = filename + ".json";
+        return json;
       });
     } else if (ext === "Json") {
-      $.getJSON(params.model.uri, function(model) {
-        callback(model);
-      });
+      return $.getJSON(url);
     }
+    return new Promise(() => {
+      throw new Error("Unsupported format: "+ext);
+    });
   },
 
   loadTexture: function(gl, url, keepInCache, callback) {
@@ -318,31 +205,30 @@ var GFX = {
     return ext.substr(0,1).toUpperCase()+ext.substr(1);
   },
 
-  getModelFileExtension: function(modelFile) {
-    var ext = GFX.getFileExtension(modelFile.uri);
+  getModelFileExtension: function(name, url) {
+    var ext = GFX.getFileExtension(url);
     if (ext === "") {
-      ext = GFX.getFileExtension(modelFile.name);
+      ext = GFX.getFileExtension(name);
     }
     return ext;
   },
 
-  exportModel: function(params, modelType) {
-    var ext = GFX.getModelFileExtension(params.model);
-    var filename = GFX.getFileNameWithoutExtension(params.model.name);
-    var onExportSuccess = function(text) {
+  exportModel: (name, url, modelType, materialUrls) => {
+    const filename = GFX.getFileNameWithoutExtension(name);
+    var onExportSuccess = text => {
       saveAs(
         new Blob([text], {type: "text/plain;charset=" + document.characterSet}),
         filename + modelType
       );
     };
-    GFX.modelFileToJson(params, function(model) {
+    return GFX.modelFileToJson(name, url, materialUrls).then(json => {
       if (modelType === ".obj") {
-        WavefrontUtils.exportObjModel(model, onExportSuccess);
+        WavefrontUtils.exportObjModel(json, onExportSuccess);
       } else if (modelType === ".json") {
-        var out = GFX.modelStringify(model);
+        const out = GFX.modelStringify(json);
         onExportSuccess(out);
       } else {
-        console.error("Unsupported model type: "+modelType);
+        throw new Error("Unsupported model type: "+modelType);
       }
     });
   },
@@ -432,4 +318,4 @@ var GFX = {
     return modelData;
   }
 };
-export {GFX};
+export {GFX as default};

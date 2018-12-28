@@ -258,7 +258,7 @@ input.three[type=range] {
 .container {
   position: relative;
 }
-#text {
+#canvas2D {
   background-color: transparent;
   position: absolute;
   left: 0px;
