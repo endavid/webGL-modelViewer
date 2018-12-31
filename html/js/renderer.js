@@ -1,5 +1,5 @@
 import GlState from './glState.js';
-import GFX from './libs.js';
+import GFX from './gfx.js';
 import MATH from './math.js';
 import PluginLitModel from './pluginLitModel.js';
 import PluginOverlay from './pluginOverlay.js';

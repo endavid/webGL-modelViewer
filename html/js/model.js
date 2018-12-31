@@ -1,4 +1,4 @@
-import GFX from './libs.js';
+import GFX from './gfx.js';
 import MATH from './math.js';
 import SkinnedModel from './skinnedModel.js';
 

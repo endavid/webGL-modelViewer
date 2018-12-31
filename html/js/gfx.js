@@ -1,4 +1,3 @@
-import SkinnedModel from './skinnedModel.js';
 import MATH from './math.js';
 import {WavefrontUtils} from './parserWavefront.js';
 import {ColladaUtils} from './parserCollada.js';
@@ -134,7 +133,7 @@ var GFX = {
         }
       });
     } else if (ext === "Dae") {
-      return $.get(url).then(data => {
+      return $.get(url, null, null, 'text').then(data => {
         const filename = GFX.getFileNameWithoutExtension(name);
         let json = ColladaUtils.parseCollada(data, filename + ".png");
         json.name = filename + ".json";

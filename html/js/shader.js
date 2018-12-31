@@ -1,4 +1,4 @@
-import GFX from './libs.js';
+import GFX from './gfx.js';
 
 class Shader {
   constructor(gl, program, attribs, uniforms) {

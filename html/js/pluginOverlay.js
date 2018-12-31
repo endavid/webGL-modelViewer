@@ -1,5 +1,5 @@
 import Shader from './shader.js';
-import GFX from './libs.js';
+import GFX from './gfx.js';
 
 class PluginOverlay {
   constructor(gl, shader) {

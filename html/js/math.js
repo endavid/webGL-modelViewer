@@ -21,12 +21,13 @@ var MATH = {
 
   getProjection: function(angle, a, zMin, zMax)
   {
-    var tan = Math.tan(MATH.degToRad(0.5*angle)),
+    // ref https://github.com/endavid/VidEngine/blob/master/VidFramework/VidFramework/sdk/math/Matrix.swift
+    const tan = Math.tan(MATH.degToRad(0.5*angle)),
       A = -(zMax + zMin)/(zMax - zMin),
       B = (-2*zMax*zMin)/(zMax-zMin);
     return [
-      0.5/tan, 0, 0, 0,
-      0, 0.5*a/tan, 0, 0,
+      1.0/tan, 0, 0, 0,
+      0, 1.0*a/tan, 0, 0,
       0, 0, A, -1,
       0, 0, B, 0
     ];
