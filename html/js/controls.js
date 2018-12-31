@@ -332,8 +332,9 @@ function onChangeKeyframe() {
 }
 
 function setRotation(phi, theta) {
-  const phiDeg = MATH.radToDeg(phi);
-  const thetaDeg = MATH.radToDeg(theta);
+  const round2 = v => Math.round(v * 100) / 100;
+  const phiDeg = round2(MATH.radToDeg(phi));
+  const thetaDeg = round2(MATH.radToDeg(theta));
   $("#modelRotationTheta").val(thetaDeg);
   $("#modelRotationTheta_number").val(thetaDeg);
   $("#modelRotationPhi").val(phiDeg);
