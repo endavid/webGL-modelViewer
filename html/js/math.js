@@ -4,9 +4,9 @@
   */
 var MATH = {
   normalize: function(v) {
-    var norm = 0;
-    v.forEach(function(c) { norm += c * c; });
-    return v.map(function(c) { return c / norm; });
+    var norm = v.reduce((acc, c) => acc + c * c, 0);
+    norm = Math.sqrt(norm) || 1;
+    return v.map(c => c / norm);
   },
   
   degToRad: function(angle)
@@ -162,6 +162,30 @@ var MATH = {
     out[14+o] = mb[2] * ma[12] + mb[6] * ma[13] + mb[10] * ma[14] + mb[14] * ma[15];
     out[15+o] = mb[3] * ma[12] + mb[7] * ma[13] + mb[11] * ma[14] + mb[15] * ma[15];
     return out;
+  },
+
+  sum: (a, b) => {
+    var out = [];
+    a.forEach((v, i) => {
+      out.push(v + b[i]);
+    });
+    return out;
+  },
+
+  diff: (a, b) => {
+    var out = [];
+    a.forEach((v, i) => {
+      out.push(v - b[i]);
+    });
+    return out;
+  },
+
+  cross: (a, b) => {
+    return [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0]
+    ];
   },
 
   isPowerOf2: function(n) {

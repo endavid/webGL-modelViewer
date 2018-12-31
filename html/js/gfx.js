@@ -18,27 +18,23 @@ var GFX = {
 
   /// Eg. GFX.useShader(gl, "shaders/main.vs", "shaders/main.fs");
   /// Returns a promise
-  useShader: function(gl, vsPath, fsPath)
-  {
-    return Promise.all([
-      GFX.loadShader(vsPath, GFX.SHADER_TYPE_VERTEX),
-      GFX.loadShader(fsPath, GFX.SHADER_TYPE_FRAGMENT)
-    ]).then(([vd, fd]) => {
-      var vertexShader = GFX.getShader(gl, vsPath);
-      var fragmentShader = GFX.getShader(gl, fsPath);
-      var prog = gl.createProgram();
-      gl.attachShader(prog, vertexShader);
-      gl.attachShader(prog, fragmentShader);
-      gl.linkProgram(prog);
-      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-        throw new Error("Could not initialise shaders: "+vsPath+", "+fsPath);
-      }
-      return prog;
-    });
-  },
+  useShader: (gl, vsPath, fsPath) => Promise.all([
+    GFX.loadShader(vsPath, GFX.SHADER_TYPE_VERTEX),
+    GFX.loadShader(fsPath, GFX.SHADER_TYPE_FRAGMENT)
+  ]).then(([vd, fd]) => {
+    var vertexShader = GFX.getShader(gl, vsPath);
+    var fragmentShader = GFX.getShader(gl, fsPath);
+    var prog = gl.createProgram();
+    gl.attachShader(prog, vertexShader);
+    gl.attachShader(prog, fragmentShader);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      throw new Error("Could not initialise shaders: " + vsPath + ", " + fsPath);
+    }
+    return prog;
+  }),
 
-  loadShader: function(file, type)
-  {
+  loadShader: (file, type) => {
     return $.get(file).then(data => {
       // store in cache
       GFX.shaderCache[file] = {script: data, type: type};
@@ -46,8 +42,7 @@ var GFX = {
     });
   },
 
-  getShader: function(gl, id)
-  {
+  getShader: (gl, id) => {
     var shaderObj = GFX.shaderCache[id];
     var shaderScript = shaderObj.script;
     var shaderType = shaderObj.type;
@@ -67,8 +62,7 @@ var GFX = {
     return shader;
   }, // getShader
 
-  destroyBuffers: function(gl, modelData)
-  {
+  destroyBuffers: (gl, modelData) => {
     if (modelData.meshes) {
       modelData.meshes.forEach(function (m) {
         // remove img reference
@@ -99,7 +93,7 @@ var GFX = {
     GFX.textureCache = newCache;
   },
 
-  flipAxisZ: function(model) {
+  flipAxisZ: (model) => {
     var n = model.vertices.length;
     var coordsPerVertex = 8; // position (3), normal (3), uv (2)
     for (var i = 0; i < n; i+=coordsPerVertex) {
@@ -115,8 +109,7 @@ var GFX = {
     }
   },
 
-  modelFileToJson: function(name, url, materialUrls)
-  {
+  modelFileToJson: (name, url, materialUrls) => {
     var ext = GFX.getModelFileExtension(name, url);
     if (ext === "Obj") {
       return $.get(url).then(data => {
@@ -147,7 +140,7 @@ var GFX = {
     });
   },
 
-  loadTexture: function(gl, url, keepInCache, callback) {
+  loadTexture: (gl, url, keepInCache, callback) => {
     if (GFX.textureCache[url]) {
       if (callback) {
         callback(GFX.textureCache[url]);
@@ -188,14 +181,14 @@ var GFX = {
     return image;
   },
 
-  getFileNameWithoutExtension: function(file) {
+  getFileNameWithoutExtension: (file) => {
     var iSlash = file.lastIndexOf('/')+1;
     var iDot = file.lastIndexOf('.');
     return file.substr(iSlash, iDot - iSlash);
   },
 
   // returns the extension in Camel case. Eg. Json, Obj
-  getFileExtension: function(file) {
+  getFileExtension: (file) => {
     var iDot = file.lastIndexOf('.');
     if (iDot < 0) {
       return "";
@@ -204,7 +197,7 @@ var GFX = {
     return ext.substr(0,1).toUpperCase()+ext.substr(1);
   },
 
-  getModelFileExtension: function(name, url) {
+  getModelFileExtension: (name, url) => {
     var ext = GFX.getFileExtension(url);
     if (ext === "") {
       ext = GFX.getFileExtension(name);
@@ -232,7 +225,7 @@ var GFX = {
     });
   },
 
-  exportPose: function(pose, filename) {
+  exportPose: (pose, filename) => {
     var text = JSON.stringify(pose, null, "  ");
     saveAs(
       new Blob([text], {type: "text/plain;charset=" + document.characterSet}),
@@ -241,7 +234,7 @@ var GFX = {
   },
 
   // JSON.stringify generates array that are difficult to read...
-  modelStringify: function(model) {
+  modelStringify: (model) => {
     //return JSON.stringify(model, null, "  ");
     var s = "{\n";
     // JSON.stringify everything but "vertices" and "meshes"
@@ -294,7 +287,7 @@ var GFX = {
     return s;
   },
 
-  createQuad: function (gl) {
+  createQuad: (gl) => {
     var modelData = {
       vertices: false,
       faces: false,

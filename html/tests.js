@@ -1,6 +1,7 @@
 import SkinnedModel from './js/skinnedModel.js';
 import MATH from './js/math.js';
 import {ColladaUtils} from './js/parserCollada.js';
+import ModelData from './js/modelData.js';
 
 QUnit.test( "matrix × vector", function( assert ) {
   // row-major
@@ -43,8 +44,8 @@ QUnit.test("projection matrix", function(assert) {
   var m = MATH.getProjection(90, 3/4, 1, 50);
   // column-major
   var expected = [
-    0.5000000000000001, 0, 0, 0,
-    0, 0.37500000000000006, 0, 0,
+    1.0000000000000002, 0, 0, 0,
+    0, 0.7500000000000001, 0, 0,
     0, 0, -1.0408163265306123, -1,
     0, 0, -2.0408163265306123, 0];
   assert.deepEqual(m, expected);
@@ -118,4 +119,34 @@ QUnit.test("add pose keyframe", function(assert) {
       done();
     }
   });
+});
+
+QUnit.test("Model Data", assert => {
+  const json = {
+    name: "tiny test",
+    materials: {},
+    vertices: [
+      1, 0, 0, 1, 0, 0, 0, 0,
+      0, 1, 0, 0, 1, 0, 0, 0,
+      0, 0, 1, 0, 0, 1, 0, 0,
+      -1, 0, 0, -1, 0, 0, 0, 0,      
+      0, -1, 0, 0, -1, 0, 0, 0,
+      0, 0, -1, 0, 0, -1, 0, 0,
+    ],
+    stride: 8,
+    meshes: [{
+      indices: [
+        0, 1, 2,
+        0, 1, 3,
+        1, 2, 3,
+        1, 2, 4,
+        3, 4, 5,
+        2, 4, 5
+      ]
+    }]
+  };
+  const modelData = new ModelData(json);
+  assert.deepEqual(modelData.getNormal(2), [0, 0, 1]);
+  modelData.recomputeNormals();
+  assert.deepEqual(modelData.getNormal(2), [0, 0, 1]);
 });
