@@ -240,6 +240,9 @@ input[type=text] {
   width: 8ex;
   padding: 4px;
 }
+input[type=checkbox] {
+  margin-right: 1em;
+}
 input.range[type=number] {
   font-size: xx-small;
   width: 6ex;

@@ -144,8 +144,8 @@ class Renderer {
   }
   applyAngleDeltas() {
     const e = 0.001;
-    const dX = this.mouseState.lock.y ? 0 : this.mouseState.dX;
-    const dY = this.mouseState.lock.x ? 0 : this.mouseState.dY;
+    const dX = this.mouseState.lock.x ? 0 : this.mouseState.dX;
+    const dY = this.mouseState.lock.y ? 0 : this.mouseState.dY;
     if (Math.abs(dX) > e || Math.abs(dY) > e) {
       this.mouseState.theta = MATH.clampAngle(this.mouseState.theta + Math.PI * dX);
       this.mouseState.phi = MATH.clampAngle(this.mouseState.phi + Math.PI * dY);

@@ -115,11 +115,7 @@ function populateControls() {
     })
   ]);
   UiUtils.addGroup("gModel", "Model Settings", [
-    UiUtils.createCheckbox("lockRotationY", Config.isLockRotationY, function(value) {
-      Config.isLockRotationY = value;
-      updateRotationLock();
-    }),
-    UiUtils.createCheckbox("z_up", Config.isZAxisUp, function(value) {
+    UiUtils.createCheckbox("z_up", "Z is up", Config.isZAxisUp, function(value) {
       Config.isZAxisUp = value;
       reloadModel();
     }),
@@ -127,14 +123,17 @@ function populateControls() {
       Config.modelScale = Math.pow(10, parseFloat(value));
       updateModelTransform();
     }),
+    UiUtils.createCheckboxes("axisLock", {
+        isLockRotationX: {text: "lock X", default: Config.isLockRotationX},
+        isLockRotationY: {text: "lock Y", default: Config.isLockRotationY},
+      }, (key, value) => {
+        Config[key] = value;
+        updateRotationLock();
+    }),
     UiUtils.createSlider("modelRotationTheta", "rotation Y axis",
       Config.modelRotationTheta, -180, 180, 0.1, function(value) {
         Config.modelRotationTheta = parseFloat(value);
         updateModelTransform();
-    }),
-    UiUtils.createCheckbox("lockRotationX", Config.isLockRotationX, function(value) {
-      Config.isLockRotationX = value;
-      updateRotationLock();
     }),
     UiUtils.createSlider("modelRotationPhi", "rotation X axis",
       Config.modelRotationPhi, -90, 90, 0.1, function(value) {

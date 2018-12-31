@@ -45,18 +45,26 @@ const UiUtils = {
     controls.forEach(function(c) {td.append(c);});
     return $('<tr>').attr('id',id+"_parent").append(td);
   },
-  createCheckbox: (id, checked, callback) => {
-    var updateFunction = function(event) {
-      callback(event.target.checked);
-    };
-    return $('<tr>').attr('id',id+"_parent").append($('<td>')
-            .append(id+": ")
-            .append($('<input>')
-              .attr('id', id)
-              .attr('type', "checkbox")
-              .prop('checked', checked)
-              .change(updateFunction))
-    );
+  createCheckbox: (id, text, checked, callback) => {
+    var config = {};
+    config[id] = {text: text, default: checked};
+    return UiUtils.createCheckboxes(id, config, (key, value) => {
+      callback(value);
+    });
+  },
+  createCheckboxes: (id, config, callback) => {
+    const keys = Object.keys(config);
+    var td = $('<td>');
+    keys.forEach(key => {
+      var updateFn = event => callback(key, event.target.checked);
+      td.append(config[key].text+": ")
+      .append($('<input>')
+        .attr('id', key)
+        .attr('type', "checkbox")
+        .prop('checked', config[key].default)
+        .change(updateFn));
+    });
+    return $('<tr>').attr('id',id+"_parent").append(td);
   },
   createDropdownList: (id, list, callback) => {
     var updateFunction = function(event) {
