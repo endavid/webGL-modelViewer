@@ -2,7 +2,7 @@ import UiUtils from './uiutils.js';
 import Viewer from './viewer.js';
 import Config from './config.js';
 import MATH from './math.js';
-import GFX from './libs.js';
+import GFX from './gfx.js';
 
 var ImageUrls = {
   "banana.png": "resources/banana.png",
