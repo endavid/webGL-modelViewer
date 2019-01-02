@@ -1,7 +1,6 @@
 import GFX from './gfx.js';
 import MATH from './math.js';
 import SkinnedModel from './skinnedModel.js';
-import ModelData from './modelData.js';
 
 class Model {
   // format:
@@ -61,17 +60,34 @@ class Model {
   destroy(gl) {
     GFX.destroyBuffers(gl, this);
   }
-  static createAsync(gl, name, url, config, imageUrls, materialUrls) {
+  static createAsync(gl, name, url, config, imageUrls, materialUrls, onProgress, onDone, onError) {
     return GFX.modelFileToJson(name, url, materialUrls).then(json => {
-      let modelData = new ModelData(json);
       if (config.isZAxisUp) {
         GFX.flipAxisZ(json);
       }
       if (config.recomputeNormals) {
-        modelData.recomputeNormals();
+        if (window.Worker) {
+          let worker = new Worker('./js/modelWorker.js');
+          let load = {
+            model: json,
+            fn: "recomputeNormals"
+          };
+          worker.onmessage = e => {
+            onProgress(e.data.done);
+            if (e.data.done === 100 && e.data.vertices) {
+              json.vertices = e.data.vertices;
+              onDone(new Model(gl, json, imageUrls));
+            }
+          };
+          worker.postMessage(load);
+        } else {
+          throw new Error("Can't create Worker to compute normals");
+        }
+      } else {
+        onDone(new Model(gl, json, imageUrls));
       }
-      return new Model(gl, json, imageUrls);
-    });
+    })
+    .catch(onError);
   }
 }
 export {Model as default};

@@ -309,20 +309,23 @@ function updateRotationLock() {
 function reloadModel() {
   const url = $("#Presets").val();
   const name = $("#Presets option:selected").text();
-  viewer.loadModel(name, url, Config, ImageUrls, MaterialUrls)
-  .then(model => {
+  progressBarUpdate(0);
+  $("#progressBarDiv").show();
+  viewer.loadModel(name, url, Config, ImageUrls, MaterialUrls, progressBarUpdate, model => {
     removePoseGroup();
+    $("#progressBarDiv").hide();
     if (model.skinnedModel) {
       $("#keyframe").attr('max', model.skinnedModel.keyframeCount - 1);
       $("#keyframe_number").val(-1);
       Config.keyframe = -1;
       addPoseGroup(model.skinnedModel);
     }
-  })
-  .catch(e => {
-    setError(e);
-  });
+  }, setError);
   setRotation(0, 0);
+}
+
+function progressBarUpdate(percentage) {
+  $("#progressBar").css('width', percentage + "%");
 }
 
 function onChangeKeyframe() {

@@ -129,6 +129,23 @@ body {
   width: 90%;
 }
 
+#progressBarDiv {
+  position: relative;
+  width: 95%;
+  height: 16px;
+  margin: auto;
+  margin-bottom: 8px;
+  margin-top: 8px;
+  background-color: #272525;
+}
+
+#progressBar {
+  position: absolute;
+  width: 1%;
+  height: 100%;
+  background-color: #4CAF50;
+}
+
 canvas {
   border:1px solid #d3d3d3;
   background-color: gray;

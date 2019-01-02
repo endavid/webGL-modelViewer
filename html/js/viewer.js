@@ -2,15 +2,15 @@ import Renderer from './renderer.js';
 import Model from './model.js';
 
 class Viewer extends Renderer {
-  loadModel(name, url, config, imageUrls, materialUrls) {
+  loadModel(name, url, config, imageUrls, materialUrls, onProgress, onComplete, onError) {
     var self = this;
     const gl = this.glState.gl;
     this.destroyAll();
-    return Model.createAsync(gl, name, url, config, imageUrls, materialUrls)
-    .then(model => {
-      self.scene.models.push(model);
-      return model;
-    });
+    Model.createAsync(gl, name, url, config, imageUrls, materialUrls,
+      onProgress, model => {
+        self.scene.models.push(model);
+        onComplete(model);
+      }, onError);
   }
   destroyAll() {
     const gl = this.glState.gl;
