@@ -148,5 +148,5 @@ QUnit.test("Model Data", assert => {
   const modelData = new ModelData(json);
   assert.deepEqual(modelData.getNormal(2), [0, 0, 1]);
   modelData.recomputeNormals();
-  assert.deepEqual(modelData.getNormal(2), [0, 0, 1]);
+  assert.deepEqual(modelData.getNormal(2), [0.7886751345948129, 0, 0]);
 });

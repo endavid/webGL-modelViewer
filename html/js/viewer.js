@@ -2,11 +2,11 @@ import Renderer from './renderer.js';
 import Model from './model.js';
 
 class Viewer extends Renderer {
-  loadModel(name, url, invertAxis, imageUrls, materialUrls) {
+  loadModel(name, url, config, imageUrls, materialUrls) {
     var self = this;
     const gl = this.glState.gl;
     this.destroyAll();
-    return Model.createAsync(gl, name, url, invertAxis, imageUrls, materialUrls)
+    return Model.createAsync(gl, name, url, config, imageUrls, materialUrls)
     .then(model => {
       self.scene.models.push(model);
       return model;

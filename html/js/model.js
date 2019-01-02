@@ -1,6 +1,7 @@
 import GFX from './gfx.js';
 import MATH from './math.js';
 import SkinnedModel from './skinnedModel.js';
+import ModelData from './modelData.js';
 
 class Model {
   // format:
@@ -60,10 +61,14 @@ class Model {
   destroy(gl) {
     GFX.destroyBuffers(gl, this);
   }
-  static createAsync(gl, name, url, invertAxis, imageUrls, materialUrls) {
+  static createAsync(gl, name, url, config, imageUrls, materialUrls) {
     return GFX.modelFileToJson(name, url, materialUrls).then(json => {
-      if (invertAxis) {
+      let modelData = new ModelData(json);
+      if (config.isZAxisUp) {
         GFX.flipAxisZ(json);
+      }
+      if (config.recomputeNormals) {
+        modelData.recomputeNormals();
       }
       return new Model(gl, json, imageUrls);
     });

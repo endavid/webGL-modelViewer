@@ -115,9 +115,12 @@ function populateControls() {
     })
   ]);
   UiUtils.addGroup("gModel", "Model Settings", [
-    UiUtils.createCheckbox("z_up", "Z is up", Config.isZAxisUp, function(value) {
-      Config.isZAxisUp = value;
-      reloadModel();
+    UiUtils.createCheckboxes("onLoadOptions", {
+        isZAxisUp: {text: "Z is up", default: Config.isZAxisUp},
+        recomputeNormals: {text: "recompute normals", default: Config.recomputeNormals}
+      }, (key, value) => {
+        Config[key] = value;
+        reloadModel();
     }),
     UiUtils.createSlider("modelScaleExp10", "scale", 0, -3, 3, 0.2, function(value) {
       Config.modelScale = Math.pow(10, parseFloat(value));
@@ -306,7 +309,7 @@ function updateRotationLock() {
 function reloadModel() {
   const url = $("#Presets").val();
   const name = $("#Presets option:selected").text();
-  viewer.loadModel(name, url, Config.isZAxisUp, ImageUrls, MaterialUrls)
+  viewer.loadModel(name, url, Config, ImageUrls, MaterialUrls)
   .then(model => {
     removePoseGroup();
     if (model.skinnedModel) {

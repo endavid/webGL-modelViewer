@@ -1,5 +1,6 @@
 var Config = {
   isZAxisUp: false,
+  recomputeNormals: false,
   isLockRotationY: false,
   isLockRotationX: false,
   modelRotationTheta: 0,

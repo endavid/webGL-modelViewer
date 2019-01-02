@@ -21,7 +21,7 @@ class ModelData {
     const n = this.numVertices();
     for (let i = 0; i < n; i++) {
       let j = i * this.stride;
-      let triangleList = this.getTrianglesThatContainVertex(j);
+      let triangleList = this.getTrianglesThatContainVertex(i);
       let numContributingFaces = triangleList.length;
       if (numContributingFaces === 0) {
         continue;
