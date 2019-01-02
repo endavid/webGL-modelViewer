@@ -320,8 +320,8 @@ function reloadModel() {
       Config.keyframe = -1;
       addPoseGroup(model.skinnedModel);
     }
+    setRotation(0, 0);
   }, setError);
-  setRotation(0, 0);
 }
 
 function progressBarUpdate(percentage) {

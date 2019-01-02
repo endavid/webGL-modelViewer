@@ -37,17 +37,42 @@ class ModelData {
     this.facesPerPosition = {};
   }
   stepFacesPerPositionCreation(i) {
-    const n = this.numVertices();
-    if (i === n) {
+    const num = this.numTriangles();
+    if (i === num) {
       return 100;
     }
-    const position = this.getPosition(i);
-    const hash = MATH.hashVertex(position);
-    this.facesPerPosition[hash] = this.getTrianglesThatContainVertex(i, hash);
-    return Math.round(100 * i / n);
+    const progress = Math.round(100 * i / num);
+    var meshIndex = 0;
+    var mesh = this.meshes[0];
+    var n = mesh.indices.length / 3;
+    while (i >= n) {
+      i = i - n;
+      meshIndex++;
+      mesh = this.meshes[meshIndex];
+      n = mesh.indices.length / 3;
+    }
+    var self = this;
+    const vertexIndexToHash = vi => MATH.hashVertex(self.getPosition(vi));
+    let t = mesh.indices.slice(3 * i, 3 * (i+1));
+    const hashes = t.map(vertexIndexToHash);
+    var fpp = this.facesPerPosition;
+    hashes.forEach(h => {
+      if (!fpp[h]) {
+        fpp[h] = [];
+      }
+      fpp[h].push(t);
+    });
+    return progress;
   }
   numVertices() {
     return this.vertices.length / this.stride;
+  }
+  numTriangles() {
+    var numTriangles = 0;
+    this.meshes.forEach(m => {
+      numTriangles += m.indices.length / 3;
+    });
+    return numTriangles;
   }
   getPosition(vertexIndex) {
     const i = vertexIndex * this.stride;
@@ -67,7 +92,7 @@ class ModelData {
     let j = i * this.stride;
     const position = this.getPosition(i);
     const hash = MATH.hashVertex(position);
-    let triangleList = this.getTrianglesThatContainVertex(i, hash);
+    let triangleList = this.facesPerPosition[hash];
     let numContributingFaces = triangleList.length;
     if (numContributingFaces === 0) {
       return progress;
@@ -79,28 +104,6 @@ class ModelData {
     this.vertices[j + 4] = normalAverage[1];
     this.vertices[j + 5] = normalAverage[2];
     return progress;
-  }
-  getTrianglesThatContainVertex(vertexIndex, hash) {
-    var self = this;
-    const equal = vi => vi === vertexIndex;
-    const equalHash = h => h === hash;
-    const vertexIndexToHash = vi => MATH.hashVertex(self.getPosition(vi));
-    var triangleList = [];
-    this.meshes.forEach(m => {
-      const numTriangles = m.indices.length / 3;
-      for (let i = 0; i < numTriangles; i++) {
-        let t = m.indices.slice(3 * i, 3 * (i+1));
-        if (t.findIndex(equal) >= 0) {
-          triangleList.push(t);
-        } else if (hash) {
-          const hashes = t.map(vertexIndexToHash);
-          if (hashes.findIndex(equalHash) >= 0) {
-            triangleList.push(t);
-          }
-        }
-      }
-    });
-    return triangleList;
   }
   computeTriangleNormal(triangle) {
     const positions = triangle.map(this.getPosition.bind(this));
