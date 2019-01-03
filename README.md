@@ -24,7 +24,7 @@ Rigged Collada models are supported as well. You can preview the keyframes in an
 Development
 -----------
 ### Style
-The idea is to target ECMAScript 2016 (or ES7), but at the moment I'm relying on JSHint to get the style right, so all the code is ES2015 (ES6) compliant. Older version of Javascript are not supported. 
+The idea is to target ECMAScript 2016 (or ES7), but at the moment all the code is ES2015 (ES6) compliant. Older version of Javascript are not supported. 
 
 Preferred style:
 * Declare classes with the `class` keyword, never with `function`.
