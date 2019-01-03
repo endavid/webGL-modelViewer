@@ -5,24 +5,17 @@ class PluginLitModel {
     this.shaders = shaders;
     this.whiteTexture = whiteTexture;
   }
-  static createAsync(gl, whiteTexture) {
+  static async createAsync(gl, whiteTexture) {
     const attribs = ["uv", "position", "normal"];
     const uniforms = ["Pmatrix", "Vmatrix", "Mmatrix", "lightDirection", "sampler"];
     const attribsSkin = attribs.concat(["boneWeights", "boneIndices"]);
     const uniformsSkin = uniforms.concat(["sampler", "joints"]);
     var shaders = {};
-    return Shader.createAsync(gl, 
-      "shaders/geometry.vs", "shaders/lighting.fs",
-       attribs, uniforms).then(shader => {
-      shaders.lit = shader;
-      // making it sequential, to avoid reading lighting.fs in parallel
-      return Shader.createAsync(gl, 
-        "shaders/skinning.vs", "shaders/lighting.fs", 
-        attribsSkin, uniformsSkin);
-    }).then(shader => {
-      shaders.litSkin = shader;
-      return new PluginLitModel(shaders, whiteTexture);
-    });
+    const shader = await Shader.createAsync(gl, "shaders/geometry.vs", "shaders/lighting.fs", attribs, uniforms);
+    shaders.lit = shader;
+    const shader_1 = await Shader.createAsync(gl, "shaders/skinning.vs", "shaders/lighting.fs", attribsSkin, uniformsSkin);
+    shaders.litSkin = shader_1;
+    return new PluginLitModel(shaders, whiteTexture);
   }
   setOpaquePass(glState) {
     glState.setDepthTest(true);

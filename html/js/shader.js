@@ -13,10 +13,9 @@ class Shader {
       self.uniforms[u] = gl.getUniformLocation(program, u);
     });
   }
-  static createAsync(gl, vs, fs, attribs, uniforms) {
-    return GFX.useShader(gl, vs, fs).then(program => {
-      return new Shader(gl, program, attribs, uniforms);
-    });
+  static async createAsync(gl, vs, fs, attribs, uniforms) {
+    const program = await GFX.useShader(gl, vs, fs);
+    return new Shader(gl, program, attribs, uniforms);
   }
   enableVertexAttributes(gl) {
     const attribKeys = Object.keys(this.attribs);

@@ -6,14 +6,11 @@ class PluginOverlay {
     this.shader = shader;
     this.quad = GFX.createQuad(gl);
   }
-  static createAsync(gl) {
+  static async createAsync(gl) {
     const attribs = ["position"];
     const uniforms = ["scale", "offset", "colourTransform", "colourBias"];
-    return Shader.createAsync(gl, 
-      "shaders/fullscreen.vs", "shaders/colour.fs",
-       attribs, uniforms).then(shader => {
-      return new PluginOverlay(gl, shader);
-    });
+    const shader = await Shader.createAsync(gl, "shaders/fullscreen.vs", "shaders/colour.fs", attribs, uniforms);
+    return new PluginOverlay(gl, shader);
   }
   setBlendPass(glState) {
     glState.setDepthTest(false);

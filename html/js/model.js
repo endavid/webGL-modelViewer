@@ -61,7 +61,7 @@ class Model {
     GFX.destroyBuffers(gl, this);
   }
   static createAsync(gl, name, url, config, imageUrls, materialUrls, onProgress, onDone, onError) {
-    return GFX.modelFileToJson(name, url, materialUrls).then(json => {
+    GFX.modelFileToJson(name, url, materialUrls).then(json => {
       if (config.isZAxisUp) {
         GFX.flipAxisZ(json);
       }

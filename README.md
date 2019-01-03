@@ -24,7 +24,7 @@ Rigged Collada models are supported as well. You can preview the keyframes in an
 Development
 -----------
 ### Style
-The idea is to target ECMAScript 2016 (or ES7), but at the moment all the code is ES2015 (ES6) compliant. Older version of Javascript are not supported. 
+We target ECMAScript 2016 (or ES7), so we can use all modern syntactic sugar. Older versions of Javascript are not supported. 
 
 Preferred style:
 * Declare classes with the `class` keyword, never with `function`.
@@ -32,6 +32,8 @@ Preferred style:
 * Prefer modules and avoid the old `(function(global) {})(this);` wrapping construct.
 * Prefer *readability* over backwards-compatibiliy.
 * Use `Promises` for async operations, with the only exception of things that do not need to be waited for. For instance, images are loaded asynchronously, but we don't need to wait for them to be ready (for a WebGL texture to be created). A model can be loaded and displayed with a default white texture, and as images get loaded, the textures will appear.
+* Use `async` and `await` syntactic sugar for Promises.
+* Unfortunately, *Workers* do not support modules at the moment, so code involving workers will look uglier. Try to make the `Worker` code as independent as possible (even if it means copy-pasting a couple of already existing functions).
 
 
 ### Architecture
