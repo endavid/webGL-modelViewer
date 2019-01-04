@@ -3,24 +3,21 @@
   * need to be sent to the GPU.
   */
 var VMath = {
-  normalize: function(v) {
+  normalize: v => {
     var norm = v.reduce((acc, c) => acc + c * c, 0);
     norm = Math.sqrt(norm) || 1;
     return v.map(c => c / norm);
   },
   
-  degToRad: function(angle)
-  {
+  degToRad: angle => {
     return(angle * Math.PI / 180.0);
   },
 
-  radToDeg: function(angle)
-  {
+  radToDeg: angle => {
     return(angle * 180.0 / Math.PI);
   },
 
-  getProjection: function(angle, a, zMin, zMax)
-  {
+  getProjection: (angle, a, zMin, zMax) => {
     // ref https://github.com/endavid/VidEngine/blob/master/VidFramework/VidFramework/sdk/math/Matrix.swift
     const tan = Math.tan(VMath.degToRad(0.5*angle)),
       A = -(zMax + zMin)/(zMax - zMin),
@@ -33,14 +30,14 @@ var VMath = {
     ];
   },
 
-  getI4: function() {
+  getI4: () => {
     return [1,0,0,0,
             0,1,0,0,
             0,0,1,0,
             0,0,0,1];
   },
 
-  setI4: function(m, offset) {
+  setI4: (m, offset) => {
     var o = offset || 0;
     m[o+0] =1; m[o+1] =0; m[o+2] =0; m[o+3] =0;
     m[o+4] =0; m[o+5] =1; m[o+6] =0; m[o+7] =0;
@@ -48,14 +45,14 @@ var VMath = {
     m[o+12]=0; m[o+13]=0; m[o+14]=0; m[o+15]=1;
   },
 
-  setScale4: function(m, scale) {
+  setScale4: (m, scale) => {
     VMath.setI4(m);
     m[0]=scale;
     m[5]=scale;
     m[10]=scale;
   },
 
-  rotateX: function(m, angle) {
+  rotateX: (m, angle) => {
     var c=Math.cos(angle);
     var s=Math.sin(angle);
     var mv1=m[1], mv5=m[5], mv9=m[9];
@@ -69,7 +66,7 @@ var VMath = {
     return m;
   },
 
-  rotateY: function(m, angle) {
+  rotateY: (m, angle) => {
     var c=Math.cos(angle);
     var s=Math.sin(angle);
     var mv0=m[0], mv4=m[4], mv8=m[8];
@@ -83,7 +80,7 @@ var VMath = {
     return m;
   },
 
-  rotateZ: function(m, angle) {
+  rotateZ: (m, angle) => {
     var c=Math.cos(angle);
     var s=Math.sin(angle);
     var mv0=m[0], mv4=m[4], mv8=m[8];
@@ -97,19 +94,19 @@ var VMath = {
     return m;
   },
 
-  translateX: function(m, t){
+  translateX: (m, t) => {
     m[12]+=t;
   },
 
-  translateY: function(m, t){
+  translateY: (m, t) => {
     m[13]+=t;
   },
 
-  translateZ: function(m, t){
+  translateZ: (m, t) => {
     m[14]+=t;
   },
 
-  mulVector: function(m, v) {
+  mulVector: (m, v) => {
     var out = [0,0,0,0];
     // for row-major matrices
     out[0] = m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3];
@@ -119,7 +116,7 @@ var VMath = {
     return out;
   },
 
-  transpose: function(mi, m, offset) {
+  transpose: (mi, m, offset) => {
     var out = m || new Array(16);
     var o = offset || 0;
     out[0+o] = mi[0];
@@ -141,7 +138,7 @@ var VMath = {
     return out;
   },
 
-  mulMatrix: function(ma, mb, m, offset) {
+  mulMatrix: (ma, mb, m, offset) => {
     var out = m || new Array(16);
     var o = offset || 0;
     // for row-major matrices
@@ -188,27 +185,27 @@ var VMath = {
     ];
   },
 
-  isPowerOf2: function(n) {
+  isPowerOf2: (n) => {
     if (typeof n !== 'number') {
       return null;
     }
     return n && (n & (n - 1)) === 0;
   },
 
-  rgbToFloat: function(rgb) {
+  rgbToFloat: (rgb) => {
     var r = (rgb >> 16) & 0x0000ff;
     var g = (rgb >> 8) & 0x0000ff;
     var b = (rgb) & 0x0000ff;
     return [r / 255.0, g / 255.0, b / 255.0];
   },
 
-  clampAngle: function(a) {
+  clampAngle: a => {
     while (a < -Math.PI) a += Math.PI * 2;
     while (a > Math.PI) a -= Math.PI * 2;
     return a;
   },
 
-  clamp: function(a, minA, maxA) {
+  clamp: (a, minA, maxA) => {
     if (a < minA) return minA;
     if (a > maxA) return maxA;
     return a;
