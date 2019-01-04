@@ -1,10 +1,10 @@
 import Shader from './shader.js';
-import GFX from './gfx.js';
+import Gfx from './gfx.js';
 
 class PluginOverlay {
   constructor(gl, shader) {
     this.shader = shader;
-    this.quad = GFX.createQuad(gl);
+    this.quad = Gfx.createQuad(gl);
   }
   static async createAsync(gl) {
     const attribs = ["position"];

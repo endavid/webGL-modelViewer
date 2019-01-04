@@ -2,7 +2,7 @@ import UiUtils from './uiutils.js';
 import Viewer from './viewer.js';
 import Config from './config.js';
 import MATH from './math.js';
-import GFX from './gfx.js';
+import Gfx from './gfx.js';
 
 var ImageUrls = {
   "banana.png": "resources/banana.png",
@@ -21,7 +21,7 @@ function populateControls() {
   function onChangeFileBrowser(values) {
     var models = [];
     for (var i = 0 ; i < values.length; i++) {
-      var ext = GFX.getFileExtension(values[i].name);
+      var ext = Gfx.getFileExtension(values[i].name);
       if (ext === "Json" || ext === "Obj" || ext === "Dae") {
         models.push(values[i]);
       } else if (ext === "Mtl") {
@@ -49,7 +49,7 @@ function populateControls() {
         $("#keyframe").attr('max', skinnedModel.keyframeCount - 1);
         return;
       }
-      var ext = GFX.getFileExtension(values[i].name);
+      var ext = Gfx.getFileExtension(values[i].name);
       if (ext === "Json") {
         $.getJSON(values[i].uri, pose => {
           skinnedModel.addPose(pose.pose);
@@ -71,7 +71,7 @@ function populateControls() {
     }
     var skinnedModel = model.skinnedModel;
     var f = values[0];
-    var ext = GFX.getFileExtension(f.name);
+    var ext = Gfx.getFileExtension(f.name);
     if (ext === "Json") {
       $.getJSON(f.uri, function(jro) {
         skinnedModel.updateJointRotationOrder(jro.jointRotationOrder);             
@@ -108,7 +108,7 @@ function populateControls() {
       var modelType = $("#"+e.target.id+"_select").val();
       const url = $("#Presets").val();
       const name = $("#Presets option:selected").text();
-      GFX.exportModel(name, url, modelType, MaterialUrls)
+      Gfx.exportModel(name, url, modelType, MaterialUrls)
       .catch(e => {
         setError(e);
       });
@@ -355,8 +355,8 @@ function saveCurrentPose() {
   if (model && model.skinnedModel) {
     const frame = Config.keyframe;
     const pose = model.skinnedModel.getPoseFile(frame);
-    const fn = GFX.getFileNameWithoutExtension(model.name);
-    GFX.exportPose(pose, fn + "_" + frame);
+    const fn = Gfx.getFileNameWithoutExtension(model.name);
+    Gfx.exportPose(pose, fn + "_" + frame);
   } else {
     setWarning("No skinned model");
   }

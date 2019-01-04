@@ -1,4 +1,4 @@
-import GFX from './gfx.js';
+import Gfx from './gfx.js';
 
 class Shader {
   constructor(gl, program, attribs, uniforms) {
@@ -14,7 +14,7 @@ class Shader {
     });
   }
   static async createAsync(gl, vs, fs, attribs, uniforms) {
-    const program = await GFX.useShader(gl, vs, fs);
+    const program = await Gfx.useShader(gl, vs, fs);
     return new Shader(gl, program, attribs, uniforms);
   }
   enableVertexAttributes(gl) {

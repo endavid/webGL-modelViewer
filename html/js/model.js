@@ -1,4 +1,4 @@
-import GFX from './gfx.js';
+import Gfx from './gfx.js';
 import MATH from './math.js';
 import SkinnedModel from './skinnedModel.js';
 
@@ -43,11 +43,11 @@ class Model {
       const mat = m.material !== undefined ? json.materials[m.material] || {} : {};
       const albedoMapName = mat.albedoMap || "missing";
       // if the .dds texture is missing, try to find equivalent .png
-      var albedoMapUrl = imageUrls[albedoMapName] || imageUrls[GFX.getFileNameWithoutExtension(albedoMapName)+".png"];
+      var albedoMapUrl = imageUrls[albedoMapName] || imageUrls[Gfx.getFileNameWithoutExtension(albedoMapName)+".png"];
       var mesh = {
         indexBuffer: gl.createBuffer(),
         numPoints: m.indices.length,
-        albedoMap: albedoMapUrl !== undefined ? GFX.loadTexture(gl, albedoMapUrl) : false
+        albedoMap: albedoMapUrl !== undefined ? Gfx.loadTexture(gl, albedoMapUrl) : false
       };
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
@@ -58,12 +58,12 @@ class Model {
     this.meshes = meshes;
   }
   destroy(gl) {
-    GFX.destroyBuffers(gl, this);
+    Gfx.destroyBuffers(gl, this);
   }
   static createAsync(gl, name, url, config, imageUrls, materialUrls, onProgress, onDone, onError) {
-    GFX.modelFileToJson(name, url, materialUrls).then(json => {
+    Gfx.modelFileToJson(name, url, materialUrls).then(json => {
       if (config.isZAxisUp) {
-        GFX.flipAxisZ(json);
+        Gfx.flipAxisZ(json);
       }
       if (config.recomputeNormals) {
         if (window.Worker) {

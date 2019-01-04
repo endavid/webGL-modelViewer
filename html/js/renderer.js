@@ -1,5 +1,5 @@
 import GlState from './glState.js';
-import GFX from './gfx.js';
+import Gfx from './gfx.js';
 import MATH from './math.js';
 import PluginLitModel from './pluginLitModel.js';
 import PluginOverlay from './pluginOverlay.js';
@@ -52,7 +52,7 @@ class Renderer {
     this.plugins = [];
     this.plugins2d = [];
     this.init().then(() => {
-      GFX.loadTexture(self.glState.gl, whiteUrl, true, (img) => {
+      Gfx.loadTexture(self.glState.gl, whiteUrl, true, (img) => {
         self.whiteTexture = img;
         self.initPlugins();
         self.initPlugins2d();
@@ -216,7 +216,7 @@ class Renderer {
   setOverlayImage(url, callback) {
     var overlay = this.scene.overlay;
     const gl = this.glState.gl;
-    GFX.loadTexture(gl, url, true, img => {
+    Gfx.loadTexture(gl, url, true, img => {
       overlay.url = url;
       overlay.img = img;
       if (callback) {
