@@ -7,6 +7,23 @@ const ShaderType = {
   vertex: "x-shader/x-vertex"
 };
 
+function createAndCompileShader(gl, shaderCode, shaderType) {  
+  var shader;
+  if (shaderType == ShaderType.fragment) {
+    shader = gl.createShader(gl.FRAGMENT_SHADER);
+  } else if (shaderType == ShaderType.vertex) {
+    shader = gl.createShader(gl.VERTEX_SHADER);
+  } else {
+    throw new Error("Unknown shader type: " + shaderType);
+  }
+  gl.shaderSource(shader, shaderCode);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw new Error(gl.getShaderInfoLog(shader));
+  }
+  return shader;
+}
+
 /**
  * Graphics lib singleton
  *  They require jQuery
@@ -20,60 +37,27 @@ class Gfx {
       return instance;
     }
     this.constructor.instance = this;
-    this.shaderCache = {};
     this.textureCache = {};
   }
 
   /// Eg. Gfx.useShader(gl, "shaders/main.vs", "shaders/main.fs");
   /// Returns a promise
-  static useShader(gl, vsPath, fsPath) {
-    return Promise.all([
-      Gfx.loadShader(vsPath, ShaderType.vertex),
-      Gfx.loadShader(fsPath, ShaderType.fragment)
-    ]).then(([vd, fd]) => {
-      const vertexShader = Gfx.getShader(gl, vsPath);
-      const fragmentShader = Gfx.getShader(gl, fsPath);
-      const prog = gl.createProgram();
-      gl.attachShader(prog, vertexShader);
-      gl.attachShader(prog, fragmentShader);
-      gl.linkProgram(prog);
-      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-        throw new Error(
-          "Could not initialise shaders: " + vsPath + ", " + fsPath
-        );
-      }
-      return prog;
-    });
-  }
-
-  static loadShader(file, type) {
-    return $.get(file).then(data => {
-      // store in cache
-      var gfx = new Gfx(); // singleton
-      gfx.shaderCache[file] = { script: data, type: type };
-      return data;
-    });
-  }
-
-  static getShader(gl, id) {
-    var gfx = new Gfx(); // singleton
-    const shaderObj = gfx.shaderCache[id];
-    const shaderScript = shaderObj.script;
-    const shaderType = shaderObj.type;
-    var shader;
-    if (shaderType == ShaderType.fragment) {
-      shader = gl.createShader(gl.FRAGMENT_SHADER);
-    } else if (shaderType == ShaderType.vertex) {
-      shader = gl.createShader(gl.VERTEX_SHADER);
-    } else {
-      return null;
+  static async useShader(gl, vsPath, fsPath) {
+    const [vd, fd] = await Promise.all([
+      $.get(vsPath), $.get(fsPath)
+    ])
+    const vertexShader = createAndCompileShader(gl, vd, ShaderType.vertex);
+    const fragmentShader = createAndCompileShader(gl, fd, ShaderType.fragment);
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vertexShader);
+    gl.attachShader(prog, fragmentShader);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      throw new Error(
+        "Could not initialise shaders: " + vsPath + ", " + fsPath
+      );
     }
-    gl.shaderSource(shader, shaderScript);
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      throw new Error(gl.getShaderInfoLog(shader));
-    }
-    return shader;
+    return prog;
   }
 
   static destroyBuffers(gl, modelData) {

@@ -11,10 +11,8 @@ class PluginLitModel {
     const attribsSkin = attribs.concat(["boneWeights", "boneIndices"]);
     const uniformsSkin = uniforms.concat(["sampler", "joints"]);
     var shaders = {};
-    const shader = await Shader.createAsync(gl, "shaders/geometry.vs", "shaders/lighting.fs", attribs, uniforms);
-    shaders.lit = shader;
-    const shader_1 = await Shader.createAsync(gl, "shaders/skinning.vs", "shaders/lighting.fs", attribsSkin, uniformsSkin);
-    shaders.litSkin = shader_1;
+    shaders.lit = await Shader.createAsync(gl, "shaders/geometry.vs", "shaders/lighting.fs", attribs, uniforms);
+    shaders.litSkin = await Shader.createAsync(gl, "shaders/skinning.vs", "shaders/lighting.fs", attribsSkin, uniformsSkin);
     return new PluginLitModel(shaders, whiteTexture);
   }
   setOpaquePass(glState) {
