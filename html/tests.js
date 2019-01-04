@@ -1,5 +1,5 @@
 import SkinnedModel from './js/skinnedModel.js';
-import MATH from './js/math.js';
+import VMath from './js/math.js';
 import {ColladaUtils} from './js/parserCollada.js';
 import ModelData from './js/modelData.js';
 
@@ -12,10 +12,10 @@ QUnit.test( "matrix × vector", function( assert ) {
     0, 0, 0, 3
   ];
   var v = [1, 2, 3, 4];
-  var mv = MATH.mulVector(m, v);
+  var mv = VMath.mulVector(m, v);
   // https://api.qunitjs.com/assert/deepEqual
   assert.deepEqual(mv, [6, 3, 3, 19]);
-  var mvt = MATH.mulVector(MATH.transpose(m), v);
+  var mvt = VMath.mulVector(VMath.transpose(m), v);
   assert.deepEqual(mvt, [-3, 5, 14, 12]);
 });
 
@@ -27,21 +27,21 @@ QUnit.test( "matrix × matrix", function( assert ) {
     1, 1, 1, 2,
     0, 0, 0, 3
   ];
-  var mm = MATH.mulMatrix(m, m);
+  var mm = VMath.mulMatrix(m, m);
   var expected = [1, 0, 0, -4, 1, 0, 0, 2, 3, 1, 1, 8, 0, 0, 0, 9];
   assert.deepEqual(mm, expected);
-  var mt = MATH.transpose(m);
-  var mmt = MATH.mulMatrix(mt, mt);
-  expected = MATH.transpose(expected);
+  var mt = VMath.transpose(m);
+  var mmt = VMath.mulMatrix(mt, mt);
+  expected = VMath.transpose(expected);
   assert.deepEqual(mmt, expected);
   var m2 = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0];
-  MATH.mulMatrix(mt, m2, mm);
+  VMath.mulMatrix(mt, m2, mm);
   expected = [3, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0];
   assert.deepEqual(mm, expected);
 });
 
 QUnit.test("projection matrix", function(assert) {
-  var m = MATH.getProjection(90, 3/4, 1, 50);
+  var m = VMath.getProjection(90, 3/4, 1, 50);
   // column-major
   var expected = [
     1.0000000000000002, 0, 0, 0,

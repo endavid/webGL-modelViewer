@@ -1,4 +1,4 @@
-import MATH from './math.js';
+import VMath from './math.js';
 
 class GlState {
   constructor(gl) {
@@ -16,7 +16,7 @@ class GlState {
   setClearColor(rgb) {
     if (rgb !== this.clearColor) {
       this.clearColor = rgb;
-      const v = MATH.rgbToFloat(rgb);
+      const v = VMath.rgbToFloat(rgb);
       this.gl.clearColor(v[0], v[1], v[2], 1);
     }
   }

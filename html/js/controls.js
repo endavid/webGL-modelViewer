@@ -1,7 +1,7 @@
 import UiUtils from './uiutils.js';
 import Viewer from './viewer.js';
 import Config from './config.js';
-import MATH from './math.js';
+import VMath from './math.js';
 import Gfx from './gfx.js';
 
 var ImageUrls = {
@@ -297,8 +297,8 @@ function updateCameraFOV() {
 }
 
 function updateModelTransform() {
-  const phi = MATH.degToRad(Config.modelRotationPhi);
-  const theta = MATH.degToRad(Config.modelRotationTheta);
+  const phi = VMath.degToRad(Config.modelRotationPhi);
+  const theta = VMath.degToRad(Config.modelRotationTheta);
   viewer.setModelRotationAndScale(0, phi, theta, Config.modelScale);
 }
 
@@ -339,8 +339,8 @@ function onChangeKeyframe() {
 
 function setRotation(phi, theta) {
   const round2 = v => Math.round(v * 100) / 100;
-  const phiDeg = round2(MATH.radToDeg(phi));
-  const thetaDeg = round2(MATH.radToDeg(theta));
+  const phiDeg = round2(VMath.radToDeg(phi));
+  const thetaDeg = round2(VMath.radToDeg(theta));
   $("#modelRotationTheta").val(thetaDeg);
   $("#modelRotationTheta_number").val(thetaDeg);
   $("#modelRotationPhi").val(phiDeg);

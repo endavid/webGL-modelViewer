@@ -1,4 +1,4 @@
-import MATH from './math.js';
+import VMath from './math.js';
 
 class Camera {
   constructor(fov, aspect, near, far) {
@@ -6,10 +6,10 @@ class Camera {
     this.near = near;
     this.far = far;
     this.setFOV(fov);
-    this.viewMatrix = MATH.getI4();
+    this.viewMatrix = VMath.getI4();
   }
   reset() {
-    MATH.setI4(this.viewMatrix);
+    VMath.setI4(this.viewMatrix);
   }
   setPosition(x, y, z) {
     this.viewMatrix[12] = x;
@@ -17,11 +17,11 @@ class Camera {
     this.viewMatrix[14] = z;
   }
   setPitch(degrees) {
-    MATH.rotateX(this.viewMatrix, MATH.degToRad(degrees));
+    VMath.rotateX(this.viewMatrix, VMath.degToRad(degrees));
   }
   setFOV(fov) {
     this.fov = fov;
-    this.projectionMatrix = MATH.getProjection(fov, this.aspect, this.near, this.far);
+    this.projectionMatrix = VMath.getProjection(fov, this.aspect, this.near, this.far);
   }
 }
 export {Camera as default};

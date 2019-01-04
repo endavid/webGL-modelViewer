@@ -2,7 +2,7 @@
   * Matrices are stored column-major, because this is the way they
   * need to be sent to the GPU.
   */
-var MATH = {
+var VMath = {
   normalize: function(v) {
     var norm = v.reduce((acc, c) => acc + c * c, 0);
     norm = Math.sqrt(norm) || 1;
@@ -22,7 +22,7 @@ var MATH = {
   getProjection: function(angle, a, zMin, zMax)
   {
     // ref https://github.com/endavid/VidEngine/blob/master/VidFramework/VidFramework/sdk/math/Matrix.swift
-    const tan = Math.tan(MATH.degToRad(0.5*angle)),
+    const tan = Math.tan(VMath.degToRad(0.5*angle)),
       A = -(zMax + zMin)/(zMax - zMin),
       B = (-2*zMax*zMin)/(zMax-zMin);
     return [
@@ -49,7 +49,7 @@ var MATH = {
   },
 
   setScale4: function(m, scale) {
-    MATH.setI4(m);
+    VMath.setI4(m);
     m[0]=scale;
     m[5]=scale;
     m[10]=scale;
@@ -214,4 +214,4 @@ var MATH = {
     return a;
   }
 };
-export {MATH as default};
+export {VMath as default};

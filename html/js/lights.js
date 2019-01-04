@@ -1,4 +1,4 @@
-import MATH from './math.js';
+import VMath from './math.js';
 
 class SunLight {
   constructor(altitude, eastWest) {
@@ -7,7 +7,7 @@ class SunLight {
     this.updateDirection();
   }
   updateDirection() {
-    this.direction = MATH.normalize([this.eastWest, this.altitude, 1.0]);
+    this.direction = VMath.normalize([this.eastWest, this.altitude, 1.0]);
   }
   setAltitude(v) {
     this.altitude = v;

@@ -1,4 +1,4 @@
-import MATH from './math.js';
+import VMath from './math.js';
 
 const MAX_JOINTS = 100;
 
@@ -29,7 +29,7 @@ class SkinnedModel {
   constructor(skin, skeleton, anims) {
     this.joints = new Array(MAX_JOINTS * 16);
     for (let offset = 0; offset < 16 * MAX_JOINTS; offset += 16) {
-      MATH.setI4(this.joints, offset);
+      VMath.setI4(this.joints, offset);
     }
     this.jointNames = skin.joints;
     this.jointIndices = {};
@@ -47,16 +47,16 @@ class SkinnedModel {
   /// JointMatrix * InvBindMatrix
   applyDefaultPose() {
     for (let i = 0; i < this.jointNames.length; i++) {
-      const m = MATH.mulMatrix(this.getDefaultPoseMatrix(i), this.inverseBindMatrices[i]);
+      const m = VMath.mulMatrix(this.getDefaultPoseMatrix(i), this.inverseBindMatrices[i]);
       // convert row-major to column-major, GL-ready
-      MATH.transpose(m, this.joints, i * 16);
+      VMath.transpose(m, this.joints, i * 16);
     }
   }
   applyPose(keyframe) {
     for (let i = 0; i < this.jointNames.length; i++) {
-      const m = MATH.mulMatrix(this.getAnimMatrix(i, keyframe), this.inverseBindMatrices[i]);
+      const m = VMath.mulMatrix(this.getAnimMatrix(i, keyframe), this.inverseBindMatrices[i]);
       // convert row-major to column-major, GL-ready
-      MATH.transpose(m, this.joints, i * 16);
+      VMath.transpose(m, this.joints, i * 16);
     }
   }
   getDefaultPoseMatrix(i) {
@@ -66,7 +66,7 @@ class SkinnedModel {
     var parent = node.parent;
     while (parent) {
       node = this.skeleton[parent];
-      m = MATH.mulMatrix(node.transform, m);
+      m = VMath.mulMatrix(node.transform, m);
       parent = node.parent;
     }
     // m = armatureTransform * m;
@@ -80,32 +80,32 @@ class SkinnedModel {
     const transform = this.skeleton[name].transform;
     const s = arrayValueOrDefault(jointAnim.scale, keyframe, [1, 1, 1]);
     const t = arrayValueOrDefault(jointAnim.translation, keyframe, [0, 0, 0]);
-    const rx = MATH.degToRad(arrayValueOrDefault(jointAnim["rotateX.ANGLE"], keyframe, 0));
-    const ry = MATH.degToRad(arrayValueOrDefault(jointAnim["rotateY.ANGLE"], keyframe, 0));
-    const rz = MATH.degToRad(arrayValueOrDefault(jointAnim["rotateZ.ANGLE"], keyframe, 0));
-    var ms = MATH.getI4();
+    const rx = VMath.degToRad(arrayValueOrDefault(jointAnim["rotateX.ANGLE"], keyframe, 0));
+    const ry = VMath.degToRad(arrayValueOrDefault(jointAnim["rotateY.ANGLE"], keyframe, 0));
+    const rz = VMath.degToRad(arrayValueOrDefault(jointAnim["rotateZ.ANGLE"], keyframe, 0));
+    var ms = VMath.getI4();
     ms[0] = s[0];
     ms[5] = s[1];
     ms[10] = s[2];
-    var mt = MATH.getI4();
+    var mt = VMath.getI4();
     // row-major
     mt[3] = transform[3] + t[0];
     mt[7] = transform[7] + t[1];
     mt[11] = transform[11] + t[2];
     var mr = {
-      x: MATH.rotateX(MATH.getI4(), rx),
-      y: MATH.rotateY(MATH.getI4(), ry),
-      z: MATH.rotateZ(MATH.getI4(), rz)
+      x: VMath.rotateX(VMath.getI4(), rx),
+      y: VMath.rotateY(VMath.getI4(), ry),
+      z: VMath.rotateZ(VMath.getI4(), rz)
     };
     // rotations are column-major! convert to row-major
-    mr.x = MATH.transpose(mr.x);
-    mr.y = MATH.transpose(mr.y);
-    mr.z = MATH.transpose(mr.z);
+    mr.x = VMath.transpose(mr.x);
+    mr.y = VMath.transpose(mr.y);
+    mr.z = VMath.transpose(mr.z);
     const order = this.skeleton[name].rotationOrder || "xyz";
-    var m = MATH.mulMatrix(mr[order[0]], mr[order[1]]);
-    m = MATH.mulMatrix(m, mr[order[2]]);
-    m = MATH.mulMatrix(m, ms);
-    m = MATH.mulMatrix(mt, m);
+    var m = VMath.mulMatrix(mr[order[0]], mr[order[1]]);
+    m = VMath.mulMatrix(m, mr[order[2]]);
+    m = VMath.mulMatrix(m, ms);
+    m = VMath.mulMatrix(mt, m);
     return m;
   }
   getAnimMatrix(i, keyframe) {
@@ -116,7 +116,7 @@ class SkinnedModel {
     while (parent) {
       node = this.skeleton[parent];
       const pm = this.getJointMatrix(parent, keyframe);
-      m = MATH.mulMatrix(pm, m);
+      m = VMath.mulMatrix(pm, m);
       parent = node.parent;
     }
     // m = armatureTransform * m;

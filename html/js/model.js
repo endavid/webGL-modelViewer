@@ -1,5 +1,5 @@
 import Gfx from './gfx.js';
-import MATH from './math.js';
+import VMath from './math.js';
 import SkinnedModel from './skinnedModel.js';
 
 class Model {
@@ -20,7 +20,7 @@ class Model {
   // }
   constructor(gl, json, imageUrls) {
     this.name = json.name;
-    this.transformMatrix = MATH.getI4();
+    this.transformMatrix = VMath.getI4();
     //vertices
     this.vertexBuffer= gl.createBuffer();
     this.stride = json.stride;

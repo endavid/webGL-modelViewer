@@ -1,4 +1,4 @@
-import MATH from './math.js';
+import VMath from './math.js';
 
 class PluginLabels {
   constructor() {}
@@ -9,8 +9,8 @@ class PluginLabels {
     context.strokeStyle = "#ffffff";
     const labels = scene.labels;
     function worldToPixels(world) {
-      var view = MATH.mulVector(scene.camera.viewMatrix, world);
-      var clip = MATH.mulVector(scene.camera.projectionMatrix, view);
+      var view = VMath.mulVector(scene.camera.viewMatrix, world);
+      var clip = VMath.mulVector(scene.camera.projectionMatrix, view);
       clip[0] /= clip[3]; clip[1] /= clip[3];
       // convert from clipspace to pixels
       return [(clip[0] *  0.5 + 0.5) * canvas.width, (clip[1] * -0.5 + 0.5) * canvas.height];
@@ -24,7 +24,7 @@ class PluginLabels {
     Object.keys(labels.model).forEach(function (k) {
       var pos = labels.model[k];
       pos[3] = 1;
-      var world = MATH.mulVector(modelMatrix, pos);
+      var world = VMath.mulVector(modelMatrix, pos);
       var pix = worldToPixels(world);
       PluginLabels.drawLabel(context, pix[0], pix[1], k);
     });

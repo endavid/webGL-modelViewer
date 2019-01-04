@@ -1,4 +1,4 @@
-var MATH = {
+var VMath = {
   normalize: function(v) {
     var norm = v.reduce((acc, c) => acc + c * c, 0);
     norm = Math.sqrt(norm) || 1;
@@ -52,7 +52,7 @@ class ModelData {
       n = mesh.indices.length / 3;
     }
     var self = this;
-    const vertexIndexToHash = vi => MATH.hashVertex(self.getPosition(vi));
+    const vertexIndexToHash = vi => VMath.hashVertex(self.getPosition(vi));
     let t = mesh.indices.slice(3 * i, 3 * (i+1));
     const hashes = t.map(vertexIndexToHash);
     var fpp = this.facesPerPosition;
@@ -91,14 +91,14 @@ class ModelData {
     const progress = Math.round(100 * i / n);
     let j = i * this.stride;
     const position = this.getPosition(i);
-    const hash = MATH.hashVertex(position);
+    const hash = VMath.hashVertex(position);
     let triangleList = this.facesPerPosition[hash];
     let numContributingFaces = triangleList.length;
     if (numContributingFaces === 0) {
       return progress;
     }
     let faceNormals = triangleList.map(this.computeTriangleNormal.bind(this));
-    let vectorSum = faceNormals.reduce(MATH.sum, [0, 0, 0]);
+    let vectorSum = faceNormals.reduce(VMath.sum, [0, 0, 0]);
     let normalAverage = vectorSum.map(div.bind(null, numContributingFaces));
     this.vertices[j + 3] = normalAverage[0];
     this.vertices[j + 4] = normalAverage[1];
@@ -107,8 +107,8 @@ class ModelData {
   }
   computeTriangleNormal(triangle) {
     const positions = triangle.map(this.getPosition.bind(this));
-    const v1 = MATH.diff(positions[0], positions[1]);
-    const v2 = MATH.diff(positions[0], positions[2]);
-    return MATH.normalize(MATH.cross(v1, v2));
+    const v1 = VMath.diff(positions[0], positions[1]);
+    const v2 = VMath.diff(positions[0], positions[2]);
+    return VMath.normalize(VMath.cross(v1, v2));
   }
 }

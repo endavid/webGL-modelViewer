@@ -1,4 +1,4 @@
-import MATH from "./math.js";
+import VMath from "./math.js";
 import { WavefrontUtils } from "./parserWavefront.js";
 import { ColladaUtils } from "./parserCollada.js";
 
@@ -163,7 +163,7 @@ class Gfx {
         gl.UNSIGNED_BYTE,
         image
       );
-      if (MATH.isPowerOf2(image.width) && MATH.isPowerOf2(image.height)) {
+      if (VMath.isPowerOf2(image.width) && VMath.isPowerOf2(image.height)) {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(
           gl.TEXTURE_2D,

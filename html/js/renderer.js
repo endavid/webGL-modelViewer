@@ -1,6 +1,6 @@
 import GlState from './glState.js';
 import Gfx from './gfx.js';
-import MATH from './math.js';
+import VMath from './math.js';
 import PluginLitModel from './pluginLitModel.js';
 import PluginOverlay from './pluginOverlay.js';
 import PluginLabels from './pluginLabels.js';
@@ -29,9 +29,9 @@ class Renderer {
     this.onRotation = () => {};
     this.cameraPosition = { x: 0, y: -100, z: -250 };
     // matrices
-    this.projectionMatrix = MATH.getProjection(20, this.canvas.width / this.canvas.height, 1, 400);
-    this.modelMatrix = MATH.getI4();
-    this.viewMatrix = MATH.getI4();
+    this.projectionMatrix = VMath.getProjection(20, this.canvas.width / this.canvas.height, 1, 400);
+    this.modelMatrix = VMath.getI4();
+    this.viewMatrix = VMath.getI4();
     // Overwrite this function with your custom stuff
     this.drawModel = function () {
     };
@@ -147,9 +147,9 @@ class Renderer {
     const dX = this.mouseState.lock.x ? 0 : this.mouseState.dX;
     const dY = this.mouseState.lock.y ? 0 : this.mouseState.dY;
     if (Math.abs(dX) > e || Math.abs(dY) > e) {
-      this.mouseState.theta = MATH.clampAngle(this.mouseState.theta + Math.PI * dX);
-      this.mouseState.phi = MATH.clampAngle(this.mouseState.phi + Math.PI * dY);
-      this.mouseState.phi = MATH.clamp(this.mouseState.phi, -Math.PI * 0.5, Math.PI * 0.5);
+      this.mouseState.theta = VMath.clampAngle(this.mouseState.theta + Math.PI * dX);
+      this.mouseState.phi = VMath.clampAngle(this.mouseState.phi + Math.PI * dY);
+      this.mouseState.phi = VMath.clamp(this.mouseState.phi, -Math.PI * 0.5, Math.PI * 0.5);
       this.onRotation(this.mouseState.phi, this.mouseState.theta);
     }
   }
@@ -198,9 +198,9 @@ class Renderer {
     this.mouseState.theta = ry;
     var model = this.scene.models[index];
     if (model) {
-      MATH.setScale4(model.transformMatrix, scale);
-      MATH.rotateY(model.transformMatrix, ry);
-      MATH.rotateX(model.transformMatrix, rx);  
+      VMath.setScale4(model.transformMatrix, scale);
+      VMath.rotateY(model.transformMatrix, ry);
+      VMath.rotateX(model.transformMatrix, rx);  
     }
   }
   setKeyframe(index, keyframe) {
