@@ -1,6 +1,6 @@
 import VMath from "./math.js";
 import { WavefrontUtils } from "./parserWavefront.js";
-import { ColladaUtils } from "./parserCollada.js";
+import parseCollada from "./parserCollada.js";
 
 const ShaderType = {
   fragment: "x-shader/x-fragment",
@@ -127,7 +127,7 @@ class Gfx {
     } else if (ext === "Dae") {
       return $.get(url, null, null, "text").then(data => {
         const filename = Gfx.getFileNameWithoutExtension(name);
-        let json = ColladaUtils.parseCollada(data, filename + ".png");
+        let json = parseCollada(data, filename + ".png");
         json.name = filename + ".json";
         return json;
       });
