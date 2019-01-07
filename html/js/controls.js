@@ -324,7 +324,8 @@ function reloadModel() {
   }, setError);
 }
 
-function progressBarUpdate(percentage) {
+function progressBarUpdate(ratio) {
+  const percentage = Math.round(100 * ratio);
   $("#progressBar").css('width', percentage + "%");
 }
 

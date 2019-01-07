@@ -74,7 +74,7 @@ class Model {
           };
           worker.onmessage = e => {
             onProgress(e.data.done);
-            if (e.data.done === 100 && e.data.vertices) {
+            if (e.data.done && e.data.vertices) {
               json.vertices = e.data.vertices;
               onDone(new Model(gl, json, imageUrls));
             }

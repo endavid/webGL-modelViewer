@@ -1,7 +1,6 @@
 import SkinnedModel from './js/skinnedModel.js';
 import VMath from './js/math.js';
 import {ColladaUtils} from './js/parserCollada.js';
-import ModelData from './js/modelData.js';
 
 QUnit.test( "matrix × vector", function( assert ) {
   // row-major
@@ -147,6 +146,10 @@ QUnit.test("Model Data", assert => {
   };
   const modelData = new ModelData(json);
   assert.deepEqual(modelData.getNormal(2), [0, 0, 1]);
-  modelData.recomputeNormals();
+  var progress = {step: -1, done: false};
+  while (!progress.done) {
+    progress = modelData.stepFacesPerPositionCreation(progress.step + 1);
+  }
+  modelData.recomputeNormal(2);
   assert.deepEqual(modelData.getNormal(2), [0.7886751345948129, 0, 0]);
 });
