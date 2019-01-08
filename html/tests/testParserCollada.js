@@ -1,7 +1,7 @@
-import parseCollada from '/js/parserCollada.js';
+import Collada from '/js/parserCollada.js';
 import SkinnedModel from '/js/skinnedModel.js';
 
-QUnit.module("parseCollada");
+QUnit.module("Collada");
 
 QUnit.test("read Collada anim", assert => {
   var done = assert.async();
@@ -10,7 +10,7 @@ QUnit.test("read Collada anim", assert => {
     url: "resources/monigote.dae",
     dataType: 'text',
     success: function(data) {
-      var model = parseCollada(data);
+      var model = Collada.parse(data);
       var expectedVertexCount = 5016;
       assert.equal(model.meshes[0].indices.length, expectedVertexCount);
       assert.equal(model.stride, 16);

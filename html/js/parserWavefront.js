@@ -1,5 +1,5 @@
-var WavefrontUtils = {
-  parseObjWavefront: function(data) {
+class WavefrontObj {
+  static parse(data) {
     var lines = data.split("\n");
     var positions = [];
     var normals = [];
@@ -106,9 +106,9 @@ var WavefrontUtils = {
       model.meshes.push(submesh);
     });
     return model;
-  },
+  }
 
-  parseMaterial: function(data) {
+  static parseMaterial(data) {
     var lines = data.split("\n");
     var materials = {};
     var lastMaterial = "";
@@ -159,9 +159,9 @@ var WavefrontUtils = {
       }
     });
     return materials;
-  },
+  }
 
-  exportObjModel: function(model, callback) {
+  static export(model, callback) {
     var out = "# Vertices\n";
     var i;
     for (i = 0; i < model.vertices.length; i+=8 ) {
@@ -187,7 +187,7 @@ var WavefrontUtils = {
       }
     });
     callback(out);
-  },
+  }
 };
-export {WavefrontUtils};
+export {WavefrontObj as default};
 

@@ -1,4 +1,4 @@
-import parseCollada from '/js/parserCollada.js';
+import Collada from '/js/parserCollada.js';
 import SkinnedModel from '/js/skinnedModel.js';
 
 QUnit.module("SkinnedModel");
@@ -10,7 +10,7 @@ QUnit.test("add pose keyframe", assert => {
     url: "resources/monigote.dae",
     dataType: 'text',
     success: function(data) {
-      var model = parseCollada(data);
+      var model = Collada.parse(data);
       var skinnedModel = new SkinnedModel(model.skin, model.skeleton, model.anims);
       assert.equal(skinnedModel.keyframeCount, 5);
       var posefile = {

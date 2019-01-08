@@ -1,6 +1,6 @@
 import VMath from "./math.js";
-import { WavefrontUtils } from "./parserWavefront.js";
-import parseCollada from "./parserCollada.js";
+import WavefrontObj from "./parserWavefront.js";
+import Collada from "./parserCollada.js";
 
 const ShaderType = {
   fragment: "x-shader/x-fragment",
@@ -110,14 +110,14 @@ class Gfx {
     var ext = Gfx.getModelFileExtension(name, url);
     if (ext === "Obj") {
       return $.get(url).then(data => {
-        let json = WavefrontUtils.parseObjWavefront(data);
+        let json = WavefrontObj.parse(data);
         json.name = Gfx.getFileNameWithoutExtension(name) + ".json";
         if (
           json.materialFile !== undefined &&
           materialUrls[json.materialFile] !== undefined
         ) {
           return $.get(materialUrls[json.materialFile]).then(mtldata => {
-            json.materials = WavefrontUtils.parseMaterial(mtldata);
+            json.materials = WavefrontObj.parseMaterial(mtldata);
             return json;
           });
         } else {
@@ -127,7 +127,7 @@ class Gfx {
     } else if (ext === "Dae") {
       return $.get(url, null, null, "text").then(data => {
         const filename = Gfx.getFileNameWithoutExtension(name);
-        let json = parseCollada(data, filename + ".png");
+        let json = Collada.parse(data, filename + ".png");
         json.name = filename + ".json";
         return json;
       });
@@ -226,7 +226,7 @@ class Gfx {
     };
     return Gfx.modelFileToJson(name, url, materialUrls).then(json => {
       if (modelType === ".obj") {
-        WavefrontUtils.exportObjModel(json, onExportSuccess);
+        WavefrontObj.export(json, onExportSuccess);
       } else if (modelType === ".json") {
         const out = Gfx.modelStringify(json);
         onExportSuccess(out);

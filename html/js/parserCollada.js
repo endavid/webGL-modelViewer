@@ -351,25 +351,26 @@ function readAnimations(json) {
   return animations;
 }
 
-
-function parseCollada(xmlText, defaultMaterial) {
-  // https://github.com/abdmob/x2js
-  var x2js = new X2JS();
-  var json = x2js.xml_str2json(xmlText);
-  var skin = readSkin(json);
-  var model = readMeshes(json, defaultMaterial, skin);
-  var skeleton = readSkeleton(json);
-  var anims = readAnimations(json);
-  if (defaultMaterial) {
-    model.materials[defaultMaterial] = {
-      albedoMap: defaultMaterial
-    };
+class Collada {
+  static parse(xmlText, defaultMaterial) {
+    // https://github.com/abdmob/x2js
+    var x2js = new X2JS();
+    var json = x2js.xml_str2json(xmlText);
+    var skin = readSkin(json);
+    var model = readMeshes(json, defaultMaterial, skin);
+    var skeleton = readSkeleton(json);
+    var anims = readAnimations(json);
+    if (defaultMaterial) {
+      model.materials[defaultMaterial] = {
+        albedoMap: defaultMaterial
+      };
+    }
+    model.skin = skin;
+    model.skeleton = skeleton;
+    model.anims = anims;
+    return model;
   }
-  model.skin = skin;
-  model.skeleton = skeleton;
-  model.anims = anims;
-  return model;
 }
 
-export {parseCollada as default};
+export {Collada as default};
 
