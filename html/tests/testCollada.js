@@ -1,4 +1,4 @@
-import Collada from '/js/parserCollada.js';
+import Collada from '/js/collada.js';
 import SkinnedModel from '/js/skinnedModel.js';
 
 QUnit.module("Collada");

@@ -1,6 +1,6 @@
 import VMath from "./math.js";
-import WavefrontObj from "./parserWavefront.js";
-import Collada from "./parserCollada.js";
+import WavefrontObj from "./wavefrontObj.js";
+import Collada from "./collada.js";
 
 const ShaderType = {
   fragment: "x-shader/x-fragment",
