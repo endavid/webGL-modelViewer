@@ -37,6 +37,10 @@ Preferred style:
 * Use `async` and `await` syntactic sugar for Promises.
 * Unfortunately, *Workers* do not support modules at the moment, so code involving workers will look uglier. Try to make the `Worker` code as independent as possible (even if it means copy-pasting a couple of already existing functions).
 
+Comments about some of the custom rules in the ESLint config file:
+
+* `"imports/extensions": 0`. This is disabled because the [so-called “bare” module specifiers are currently not supported](https://developers.google.com/web/fundamentals/primers/modules). There's a [complaint about this in AirBnB repo](https://github.com/airbnb/javascript/issues/1592).
+* `"lines-between-class-members": 0`. IDEs make code pretty enough these days, so member functions are already easy to spot since they appear in a different color. No need to add extra spaces.
 
 ### Architecture
 The code is roughly divided into 2 main blocks: UI and rendering. All the UI is created throw `controls.js`, with some helpers from `uiutils.js`. The rest of the code is related to rendering. The main rendering loop is in `renderer.js`. A `Renderer` contains a series of 3D and 2D plugins. The 3D plugins render things in the WebGL canvas, while the 2D plugins are used to overlay things using a 2D context.

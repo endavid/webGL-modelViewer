@@ -24,4 +24,4 @@ class Camera {
     this.projectionMatrix = VMath.getProjection(fov, this.aspect, this.near, this.far);
   }
 }
-export {Camera as default};
+export { Camera as default };
