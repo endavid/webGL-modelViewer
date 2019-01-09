@@ -7,19 +7,19 @@ class PluginOverlay {
     this.quad = Gfx.createQuad(gl);
   }
   static async createAsync(gl) {
-    const attribs = ["position"];
-    const uniforms = ["scale", "offset", "colourTransform", "colourBias"];
-    const shader = await Shader.createAsync(gl, "shaders/fullscreen.vs", "shaders/colour.fs", attribs, uniforms);
+    const attribs = ['position'];
+    const uniforms = ['scale', 'offset', 'colourTransform', 'colourBias'];
+    const shader = await Shader.createAsync(gl, 'shaders/fullscreen.vs', 'shaders/colour.fs', attribs, uniforms);
     return new PluginOverlay(gl, shader);
   }
-  setBlendPass(glState) {
+  static setBlendPass(glState) {
     glState.setDepthTest(false);
     glState.setDepthMask(false);
     glState.setCullFace(false);
     glState.setBlend(true);
   }
   setOverlayParameters(gl, overlay) {
-    const shader = this.shader;
+    const { shader } = this;
     gl.uniform2f(shader.uniforms.scale, 1, 1);
     gl.uniform2f(shader.uniforms.offset, 0, 0);
     gl.uniform4f(shader.uniforms.colourBias, 0, 0, 0, 0);
@@ -27,13 +27,13 @@ class PluginOverlay {
     const t = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, a];
     gl.uniformMatrix4fv(shader.uniforms.colourTransform, false, t);
   }
-  draw(glState, scene, deltaTime) {
-    const overlay = scene.overlay;
+  draw(glState, scene) {
+    const { overlay } = scene;
     if (!overlay || !overlay.img) {
       return;
     }
-    const gl = glState.gl;
-    this.setBlendPass(glState);
+    const { gl } = glState;
+    PluginOverlay.setBlendPass(glState);
     this.shader.use(gl);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, overlay.img.webglTexture);
@@ -48,4 +48,4 @@ class PluginOverlay {
     gl.drawElements(gl.TRIANGLE_STRIP, this.quad.faces.length, gl.UNSIGNED_SHORT, 0);
   }
 }
-export {PluginOverlay as default};
+export { PluginOverlay as default };

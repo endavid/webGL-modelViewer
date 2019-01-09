@@ -1,33 +1,45 @@
 import VMath from './math.js';
 
 class PluginLabels {
-  constructor() {}
-  draw(context, scene, deltaTime) {
-    const canvas = context.canvas;
+  constructor() {
+    this.fillStyle = '#ffffff';
+    this.strokeStyke = '#ffffff';
+  }
+  setStyle(context) {
+    /* eslint-disable no-param-reassign */
+    context.fillStyle = this.fillStyle;
+    context.strokeStyle = this.strokeStyke;
+    /* eslint-enable no-param-reassign */
+  }
+  draw(context, scene) {
+    const { canvas } = context;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = "#ffffff";
-    context.strokeStyle = "#ffffff";
-    const labels = scene.labels;
+    this.setStyle(context);
+    const { labels } = scene;
     function worldToPixels(world) {
-      var view = VMath.mulVector(scene.camera.viewMatrix, world);
-      var clip = VMath.mulVector(scene.camera.projectionMatrix, view);
+      const view = VMath.mulVector(scene.camera.viewMatrix, world);
+      const clip = VMath.mulVector(scene.camera.projectionMatrix, view);
       clip[0] /= clip[3]; clip[1] /= clip[3];
       // convert from clipspace to pixels
-      return [(clip[0] *  0.5 + 0.5) * canvas.width, (clip[1] * -0.5 + 0.5) * canvas.height];
+      return [(clip[0] * 0.5 + 0.5) * canvas.width, (clip[1] * -0.5 + 0.5) * canvas.height];
     }
-    Object.keys(labels.world).forEach(function (k) {
-      var pos = labels.world[k];
+    Object.keys(labels.world).forEach((k) => {
+      const pos = labels.world[k];
       pos[3] = 1;
-      var pix = worldToPixels(pos);
+      const pix = worldToPixels(pos);
       PluginLabels.drawLabel(context, pix[0], pix[1], k);
     });
-    Object.keys(labels.model).forEach(function (k) {
-      var pos = labels.model[k];
-      pos[3] = 1;
-      var world = VMath.mulVector(modelMatrix, pos);
-      var pix = worldToPixels(world);
-      PluginLabels.drawLabel(context, pix[0], pix[1], k);
-    });
+    const [mainModel] = scene.models;
+    if (mainModel) {
+      const modelMatrix = mainModel.transformMatrix;
+      Object.keys(labels.model).forEach((k) => {
+        const pos = labels.model[k];
+        pos[3] = 1;
+        const world = VMath.mulVector(modelMatrix, pos);
+        const pix = worldToPixels(world);
+        PluginLabels.drawLabel(context, pix[0], pix[1], k);
+      });
+    }
   }
   // https://webglfundamentals.org/webgl/lessons/webgl-text-canvas2d.html
   static drawLabel(ctx, pixelX, pixelY, label) {
@@ -50,4 +62,4 @@ class PluginLabels {
     ctx.restore();
   }
 }
-export {PluginLabels as default};
+export { PluginLabels as default };

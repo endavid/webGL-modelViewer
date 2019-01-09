@@ -2,14 +2,14 @@ import Gfx from './gfx.js';
 
 class Shader {
   constructor(gl, program, attribs, uniforms) {
-    var self = this;
+    const self = this;
     self.program = program;
     self.attribs = {};
     self.uniforms = {};
-    attribs.forEach(function (a) {
+    attribs.forEach((a) => {
       self.attribs[a] = gl.getAttribLocation(program, a);
     });
-    uniforms.forEach(function (u) {
+    uniforms.forEach((u) => {
       self.uniforms[u] = gl.getUniformLocation(program, u);
     });
   }
@@ -19,13 +19,13 @@ class Shader {
   }
   enableVertexAttributes(gl) {
     const attribKeys = Object.keys(this.attribs);
-    for (let i = 0; i < attribKeys.length; i++) {
+    for (let i = 0; i < attribKeys.length; i += 1) {
       gl.enableVertexAttribArray(this.attribs[attribKeys[i]]);
     }
   }
   disableVertexAttributes(gl) {
     const attribKeys = Object.keys(this.attribs);
-    for (let i = 0; i < attribKeys.length; i++) {
+    for (let i = 0; i < attribKeys.length; i += 1) {
       gl.disableVertexAttribArray(this.attribs[attribKeys[i]]);
     }
   }
@@ -37,5 +37,4 @@ class Shader {
     this.disableVertexAttributes(gl);
   }
 }
-
-export {Shader as default};
+export { Shader as default };

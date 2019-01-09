@@ -6,29 +6,29 @@ class PluginLitModel {
     this.whiteTexture = whiteTexture;
   }
   static async createAsync(gl, whiteTexture) {
-    const attribs = ["uv", "position", "normal"];
-    const uniforms = ["Pmatrix", "Vmatrix", "Mmatrix", "lightDirection", "sampler"];
-    const attribsSkin = attribs.concat(["boneWeights", "boneIndices"]);
-    const uniformsSkin = uniforms.concat(["sampler", "joints"]);
-    var shaders = {};
-    shaders.lit = await Shader.createAsync(gl, "shaders/geometry.vs", "shaders/lighting.fs", attribs, uniforms);
-    shaders.litSkin = await Shader.createAsync(gl, "shaders/skinning.vs", "shaders/lighting.fs", attribsSkin, uniformsSkin);
+    const attribs = ['uv', 'position', 'normal'];
+    const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'sampler'];
+    const attribsSkin = attribs.concat(['boneWeights', 'boneIndices']);
+    const uniformsSkin = uniforms.concat(['sampler', 'joints']);
+    const shaders = {};
+    shaders.lit = await Shader.createAsync(gl, 'shaders/geometry.vs', 'shaders/lighting.fs', attribs, uniforms);
+    shaders.litSkin = await Shader.createAsync(gl, 'shaders/skinning.vs', 'shaders/lighting.fs', attribsSkin, uniformsSkin);
     return new PluginLitModel(shaders, whiteTexture);
   }
-  setOpaquePass(glState) {
+  static setOpaquePass(glState) {
     glState.setDepthTest(true);
     glState.setDepthMask(true);
     glState.setCullFace(true);
     glState.setBlend(false);
   }
-  draw(glState, scene, deltaTime) {
-    var self = this;
-    const whiteTexture = this.whiteTexture;
-    const gl = glState.gl;
-    const camera = scene.camera;
-    const light0 = scene.lights[0];
-    this.setOpaquePass(glState);
-    scene.models.forEach(model => {
+  draw(glState, scene) {
+    const self = this;
+    const { whiteTexture } = this;
+    const { gl } = glState;
+    const { camera, lights } = scene;
+    const [light0] = lights;
+    PluginLitModel.setOpaquePass(glState);
+    scene.models.forEach((model) => {
       if (!model.vertexBuffer) {
         return;
       }
@@ -40,25 +40,28 @@ class PluginLitModel {
       gl.uniformMatrix4fv(shader.uniforms.Pmatrix, false, camera.projectionMatrix);
       gl.uniformMatrix4fv(shader.uniforms.Vmatrix, false, camera.viewMatrix);
       gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.transformMatrix);
-      gl.uniform3f(shader.uniforms.lightDirection, light0.direction[0], light0.direction[1], light0.direction[2]);
+      gl.uniform3f(shader.uniforms.lightDirection,
+        light0.direction[0], light0.direction[1], light0.direction[2]);
       gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexBuffer);
       gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
-      gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4*3);
-      gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, 4*(3+3));
+      gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4 * 3);
+      gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, 4 * (3 + 3));
       if (skinned) {
-        gl.vertexAttribPointer(shader.attribs.boneWeights, 4, gl.FLOAT, false, stride, 4*(3+3+2));
-        gl.vertexAttribPointer(shader.attribs.boneIndices, 4, gl.FLOAT, false, stride, 4*(3+3+2+4));
+        gl.vertexAttribPointer(shader.attribs.boneWeights,
+          4, gl.FLOAT, false, stride, 4 * (3 + 3 + 2));
+        gl.vertexAttribPointer(shader.attribs.boneIndices,
+          4, gl.FLOAT, false, stride, 4 * (3 + 3 + 2 + 4));
         gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
       }
       // draw all submeshes
-      model.meshes.forEach(mesh => {
+      model.meshes.forEach((mesh) => {
         gl.activeTexture(gl.TEXTURE0);
-        var albedoMap = mesh.albedoMap || whiteTexture;
-        var glTexture = albedoMap.webglTexture || whiteTexture.webglTexture;
+        const albedoMap = mesh.albedoMap || whiteTexture;
+        const glTexture = albedoMap.webglTexture || whiteTexture.webglTexture;
         if (glTexture) {
           gl.bindTexture(gl.TEXTURE_2D, glTexture);
         } else {
-          console.error("Not even the white texture is ready!");
+          console.error('Not even the white texture is ready!');
         }
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
         gl.drawElements(gl.TRIANGLES, mesh.numPoints, gl.UNSIGNED_INT, 0);
@@ -67,4 +70,4 @@ class PluginLitModel {
     });
   }
 }
-export {PluginLitModel as default};
+export { PluginLitModel as default };
