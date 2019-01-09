@@ -1,0 +1,14 @@
+{
+  "name": "webgl-modelviewer",
+  "version": "1.0.2",
+  "description": "A minimalist model viewer written in raw WebGL, with no dependencies to other frameworks",
+  "author": "David Gavilan",
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.3.0"
+  },
+  "dependencies": {
+    "npm": "^6.5.0"
+  }
+}

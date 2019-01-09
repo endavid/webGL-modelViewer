@@ -24,9 +24,11 @@ Rigged Collada models are supported as well. You can preview the keyframes in an
 Development
 -----------
 ### Style
-We target ECMAScript 2016 (or ES7), so we can use all modern syntactic sugar. Older versions of Javascript are not supported. 
+We target ECMAScript 2016 (or ES7), so we can use all modern syntactic sugar. Older versions of Javascript are not supported.
+Use ESLint to get the style right. I'm using AirBnB Javascript style as base. To install it, install Node.js first. Then, from the console, run `npm install` inside the root directory of this repository.
 
 Preferred style:
+
 * Declare classes with the `class` keyword, never with `function`.
 * Keep files shorter than 500 lines. If they grow bigger, try to split the files in modules.
 * Prefer modules and avoid the old `(function(global) {})(this);` wrapping construct.
