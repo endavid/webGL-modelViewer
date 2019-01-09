@@ -6,23 +6,18 @@ onmessage = function(e) {
     progress: 0,
     done: false
   };
-  var i = 0;
-  var done = false;
-  while (!done) {
-    const progress = modelData.stepFacesPerPositionCreation(i);
-    done = progress.done;
+  var progress = {step: -1, done: false};
+  while (!progress.done) {
+    progress = modelData.stepFacesPerPositionCreation(progress.step + 1);
     msg.progress = 0.5 * (progress.step / progress.total);
     postMessage(msg);
-    i++;
   }
-  i = 0;
-  done = false;
-  while (!done) {
-    const progress = modelData.recomputeNormal(i);
-    done = progress.done;
+  progress.step = -1;
+  progress.done = false;
+  while (!progress.done) {
+    progress = modelData.recomputeNormal(progress.step + 1);
     msg.progress = 0.5 + 0.5 * (progress.step / progress.total);
     postMessage(msg);
-    i++;
   }
   msg.progress = 1;
   msg.done = true;
