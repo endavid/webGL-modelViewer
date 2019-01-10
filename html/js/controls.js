@@ -15,6 +15,172 @@ const ImageUrls = {
 
 const MaterialUrls = {};
 
+// initialized on document.ready
+let viewer;
+
+function setInfo(text) {
+  $('#infoDiv').text(text);
+}
+
+function setWarning(text) {
+  setInfo(`[WARNING] ${text}`);
+}
+
+function setError(e) {
+  console.error(e);
+  setInfo(`[ERROR] ${e}`);
+}
+
+function removePoseGroup() {
+  $('tr[id^=gPose]').remove();
+}
+
+function addPoseGroup(skinnedModel) {
+  const id = 'gPose';
+  const frame = Config.keyframe;
+  const { pose } = skinnedModel.getPoseFile(frame);
+  function updateJointWithValue(joint, value, sub) {
+    const key = `rotate${sub}.ANGLE`;
+    skinnedModel.setAnimValue(joint, frame, key, parseFloat(value));
+    skinnedModel.applyPose(frame);
+  }
+  function angleSlider(s, joint, values) {
+    const slider = UiUtils.createMultiSlider(`${s}_angle`, ['X', 'Y', 'Z'], 'rotation XYZ', values, -180, 180, 0.1, updateJointWithValue.bind(null, joint));
+    slider.attr('parent', `${id}_${joint}`);
+    return slider;
+  }
+  function updateJointTrWithValue(joint, value, sub) {
+    const indices = { X: 0, Y: 1, Z: 2 };
+    skinnedModel.setAnimValue(joint, frame, 'translation', parseFloat(value), indices[sub]);
+    skinnedModel.applyPose(frame);
+  }
+  function translationSlider(s, joint, values) {
+    const slider = UiUtils.createMultiSlider(`${s}_translation`, ['X', 'Y', 'Z'], 'translation XYZ', values, -10, 10, 0.1, updateJointTrWithValue.bind(null, joint));
+    slider.attr('parent', `${id}_${joint}`);
+    return slider;
+  }
+  function createControls(skeleton, parent) {
+    const joints = Object.keys(skeleton);
+    let controls = [];
+    joints.forEach((joint) => {
+      const transform = pose[joint] || [];
+      const rx = transform[0] || 0;
+      const ry = transform[1] || 0;
+      const rz = transform[2] || 0;
+      const tx = transform[6] || 0;
+      const ty = transform[7] || 0;
+      const tz = transform[8] || 0;
+      const subId = `${id}_${joint}`;
+      let subcontrols = [
+        angleSlider(subId, joint, [rx, ry, rz]),
+        translationSlider(subId, joint, [tx, ty, tz]),
+      ];
+      const jointControls = createControls(skeleton[joint], subId);
+      subcontrols = subcontrols.concat(jointControls);
+      const jointGroup = UiUtils.createSubGroup(subId, joint, subcontrols, parent);
+      controls = controls.concat(jointGroup);
+    });
+    return controls;
+  }
+  const controls = createControls(skinnedModel.getSkeletonTopology());
+  UiUtils.addGroup(id, 'Pose Controls', controls, '#controlsRight');
+  // hide the sliders by clicking twice to toggle controls
+  $('#gPose').click();
+  $('#gPose').click();
+}
+
+function progressBarUpdate(ratio) {
+  const percentage = Math.round(100 * ratio);
+  $('#progressBar').css('width', `${percentage}%`);
+}
+
+function updateModelTransform() {
+  const phi = VMath.degToRad(Config.modelRotationPhi);
+  const theta = VMath.degToRad(Config.modelRotationTheta);
+  viewer.setModelRotationAndScale(0, phi, theta, Config.modelScale);
+}
+
+function setRotation(phi, theta) {
+  const round2 = v => Math.round(v * 100) / 100;
+  const phiDeg = round2(VMath.radToDeg(phi));
+  const thetaDeg = round2(VMath.radToDeg(theta));
+  $('#modelRotationTheta').val(thetaDeg);
+  $('#modelRotationTheta_number').val(thetaDeg);
+  $('#modelRotationPhi').val(phiDeg);
+  $('#modelRotationPhi_number').val(phiDeg);
+  Config.modelRotationPhi = phiDeg;
+  Config.modelRotationTheta = thetaDeg;
+  updateModelTransform();
+}
+
+function reloadModel() {
+  const url = $('#Presets').val();
+  const name = $('#Presets option:selected').text();
+  progressBarUpdate(0);
+  $('#progressBarDiv').show();
+  viewer.loadModel(name, url, Config, ImageUrls, MaterialUrls, progressBarUpdate, (model) => {
+    removePoseGroup();
+    $('#progressBarDiv').hide();
+    if (model.skinnedModel) {
+      $('#keyframe').attr('max', model.skinnedModel.keyframeCount - 1);
+      $('#keyframe_number').val(-1);
+      Config.keyframe = -1;
+      addPoseGroup(model.skinnedModel);
+    }
+    setRotation(0, 0);
+  }, setError);
+}
+
+function updateRotationLock() {
+  viewer.setRotationLock(Config.isLockRotationX, Config.isLockRotationY);
+}
+
+function updateCamera() {
+  const { camera } = viewer.scene;
+  camera.reset();
+  camera.setPosition(0, -Config.cameraHeight, -Config.cameraDistance);
+  camera.setPitch(Config.cameraPitch);
+}
+
+function updateCameraFOV() {
+  const { camera } = viewer.scene;
+  camera.setFOV(Config.cameraFOV);
+}
+
+function onAddOverlay(values) {
+  const f = values[0];
+  viewer.setOverlayImage(f.uri, (img) => {
+    const aspect = img.height / img.width;
+    const sizeinfo = `${img.width}×${img.height}`;
+    if (Math.abs(aspect - 1.5) > 0.01) {
+      setWarning(`Overlay aspect should be 2:3 but loaded image is ${sizeinfo}`);
+    } else {
+      setInfo(`Overlay size: ${sizeinfo}`);
+    }
+  });
+}
+
+function saveCurrentPose() {
+  const model = viewer.scene.models[0];
+  if (model && model.skinnedModel) {
+    const frame = Config.keyframe;
+    const pose = model.skinnedModel.getPoseFile(frame);
+    const fn = Gfx.getFileNameWithoutExtension(model.name);
+    Gfx.exportPose(pose, `${fn}_${frame}`);
+  } else {
+    setWarning('No skinned model');
+  }
+}
+
+function onChangeKeyframe() {
+  removePoseGroup();
+  const model = viewer.scene.models[0];
+  if (model && model.skinnedModel) {
+    addPoseGroup(model.skinnedModel);
+    viewer.setKeyframe(0, Config.keyframe);
+  }
+}
+
 function populateControls() {
   function onChangeFileBrowser(values) {
     const models = [];
@@ -203,171 +369,6 @@ function makeCanvasFollowScroll() {
   });
 }
 
-function setInfo(text) {
-  $('#infoDiv').text(text);
-}
-
-function setWarning(text) {
-  setInfo(`[WARNING] ${text}`);
-}
-
-function setError(e) {
-  console.error(e);
-  setInfo(`[ERROR] ${e}`);
-}
-
-function removePoseGroup() {
-  $('tr[id^=gPose]').remove();
-}
-
-function addPoseGroup(skinnedModel) {
-  const id = 'gPose';
-  const frame = Config.keyframe;
-  const { pose } = skinnedModel.getPoseFile(frame);
-  function updateJointWithValue(joint, value, sub) {
-    const key = `rotate${sub}.ANGLE`;
-    skinnedModel.setAnimValue(joint, frame, key, parseFloat(value));
-    skinnedModel.applyPose(frame);
-  }
-  function angleSlider(s, joint, values) {
-    const slider = UiUtils.createMultiSlider(`${s}_angle`, ['X', 'Y', 'Z'], 'rotation XYZ', values, -180, 180, 0.1, updateJointWithValue.bind(null, joint));
-    slider.attr('parent', `${id}_${joint}`);
-    return slider;
-  }
-  function updateJointTrWithValue(joint, value, sub) {
-    const indices = { X: 0, Y: 1, Z: 2 };
-    skinnedModel.setAnimValue(joint, frame, 'translation', parseFloat(value), indices[sub]);
-    skinnedModel.applyPose(frame);
-  }
-  function translationSlider(s, joint, values) {
-    const slider = UiUtils.createMultiSlider(`${s}_translation`, ['X', 'Y', 'Z'], 'translation XYZ', values, -10, 10, 0.1, updateJointTrWithValue.bind(null, joint));
-    slider.attr('parent', `${id}_${joint}`);
-    return slider;
-  }
-  function createControls(skeleton, parent) {
-    const joints = Object.keys(skeleton);
-    let controls = [];
-    joints.forEach((joint) => {
-      const transform = pose[joint] || [];
-      const rx = transform[0] || 0;
-      const ry = transform[1] || 0;
-      const rz = transform[2] || 0;
-      const tx = transform[6] || 0;
-      const ty = transform[7] || 0;
-      const tz = transform[8] || 0;
-      const subId = `${id}_${joint}`;
-      let subcontrols = [
-        angleSlider(subId, joint, [rx, ry, rz]),
-        translationSlider(subId, joint, [tx, ty, tz]),
-      ];
-      const jointControls = createControls(skeleton[joint], subId);
-      subcontrols = subcontrols.concat(jointControls);
-      const jointGroup = UiUtils.createSubGroup(subId, joint, subcontrols, parent);
-      controls = controls.concat(jointGroup);
-    });
-    return controls;
-  }
-  const controls = createControls(skinnedModel.getSkeletonTopology());
-  UiUtils.addGroup(id, 'Pose Controls', controls, '#controlsRight');
-  // hide the sliders by clicking twice to toggle controls
-  $('#gPose').click();
-  $('#gPose').click();
-}
-
-function updateCamera() {
-  const { camera } = viewer.scene;
-  camera.reset();
-  camera.setPosition(0, -Config.cameraHeight, -Config.cameraDistance);
-  camera.setPitch(Config.cameraPitch);
-}
-
-function updateCameraFOV() {
-  const { camera } = viewer.scene;
-  camera.setFOV(Config.cameraFOV);
-}
-
-function updateModelTransform() {
-  const phi = VMath.degToRad(Config.modelRotationPhi);
-  const theta = VMath.degToRad(Config.modelRotationTheta);
-  viewer.setModelRotationAndScale(0, phi, theta, Config.modelScale);
-}
-
-function updateRotationLock() {
-  viewer.setRotationLock(Config.isLockRotationX, Config.isLockRotationY);
-}
-
-function reloadModel() {
-  const url = $('#Presets').val();
-  const name = $('#Presets option:selected').text();
-  progressBarUpdate(0);
-  $('#progressBarDiv').show();
-  viewer.loadModel(name, url, Config, ImageUrls, MaterialUrls, progressBarUpdate, (model) => {
-    removePoseGroup();
-    $('#progressBarDiv').hide();
-    if (model.skinnedModel) {
-      $('#keyframe').attr('max', model.skinnedModel.keyframeCount - 1);
-      $('#keyframe_number').val(-1);
-      Config.keyframe = -1;
-      addPoseGroup(model.skinnedModel);
-    }
-    setRotation(0, 0);
-  }, setError);
-}
-
-function progressBarUpdate(ratio) {
-  const percentage = Math.round(100 * ratio);
-  $('#progressBar').css('width', `${percentage}%`);
-}
-
-function onChangeKeyframe() {
-  removePoseGroup();
-  const model = viewer.scene.models[0];
-  if (model && model.skinnedModel) {
-    addPoseGroup(model.skinnedModel);
-    viewer.setKeyframe(0, Config.keyframe);
-  }
-}
-
-function setRotation(phi, theta) {
-  const round2 = v => Math.round(v * 100) / 100;
-  const phiDeg = round2(VMath.radToDeg(phi));
-  const thetaDeg = round2(VMath.radToDeg(theta));
-  $('#modelRotationTheta').val(thetaDeg);
-  $('#modelRotationTheta_number').val(thetaDeg);
-  $('#modelRotationPhi').val(phiDeg);
-  $('#modelRotationPhi_number').val(phiDeg);
-  Config.modelRotationPhi = phiDeg;
-  Config.modelRotationTheta = thetaDeg;
-  updateModelTransform();
-}
-
-function saveCurrentPose() {
-  const model = viewer.scene.models[0];
-  if (model && model.skinnedModel) {
-    const frame = Config.keyframe;
-    const pose = model.skinnedModel.getPoseFile(frame);
-    const fn = Gfx.getFileNameWithoutExtension(model.name);
-    Gfx.exportPose(pose, `${fn}_${frame}`);
-  } else {
-    setWarning('No skinned model');
-  }
-}
-
-function onAddOverlay(values) {
-  const f = values[0];
-  viewer.setOverlayImage(f.uri, (img) => {
-    const aspect = img.height / img.width;
-    const sizeinfo = `${img.width}×${img.height}`;
-    if (Math.abs(aspect - 1.5) > 0.01) {
-      setWarning(`Overlay aspect should be 2:3 but loaded image is ${sizeinfo}`);
-    } else {
-      setInfo(`Overlay size: ${sizeinfo}`);
-    }
-  });
-}
-
-
-let viewer;
 $(document).ready(() => {
   viewer = new Viewer('glCanvas', 'canvas2D', ImageUrls.white);
   viewer.setRotationCallback(setRotation);
