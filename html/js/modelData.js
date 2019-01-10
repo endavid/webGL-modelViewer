@@ -1,37 +1,40 @@
-(function(global) {
-  "use strict";
+/* eslint-disable strict */
+/* eslint-disable wrap-iife */
+// eslint-disable-next-line func-names
+(function (global) {
+  'use strict';
 
-  var VMath = {
-    normalize: function(v) {
-      var norm = v.reduce((acc, c) => acc + c * c, 0);
+  const VMath = {
+    normalize(v) {
+      let norm = v.reduce((acc, c) => acc + c * c, 0);
       norm = Math.sqrt(norm) || 1;
       return v.map(c => c / norm);
     },
-    sum: (a, b) => {
-      var out = [];
+    sum(a, b) {
+      const out = [];
       a.forEach((v, i) => {
         out.push(v + b[i]);
       });
       return out;
     },
-    diff: (a, b) => {
-      var out = [];
+    diff(a, b) {
+      const out = [];
       a.forEach((v, i) => {
         out.push(v - b[i]);
       });
       return out;
     },
-    cross: (a, b) => {
+    cross(a, b) {
       return [
         a[1] * b[2] - a[2] * b[1],
         a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0]
+        a[0] * b[1] - a[1] * b[0],
       ];
     },
-    hashVertex: (v) => {
+    hashVertex(v) {
       const ints = v.map(c => Math.round(100 * c));
-      return ints.reduce((acc, c) => acc + "/" + c, "");
-    }
+      return ints.reduce((acc, c) => `${acc}/${c}`, '');
+    },
   };
   class ModelData {
     constructor(json) {
@@ -39,31 +42,32 @@
       Object.assign(this, json);
       this.facesPerPosition = {};
     }
-    stepFacesPerPositionCreation(i) {
+    stepFacesPerPositionCreation(step) {
       const num = this.numTriangles();
       const progress = {
-        step: i,
+        step,
         total: num,
-        done: i === num
+        done: step === num,
       };
       if (progress.done) {
         return progress;
       }
-      var meshIndex = 0;
-      var mesh = this.meshes[0];
-      var n = mesh.indices.length / 3;
+      let meshIndex = 0;
+      let mesh = this.meshes[0];
+      let n = mesh.indices.length / 3;
+      let i = step;
       while (i >= n) {
-        i = i - n;
-        meshIndex++;
+        i -= n;
+        meshIndex += 1;
         mesh = this.meshes[meshIndex];
         n = mesh.indices.length / 3;
       }
-      var self = this;
+      const self = this;
       const vertexIndexToHash = vi => VMath.hashVertex(self.getPosition(vi));
-      let t = mesh.indices.slice(3 * i, 3 * (i+1));
+      const t = mesh.indices.slice(3 * i, 3 * (i + 1));
       const hashes = t.map(vertexIndexToHash);
-      var fpp = this.facesPerPosition;
-      hashes.forEach(h => {
+      const fpp = this.facesPerPosition;
+      hashes.forEach((h) => {
         if (!fpp[h]) {
           fpp[h] = [];
         }
@@ -75,8 +79,8 @@
       return this.vertices.length / this.stride;
     }
     numTriangles() {
-      var numTriangles = 0;
-      this.meshes.forEach(m => {
+      let numTriangles = 0;
+      this.meshes.forEach((m) => {
         numTriangles += m.indices.length / 3;
       });
       return numTriangles;
@@ -95,25 +99,27 @@
       const progress = {
         step: i,
         total: n,
-        done: i === n
+        done: i === n,
       };
       if (progress.done) {
         return progress;
       }
-      let j = i * this.stride;
+      const j = i * this.stride;
       const position = this.getPosition(i);
       const hash = VMath.hashVertex(position);
-      let triangleList = this.facesPerPosition[hash];
-      let numContributingFaces = triangleList.length;
+      const triangleList = this.facesPerPosition[hash];
+      const numContributingFaces = triangleList.length;
       if (numContributingFaces === 0) {
         return progress;
       }
-      let faceNormals = triangleList.map(this.computeTriangleNormal.bind(this));
-      let vectorSum = faceNormals.reduce(VMath.sum, [0, 0, 0]);
-      let normalAverage = vectorSum.map(div.bind(null, numContributingFaces));
+      const faceNormals = triangleList.map(this.computeTriangleNormal.bind(this));
+      const vectorSum = faceNormals.reduce(VMath.sum, [0, 0, 0]);
+      const normalAverage = vectorSum.map(div.bind(null, numContributingFaces));
+      /* eslint-disable prefer-destructuring */
       this.vertices[j + 3] = normalAverage[0];
       this.vertices[j + 4] = normalAverage[1];
       this.vertices[j + 5] = normalAverage[2];
+      /* eslint-enable prefer-destructuring */
       return progress;
     }
     computeTriangleNormal(triangle) {
@@ -125,5 +131,7 @@
   }
   // Workers do not support module exports atm (but they will: https://stackoverflow.com/a/45578811)
   // For the time being, use old export trick so we can unit-test this without a Worker
+  /* eslint-disable no-param-reassign */
+  /* eslint-disable no-multi-assign */
   global.ModelData = (global.module || {}).exports = ModelData;
 })(this);

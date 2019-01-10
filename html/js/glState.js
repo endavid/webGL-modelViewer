@@ -21,51 +21,46 @@ class GlState {
     }
   }
   setDepthTest(enable) {
-    let gl = this.gl;
     if (this.depthTest !== enable) {
       this.depthTest = enable;
-      this.glToggle(enable, gl.DEPTH_TEST);
+      this.glToggle(enable, this.gl.DEPTH_TEST);
     }
   }
   setBlend(enable) {
-    let gl = this.gl;
     if (this.blend !== enable) {
       this.blend = enable;
-      this.glToggle(enable, gl.BLEND);
+      this.glToggle(enable, this.gl.BLEND);
     }
   }
   setDepthMask(enable) {
-    let gl = this.gl;
     if (this.depthMath !== enable) {
       this.depthMask = enable;
-      gl.depthMask(enable); // ZWRITE
+      this.gl.depthMask(enable); // ZWRITE
     }
   }
   setCullFace(enable) {
-    let gl = this.gl;
     if (this.cullFace !== enable) {
       this.cullFace = enable;
-      this.glToggle(enable, gl.CULL_FACE);
+      this.glToggle(enable, this.gl.CULL_FACE);
     }
   }
   glToggle(enable, flag) {
-    let gl = this.gl;
     if (enable) {
-      gl.enable(flag);
+      this.gl.enable(flag);
     } else {
-      gl.disable(flag);
+      this.gl.disable(flag);
     }
   }
-  viewport(x, y, w, h)
-  {
+  viewport(x, y, w, h) {
     this.gl.viewport(x, y, w, h);
   }
   clear() {
-    let gl = this.gl;
+    const { gl } = this;
+    // eslint-disable-next-line no-bitwise
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
   flush() {
     this.gl.flush();
   }
 }
-export {GlState as default};
+export { GlState as default };

@@ -3,6 +3,9 @@ import VMath from './math.js';
 import WavefrontObj from './wavefrontObj.js';
 import Collada from './collada.js';
 
+// Unfortunately, I wasn't able to import saveAs as a module
+const { saveAs } = window;
+
 const ShaderType = {
   fragment: 'x-shader/x-fragment',
   vertex: 'x-shader/x-vertex',

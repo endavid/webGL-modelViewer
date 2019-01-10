@@ -1,12 +1,14 @@
+// eslint-disable-next-line no-restricted-globals
 self.importScripts('modelData.js');
 
-onmessage = function(e) {
-  var modelData = new ModelData(e.data.model);
-  var msg = {
+onmessage = (e) => {
+  // eslint-disable-next-line no-undef
+  const modelData = new ModelData(e.data.model);
+  const msg = {
     progress: 0,
-    done: false
+    done: false,
   };
-  var progress = {step: -1, done: false};
+  let progress = { step: -1, done: false };
   while (!progress.done) {
     progress = modelData.stepFacesPerPositionCreation(progress.step + 1);
     msg.progress = 0.5 * (progress.step / progress.total);
@@ -23,5 +25,6 @@ onmessage = function(e) {
   msg.done = true;
   msg.vertices = modelData.vertices;
   postMessage(msg);
+  // eslint-disable-next-line no-restricted-globals
   close(); // this worker is done, terminate
 };

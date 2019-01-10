@@ -21,10 +21,10 @@ class Model {
   constructor(gl, json, imageUrls) {
     this.name = json.name;
     this.transformMatrix = VMath.getI4();
-    //vertices
-    this.vertexBuffer= gl.createBuffer();
+    // vertices
+    this.vertexBuffer = gl.createBuffer();
     this.stride = json.stride;
-    console.log("#vertices: " + (json.vertices.length/json.stride));
+    console.log(`#vertices: ${json.vertices.length / json.stride}`);
     if (json.skin) {
       this.skinnedModel = new SkinnedModel(json.skin, json.skeleton, json.anims);
     } else {
@@ -35,19 +35,19 @@ class Model {
     // but we should be able to mix with other datatypes
     // https://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
     gl.bufferData(gl.ARRAY_BUFFER,
-                  new Float32Array(json.vertices),
-                  gl.STATIC_DRAW);
-    //submeshes
-    var meshes = [];
-    json.meshes.forEach(m => {
+      new Float32Array(json.vertices),
+      gl.STATIC_DRAW);
+    // submeshes
+    const meshes = [];
+    json.meshes.forEach((m) => {
       const mat = m.material !== undefined ? json.materials[m.material] || {} : {};
-      const albedoMapName = mat.albedoMap || "missing";
+      const albedoMapName = mat.albedoMap || 'missing';
       // if the .dds texture is missing, try to find equivalent .png
-      var albedoMapUrl = imageUrls[albedoMapName] || imageUrls[Gfx.getFileNameWithoutExtension(albedoMapName)+".png"];
-      var mesh = {
+      const albedoMapUrl = imageUrls[albedoMapName] || imageUrls[`${Gfx.getFileNameWithoutExtension(albedoMapName)}.png`];
+      const mesh = {
         indexBuffer: gl.createBuffer(),
         numPoints: m.indices.length,
-        albedoMap: albedoMapUrl !== undefined ? Gfx.loadTexture(gl, albedoMapUrl) : false
+        albedoMap: albedoMapUrl !== undefined ? Gfx.loadTexture(gl, albedoMapUrl) : false,
       };
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
       gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
@@ -61,33 +61,34 @@ class Model {
     Gfx.destroyBuffers(gl, this);
   }
   static createAsync(gl, name, url, config, imageUrls, materialUrls, onProgress, onDone, onError) {
-    Gfx.modelFileToJson(name, url, materialUrls).then(json => {
-      if (config.isZAxisUp) {
-        Gfx.flipAxisZ(json);
-      }
-      if (config.recomputeNormals) {
-        if (window.Worker) {
-          let worker = new Worker('./js/modelWorker.js');
-          let load = {
-            model: json,
-            fn: "recomputeNormals"
-          };
-          worker.onmessage = e => {
-            onProgress(e.data.done);
-            if (e.data.done && e.data.vertices) {
-              json.vertices = e.data.vertices;
-              onDone(new Model(gl, json, imageUrls));
-            }
-          };
-          worker.postMessage(load);
-        } else {
-          throw new Error("Can't create Worker to compute normals");
+    Gfx.modelFileToJson(name, url, materialUrls)
+      .then((json) => {
+        if (config.isZAxisUp) {
+          Gfx.flipAxisZ(json);
         }
-      } else {
-        onDone(new Model(gl, json, imageUrls));
-      }
-    })
-    .catch(onError);
+        if (config.recomputeNormals) {
+          if (window.Worker) {
+            const worker = new Worker('./js/modelWorker.js');
+            const load = {
+              model: json,
+              fn: 'recomputeNormals',
+            };
+            worker.onmessage = (e) => {
+              onProgress(e.data.done);
+              if (e.data.done && e.data.vertices) {
+                json.vertices = e.data.vertices;
+                onDone(new Model(gl, json, imageUrls));
+              }
+            };
+            worker.postMessage(load);
+          } else {
+            throw new Error("Can't create Worker to compute normals");
+          }
+        } else {
+          onDone(new Model(gl, json, imageUrls));
+        }
+      })
+      .catch(onError);
   }
 }
-export {Model as default};
+export { Model as default };
