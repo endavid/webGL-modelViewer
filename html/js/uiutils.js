@@ -1,3 +1,5 @@
+import $ from './jquery.module.mjs';
+
 const UiUtils = {
   createSlider: (id, text, value, min, max, step, callback) => {
     return UiUtils.createMultiSlider(id, [""], text, [value], min, max, step, callback);
