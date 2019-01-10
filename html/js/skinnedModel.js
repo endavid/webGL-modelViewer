@@ -5,24 +5,25 @@ const MAX_JOINTS = 100;
 function arrayValueOrDefault(array, index, def) {
   if (array && array[index]) {
     return array[index];
-  }    
+  }
   return def;
 }
 
 function substractJointTranslationsFromAnims(skeleton, anims) {
   const animKeys = Object.keys(anims);
+  const a = anims;
   animKeys.forEach((joint) => {
     if (anims[joint].translation) {
       for (let i = 0; i < anims[joint].translation.length; i += 1) {
         if (anims[joint].translation[i]) {
-          anims[joint].translation[i][0] -= skeleton[joint].transform[3];
-          anims[joint].translation[i][1] -= skeleton[joint].transform[7];
-          anims[joint].translation[i][2] -= skeleton[joint].transform[11];
+          a[joint].translation[i][0] -= skeleton[joint].transform[3];
+          a[joint].translation[i][1] -= skeleton[joint].transform[7];
+          a[joint].translation[i][2] -= skeleton[joint].transform[11];
         }
       }
     }
   });
-  return anims;
+  return a;
 }
 
 class SkinnedModel {

@@ -64,17 +64,19 @@ class Gfx {
 
   static destroyBuffers(gl, modelData) {
     const gfx = new Gfx(); // singleton
+    const modelRef = modelData;
     if (modelData.meshes) {
       modelData.meshes.forEach((m) => {
+        const mesh = m;
         // remove img reference
-        m.albedoMap = null;
+        mesh.albedoMap = null;
         gl.deleteBuffer(m.indexBuffer);
       });
-      modelData.meshes = false;
+      modelRef.meshes = false;
     }
     if (modelData.vertexBuffer) {
       gl.deleteBuffer(modelData.vertexBuffer);
-      modelData.vertexBuffer = false;
+      modelRef.vertexBuffer = false;
     }
     // empty texture cache
     const toKeep = [];
@@ -97,13 +99,14 @@ class Gfx {
   }
 
   static flipAxisZ(model) {
+    const modelRef = model;
     const n = model.vertices.length;
     const coordsPerVertex = 8; // position (3), normal (3), uv (2)
     for (let i = 0; i < n; i += coordsPerVertex) {
       const positionY = model.vertices[i + 1];
       const positionZ = model.vertices[i + 2];
-      model.vertices[i + 1] = positionZ;
-      model.vertices[i + 2] = -positionY;
+      modelRef.vertices[i + 1] = positionZ;
+      modelRef.vertices[i + 2] = -positionY;
       // it seems that the normals of the models I've tested don't need flipping...
     }
   }

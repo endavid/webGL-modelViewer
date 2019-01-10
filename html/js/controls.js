@@ -251,9 +251,7 @@ function populateControls() {
     'orange.json',
     'banana.obj',
     'tree01.dae',
-    'monigote.dae'].map((e) => {
-    return { name: e, value: `resources/${e}` };
-  });
+    'monigote.dae'].map(e => ({ name: e, value: `resources/${e}` }));
   const missingTexturePresets = [
     { name: 'uvChecker', value: 'resources/UVTextureChecker4096.png' },
     { name: 'white', value: 'resources/white.png' }];
@@ -261,7 +259,7 @@ function populateControls() {
   UiUtils.addGroup('gFile', 'File', [
     UiUtils.createFileBrowser('fileBrowser', 'load models & textures', true, onChangeFileBrowser),
     UiUtils.createDropdownList('Presets', modelPresets, reloadModel),
-    UiUtils.createButtonWithOptions('saveFile', 'Save', ' as ', 
+    UiUtils.createButtonWithOptions('saveFile', 'Save', ' as ',
       [{ name: 'OBJ Wavefront', value: '.obj' }, { name: 'Json', value: '.json' }],
       (e) => {
         const modelType = $(`#${e.target.id}_select`).val();
@@ -281,7 +279,7 @@ function populateControls() {
       reloadModel();
     }),
     UiUtils.createSlider('modelScaleExp10', 'scale', 0, -3, 3, 0.2, (value) => {
-      Config.modelScale = Math.pow(10, parseFloat(value));
+      Config.modelScale = 10 ** parseFloat(value);
       updateModelTransform();
     }),
     UiUtils.createCheckboxes('axisLock', {
@@ -340,7 +338,7 @@ function populateControls() {
       reloadModel();
     }),
     UiUtils.createFileBrowser('overlayFileBrowser', 'load overlay', false, onAddOverlay),
-    UiUtils.createSlider('overlayAlpha', 'overlay opacity', overlay.alpha, 0, 1, 1/255, (value) => {
+    UiUtils.createSlider('overlayAlpha', 'overlay opacity', overlay.alpha, 0, 1, 1 / 255, (value) => {
       overlay.alpha = parseFloat(value);
     }),
   ]);

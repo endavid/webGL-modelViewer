@@ -74,10 +74,11 @@ class Model {
               fn: 'recomputeNormals',
             };
             worker.onmessage = (e) => {
-              onProgress(e.data.done);
+              onProgress(e.data.progress);
               if (e.data.done && e.data.vertices) {
-                json.vertices = e.data.vertices;
-                onDone(new Model(gl, json, imageUrls));
+                const jsonRef = json;
+                jsonRef.vertices = e.data.vertices;
+                onDone(new Model(gl, jsonRef, imageUrls));
               }
             };
             worker.postMessage(load);

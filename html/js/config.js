@@ -1,4 +1,4 @@
-var Config = {
+const Config = {
   isZAxisUp: false,
   recomputeNormals: false,
   isLockRotationY: false,
@@ -13,4 +13,4 @@ var Config = {
   needsReload: false,
   keyframe: -1,
 };
-export {Config as default};
+export { Config as default };
