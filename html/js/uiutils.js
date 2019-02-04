@@ -1,4 +1,4 @@
-import $ from './jquery.module.mjs';
+import $ from './jquery.module.js';
 
 const UiUtils = {
   createSlider(id, text, value, min, max, step, callback) {
