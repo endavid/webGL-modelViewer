@@ -86,6 +86,11 @@ class Renderer {
       new PluginLabels(),
     ];
   }
+  async replaceLitShader(fragmentShaderUri) {
+    const { gl } = this.glState;
+    const plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri);
+    this.plugins[0] = plugin;
+  }
   draw(deltaTime) {
     const { glState, scene, context2d } = this;
     glState.viewport(0, 0, this.canvas.width, this.canvas.height);

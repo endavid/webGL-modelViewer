@@ -71,7 +71,7 @@ const UiUtils = {
   createDropdownList(id, list, callback) {
     const updateFunction = (event) => {
       const i = event.target.selectedIndex;
-      const obj = { name: event.target.options[i].innerHTML, uri: event.target.value };
+      const obj = { name: event.target.options[i].innerHTML, value: event.target.value };
       callback(obj);
     };
     const select = $('<select>').attr('id', id).change(updateFunction);

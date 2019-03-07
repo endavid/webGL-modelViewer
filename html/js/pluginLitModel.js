@@ -5,14 +5,15 @@ class PluginLitModel {
     this.shaders = shaders;
     this.whiteTexture = whiteTexture;
   }
-  static async createAsync(gl, whiteTexture) {
+  static async createAsync(gl, whiteTexture, fragmentShader) {
     const attribs = ['uv', 'position', 'normal'];
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'sampler'];
     const attribsSkin = attribs.concat(['boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['sampler', 'joints']);
     const shaders = {};
-    shaders.lit = await Shader.createAsync(gl, 'shaders/geometry.vs', 'shaders/lighting.fs', attribs, uniforms);
-    shaders.litSkin = await Shader.createAsync(gl, 'shaders/skinning.vs', 'shaders/lighting.fs', attribsSkin, uniformsSkin);
+    const fs = fragmentShader || 'shaders/lighting.fs';
+    shaders.lit = await Shader.createAsync(gl, 'shaders/geometry.vs', fs, attribs, uniforms);
+    shaders.litSkin = await Shader.createAsync(gl, 'shaders/skinning.vs', fs, attribsSkin, uniformsSkin);
     return new PluginLitModel(shaders, whiteTexture);
   }
   static setOpaquePass(glState) {

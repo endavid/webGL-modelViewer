@@ -252,9 +252,17 @@ function populateControls() {
     'banana.obj',
     'tree01.dae',
     'monigote.dae'].map(e => ({ name: e, value: `resources/${e}` }));
+
   const missingTexturePresets = [
     { name: 'uvChecker', value: 'resources/UVTextureChecker4096.png' },
     { name: 'white', value: 'resources/white.png' }];
+
+  const shaderPresets = [
+    { name: 'default shading', value: 'shaders/lighting.fs' },
+    { name: 'depth', value: 'shaders/debugDepth.fs' },
+    { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },
+  ];
+
   // Create the UI controls
   UiUtils.addGroup('gFile', 'File', [
     UiUtils.createFileBrowser('fileBrowser', 'load models & textures', true, onChangeFileBrowser),
@@ -334,8 +342,11 @@ function populateControls() {
   const { overlay } = viewer.scene;
   UiUtils.addGroup('gShader', 'Shader Settings', [
     UiUtils.createDropdownList('missingTexture', missingTexturePresets, (obj) => {
-      ImageUrls.missing = obj.uri;
+      ImageUrls.missing = obj.value;
       reloadModel();
+    }),
+    UiUtils.createDropdownList('shader', shaderPresets, (obj) => {
+      viewer.replaceLitShader(obj.value);
     }),
     UiUtils.createFileBrowser('overlayFileBrowser', 'load overlay', false, onAddOverlay),
     UiUtils.createSlider('overlayAlpha', 'overlay opacity', overlay.alpha, 0, 1, 1 / 255, (value) => {
