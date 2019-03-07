@@ -1,4 +1,4 @@
-import $ from './jquery.module.mjs';
+import $ from './jquery.module.js';
 import UiUtils from './uiutils.js';
 import Viewer from './viewer.js';
 import Config from './config.js';

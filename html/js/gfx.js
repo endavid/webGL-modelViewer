@@ -1,4 +1,4 @@
-import $ from './jquery.module.mjs';
+import $ from './jquery.module.js';
 import VMath from './math.js';
 import WavefrontObj from './wavefrontObj.js';
 import Collada from './collada.js';
