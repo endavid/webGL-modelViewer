@@ -343,6 +343,12 @@ class Gfx {
     canvas.width = imageData.width;
     canvas.height = imageData.height;
     ctx.putImageData(imageData, 0, 0);
+    // https://stackoverflow.com/a/41970080
+    // because we may have transparency
+    ctx.globalCompositeOperation = 'copy';
+    ctx.scale(1, -1); // Y flip
+    ctx.translate(0, -imageData.height); // so we can draw at 0,0
+    ctx.drawImage(canvas, 0, 0);
     const image = new Image();
     image.src = canvas.toDataURL();
     return image;
