@@ -273,6 +273,7 @@ function populateControls() {
   const shaderPresets = [
     { name: 'default shading', value: 'shaders/lighting.fs' },
     { name: 'depth', value: 'shaders/debugDepth.fs' },
+    { name: 'packed depth', value: 'shaders/packDepth.fs' },
     { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },
   ];
 

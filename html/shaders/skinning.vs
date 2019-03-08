@@ -12,6 +12,7 @@ varying vec2 vUV;
 varying vec3 vNormal;
 varying vec3 cameraPosition;
 varying vec3 worldPosition;
+varying highp float viewDepth;
 void main(void) { // pre-built function
   vec4 p = vec4(position, 1.);
   vec4 p0 = joints[int(boneIndices.x)] * p;
