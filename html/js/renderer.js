@@ -7,6 +7,19 @@ import PluginLabels from './pluginLabels.js';
 import { SunLight } from './lights.js';
 import Camera from './camera.js';
 
+// private things
+let captureNextFrameCallback = null;
+
+function readPixelsAsImageData(gl) {
+  const pixels = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4);
+  const w = gl.drawingBufferWidth;
+  const h = gl.drawingBufferHeight;
+  gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+  const clampedArray = new Uint8ClampedArray(pixels);
+  const imgData = new ImageData(clampedArray, w, h);
+  return imgData;
+}
+
 class Renderer {
   constructor(canvasId, canvas2dId, whiteUrl) {
     const self = this;
@@ -91,6 +104,16 @@ class Renderer {
     const plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri);
     this.plugins[0] = plugin;
   }
+  static readImageData() {
+    const p = new Promise((resolve, reject) => {
+      if (captureNextFrameCallback) {
+        reject(new Error('Still waiting for a previous capture'));
+      } else {
+        captureNextFrameCallback = (imgData) => { resolve(imgData); };
+      }
+    });
+    return p;
+  }
   draw(deltaTime) {
     const { glState, scene, context2d } = this;
     glState.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -98,6 +121,11 @@ class Renderer {
     this.plugins.forEach((plugin) => {
       plugin.draw(glState, scene, deltaTime);
     });
+    if (captureNextFrameCallback) {
+      const imgData = readPixelsAsImageData(glState.gl);
+      captureNextFrameCallback(imgData);
+      captureNextFrameCallback = null;
+    }
     this.plugins2d.forEach((plugin) => {
       plugin.draw(context2d, scene, deltaTime);
     });

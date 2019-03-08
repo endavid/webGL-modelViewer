@@ -181,6 +181,19 @@ function onChangeKeyframe() {
   }
 }
 
+function snapshot(imgData) {
+  const thumbnailHeight = 68;
+  console.log(imgData);
+  const img = Gfx.createImageFromImageData(imgData);
+  if (img.width === 0) {
+    setError('Failed to capture');
+  } else {
+    img.width = thumbnailHeight * img.width / img.height;
+    img.height = thumbnailHeight;
+    $('#imageBasket').append(img);
+  }
+}
+
 function populateControls() {
   function onChangeFileBrowser(values) {
     const models = [];
@@ -277,7 +290,23 @@ function populateControls() {
           .catch((ee) => {
             setError(ee);
           });
-      })]);
+      }),
+    UiUtils.createButtons('snapshotControls', [{
+      id: 'snapshot',
+      text: 'Snapshot',
+      callback: () => {
+        Viewer.readImageData().then(snapshot, (e) => { setError(e); });
+      },
+    },
+    {
+      id: 'clearSnapshots',
+      text: 'Clear',
+      callback: () => {
+        $('#imageBasket').empty();
+      },
+    }]),
+    UiUtils.createEmptyRow('imageBasket'),
+  ]);
   UiUtils.addGroup('gModel', 'Model Settings', [
     UiUtils.createCheckboxes('onLoadOptions', {
       isZAxisUp: { text: 'Z is up', default: Config.isZAxisUp },

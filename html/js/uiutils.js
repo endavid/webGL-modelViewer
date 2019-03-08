@@ -91,13 +91,23 @@ const UiUtils = {
       select.append(option);
     });
   },
-  createButton(id, text, callback) {
-    return $('<tr>').attr('id', `${id}_parent`).append($('<td>')
-      .append($('<button>')
-        .attr('id', id)
+  createEmptyRow(id) {
+    return $('<tr>').attr('id', `${id}_parent`)
+      .append($('<td>').attr('id', id));
+  },
+  createButtons(id, list) {
+    const td = $('<td>');
+    list.forEach((b) => {
+      td.append($('<button>')
+        .attr('id', b.id)
         .attr('type', 'button')
-        .click(callback)
-        .append(text)));
+        .click(b.callback)
+        .append(b.text));
+    });
+    return $('<tr>').attr('id', id).append(td);
+  },
+  createButton(id, text, callback) {
+    return UiUtils.createButtons(`${id}_parent`, [{ id, text, callback }]);
   },
   createButtonWithOptions(id, buttonText, midText, options, callback) {
     let select = null;
