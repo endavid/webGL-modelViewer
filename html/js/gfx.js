@@ -353,5 +353,24 @@ class Gfx {
     image.onload = () => { callback(image); };
     image.src = canvas.toDataURL();
   }
+
+  static decodeR32FPng(png) {
+    const numPixels = png.width * png.height;
+    const outArray = [];
+    const buf = new ArrayBuffer(4);
+    const view = new DataView(buf);
+    for (let i = 0; i < numPixels; i += 1) {
+      const r = png.pixels[4 * i];
+      const g = png.pixels[4 * i + 1];
+      const b = png.pixels[4 * i + 2];
+      const a = png.pixels[4 * i + 3];
+      view.setUint8(0, a);
+      view.setUint8(1, r);
+      view.setUint8(2, g);
+      view.setUint8(3, b);
+      outArray.push(view.getFloat32(0));
+    }
+    return outArray;
+  }
 }
 export { Gfx as default };
