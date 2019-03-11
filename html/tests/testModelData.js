@@ -1,14 +1,19 @@
-QUnit.module("ModelData");
+/* eslint-env qunit */
 
-QUnit.test("Model Data", assert => {
+// Unfortunately, I can't import it as a module because it's used in Workers
+const { ModelData } = window;
+
+QUnit.module('ModelData');
+
+QUnit.test('Model Data', (assert) => {
   const json = {
-    name: "tiny test",
+    name: 'tiny test',
     materials: {},
     vertices: [
       1, 0, 0, 1, 0, 0, 0, 0,
       0, 1, 0, 0, 1, 0, 0, 0,
       0, 0, 1, 0, 0, 1, 0, 0,
-      -1, 0, 0, -1, 0, 0, 0, 0,      
+      -1, 0, 0, -1, 0, 0, 0, 0,
       0, -1, 0, 0, -1, 0, 0, 0,
       0, 0, -1, 0, 0, -1, 0, 0,
     ],
@@ -20,13 +25,13 @@ QUnit.test("Model Data", assert => {
         1, 2, 3,
         1, 2, 4,
         3, 4, 5,
-        2, 4, 5
-      ]
-    }]
+        2, 4, 5,
+      ],
+    }],
   };
   const modelData = new ModelData(json);
   assert.deepEqual(modelData.getNormal(2), [0, 0, 1]);
-  var progress = {step: -1, done: false};
+  let progress = { step: -1, done: false };
   while (!progress.done) {
     progress = modelData.stepFacesPerPositionCreation(progress.step + 1);
   }
