@@ -337,7 +337,7 @@ class Gfx {
     return modelData;
   }
 
-  static createImageFromImageData(imageData) {
+  static createImageFromImageData(imageData, callback) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = imageData.width;
@@ -350,8 +350,8 @@ class Gfx {
     ctx.translate(0, -imageData.height); // so we can draw at 0,0
     ctx.drawImage(canvas, 0, 0);
     const image = new Image();
+    image.onload = () => { callback(image); };
     image.src = canvas.toDataURL();
-    return image;
   }
 }
 export { Gfx as default };

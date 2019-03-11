@@ -10,14 +10,56 @@ import Camera from './camera.js';
 // private things
 let captureNextFrameCallback = null;
 
-function readPixelsAsImageData(gl) {
-  const pixels = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4);
+function readPixelsAsImageData(gl, surface) {
+  const isFloat = surface === 'float';
   const w = gl.drawingBufferWidth;
   const h = gl.drawingBufferHeight;
-  gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-  const clampedArray = new Uint8ClampedArray(pixels);
+  let pixels;
+  if (isFloat) {
+    pixels = new Float32Array(w * h * 4);
+  } else {
+    pixels = new Uint8Array(w * h * 4);
+  }
+  const type = isFloat ? gl.FLOAT : gl.UNSIGNED_BYTE;
+  gl.readPixels(0, 0, w, h, gl.RGBA, type, pixels);
+  let clampedArray;
+  if (isFloat) {
+    const view = new DataView(new ArrayBuffer(4));
+    clampedArray = new Uint8ClampedArray(w * h * 4);
+    for (let i = 0; i < w * h; i += 1) {
+      view.setFloat32(0, pixels[4 * i]);
+      clampedArray[4 * i] = view.getUint8(0);
+      clampedArray[4 * i + 1] = view.getUint8(1);
+      clampedArray[4 * i + 2] = view.getUint8(2);
+      clampedArray[4 * i + 3] = view.getUint8(3);
+    }
+  } else {
+    clampedArray = new Uint8ClampedArray(pixels);
+  }
   const imgData = new ImageData(clampedArray, w, h);
   return imgData;
+}
+
+function createFloatFramebuffer(glState, width, height) {
+  const { gl } = glState;
+  const rb = gl.createRenderbuffer();
+  const fb = gl.createFramebuffer();
+  const texture = gl.createTexture();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  // can't use LINEAR with FLOAT textures :(
+  glState.setTextureParameters(gl.NEAREST, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.FLOAT, null);
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  // attach texture to the framebuffer
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+  // check
+  if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+    throw new Error('Can\'t use framebuffer');
+    // See http://www.khronos.org/opengles/sdk/docs/man/xhtml/glCheckFramebufferStatus.xml
+  }
+  return { fb, rb, texture };
 }
 
 class Renderer {
@@ -47,7 +89,12 @@ class Renderer {
     this.viewMatrix = VMath.getI4();
     // Overwrite this function with your custom stuff
     this.drawModel = () => {};
-    this.resources = {};
+    this.resources = {
+      framebuffers: {},
+      renderbuffers: {},
+      textures: {},
+    };
+    this.outputSurface = 'default';
     const aspect = this.canvas.width / this.canvas.height;
     this.scene = {
       camera: new Camera(33.4, aspect, 0.1, 500),
@@ -67,6 +114,7 @@ class Renderer {
       .then(() => {
         Gfx.loadTexture(self.glState.gl, whiteUrl, true, (img) => {
           self.whiteTexture = img;
+          self.initFramebuffers();
           self.initPlugins();
           self.initPlugins2d();
         });
@@ -99,6 +147,16 @@ class Renderer {
       new PluginLabels(),
     ];
   }
+  initFramebuffers() {
+    this.glState.pushRenderbuffer();
+    this.glState.pushFramebuffer();
+    const buf = createFloatFramebuffer(this.glState, this.canvas.width, this.canvas.height);
+    this.resources.framebuffers.float = buf.fb;
+    this.resources.renderbuffers.float = buf.rb;
+    this.resources.textures.float = buf.texture;
+    this.glState.popFramebuffer();
+    this.glState.popRenderbuffer();
+  }
   async replaceLitShader(fragmentShaderUri) {
     const { gl } = this.glState;
     const plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri);
@@ -116,16 +174,27 @@ class Renderer {
   }
   draw(deltaTime) {
     const { glState, scene, context2d } = this;
+    const s = this.outputSurface;
+    const fb = this.resources.framebuffers[s];
+    const rb = this.resources.renderbuffers[s];
+    glState.pushRenderbuffer();
+    glState.pushFramebuffer();
+    if (fb && rb) {
+      glState.gl.bindFramebuffer(glState.gl.FRAMEBUFFER, fb);
+      glState.gl.bindRenderbuffer(glState.gl.RENDERBUFFER, rb);
+    }
     glState.viewport(0, 0, this.canvas.width, this.canvas.height);
     glState.clear();
     this.plugins.forEach((plugin) => {
       plugin.draw(glState, scene, deltaTime);
     });
     if (captureNextFrameCallback) {
-      const imgData = readPixelsAsImageData(glState.gl);
+      const imgData = readPixelsAsImageData(glState.gl, s);
       captureNextFrameCallback(imgData);
       captureNextFrameCallback = null;
     }
+    glState.popFramebuffer();
+    glState.popRenderbuffer();
     this.plugins2d.forEach((plugin) => {
       plugin.draw(context2d, scene, deltaTime);
     });
@@ -192,10 +261,9 @@ class Renderer {
     const self = this;
     return new Promise((resolve) => {
       // Get WebGL context
-      const gl = this.canvas.getContext('experimental-webgl', { antialias: true });
-      self.initExtensions(gl, ['OES_element_index_uint']);
+      const gl = this.canvas.getContext('webgl', { antialias: true });
+      self.initExtensions(gl, ['OES_element_index_uint', 'OES_texture_float']);
       self.glState = new GlState(gl);
-      // this.resources = new Resources(gl, this.canvas.width, this.canvas.height);
       // Register mouse event listeners
       self.canvas.addEventListener('mousedown', self.mouseDown.bind(self), false);
       self.canvas.addEventListener('mouseup', self.mouseUp.bind(self), false);
@@ -257,6 +325,9 @@ class Renderer {
   }
   setBackgroundColor(rgb) {
     this.glState.setClearColor(rgb);
+  }
+  setOutputSurface(id) {
+    this.outputSurface = id;
   }
 }
 export { Renderer as default };

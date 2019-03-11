@@ -181,17 +181,48 @@ function onChangeKeyframe() {
   }
 }
 
-function snapshot(imgData) {
+function addImageToBasket(image) {
   const thumbnailHeight = 68;
-  console.log(imgData);
-  const img = Gfx.createImageFromImageData(imgData);
-  if (img.width === 0) {
-    setError('Failed to capture');
-  } else {
-    img.width = thumbnailHeight * img.width / img.height;
-    img.height = thumbnailHeight;
-    $('#imageBasket').append(img);
-  }
+  const img = image;
+  img.width = thumbnailHeight * img.width / img.height;
+  img.height = thumbnailHeight;
+  $('#imageBasket').append(img);
+}
+
+function snapshot(imgData) {
+  return new Promise((resolve, reject) => {
+    Gfx.createImageFromImageData(imgData, (image) => {
+      if (image.width === 0) {
+        reject(new Error('Failed to capture'));
+      } else {
+        resolve(image);
+      }
+    });
+  });
+}
+
+function captureColor() {
+  Viewer.readImageData()
+    .then(snapshot)
+    .then(addImageToBasket)
+    .catch(setError);
+}
+
+function captureDepth() {
+  viewer.replaceLitShader('shaders/outDepth.fs')
+    .then(() => {
+      viewer.setBackgroundColor(0xffffffff);
+      viewer.setOutputSurface('float');
+    })
+    .then(Viewer.readImageData)
+    .then(snapshot)
+    .then((img) => {
+      addImageToBasket(img);
+      viewer.setOutputSurface('default');
+      viewer.setBackgroundColor(Config.backgroundColor);
+      viewer.replaceLitShader('shaders/lighting.fs');
+    })
+    .catch(setError);
 }
 
 function populateControls() {
@@ -273,7 +304,6 @@ function populateControls() {
   const shaderPresets = [
     { name: 'default shading', value: 'shaders/lighting.fs' },
     { name: 'depth', value: 'shaders/debugDepth.fs' },
-    { name: 'packed depth', value: 'shaders/packDepth.fs' },
     { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },
   ];
 
@@ -295,9 +325,12 @@ function populateControls() {
     UiUtils.createButtons('snapshotControls', [{
       id: 'snapshot',
       text: 'Snapshot',
-      callback: () => {
-        Viewer.readImageData().then(snapshot, (e) => { setError(e); });
-      },
+      callback: captureColor,
+    },
+    {
+      id: 'snapDepth',
+      text: 'Depth',
+      callback: captureDepth,
     },
     {
       id: 'clearSnapshots',
@@ -411,7 +444,7 @@ function makeCanvasFollowScroll() {
 $(document).ready(() => {
   viewer = new Viewer('glCanvas', 'canvas2D', ImageUrls.white);
   viewer.setRotationCallback(setRotation);
-  viewer.setBackgroundColor(0x3d4d4d);
+  viewer.setBackgroundColor(Config.backgroundColor);
   updateCamera();
   populateControls();
   reloadModel();

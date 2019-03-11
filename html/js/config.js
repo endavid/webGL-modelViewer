@@ -12,5 +12,6 @@ const Config = {
   cameraFOV: 33.4,
   needsReload: false,
   keyframe: -1,
+  backgroundColor: 0x3d4d4d,
 };
 export { Config as default };

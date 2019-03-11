@@ -7,6 +7,10 @@ class GlState {
     this.setDepthMask(true);
     this.setBlend(false);
     this.clearColor = 0x0;
+    this.stacks = {
+      framebuffer: [],
+      renderbuffer: [],
+    };
     gl.clearColor(0, 0, 0, 1);
     gl.clearDepth(1.0);
     gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
@@ -61,6 +65,37 @@ class GlState {
   }
   flush() {
     this.gl.flush();
+  }
+  pushFramebuffer() {
+    const fb = this.gl.getParameter(this.gl.FRAMEBUFFER_BINDING);
+    this.stacks.framebuffer.push(fb);
+  }
+  pushRenderbuffer() {
+    const rb = this.gl.getParameter(this.gl.RENDERBUFFER_BINDING);
+    this.stacks.renderbuffer.push(rb);
+  }
+  popFramebuffer() {
+    const fb = this.stacks.framebuffer.pop();
+    if (fb) {
+      this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, fb);
+    } else {
+      this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+    }
+  }
+  popRenderbuffer() {
+    const rb = this.stacks.renderbuffer.pop();
+    if (rb) {
+      this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, rb);
+    } else {
+      this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, null);
+    }
+  }
+  setTextureParameters(filter, wrap) {
+    const { gl } = this;
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
   }
 }
 export { GlState as default };
