@@ -189,15 +189,16 @@ function addImageToBasket(image) {
   $('#imageBasket').append(img);
 }
 
-function snapshot(imgData) {
+function snapshot(png) {
   return new Promise((resolve, reject) => {
-    Gfx.createImageFromImageData(imgData, (image) => {
-      if (image.width === 0) {
-        reject(new Error('Failed to capture'));
-      } else {
-        resolve(image);
-      }
-    });
+    const image = new Image();
+    image.onload = () => {
+      resolve(image);
+    };
+    image.onerror = () => {
+      reject(new Error('Failed to capture'));
+    };
+    image.src = png.getDataURL();
   });
 }
 

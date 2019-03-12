@@ -6,11 +6,12 @@ import PluginOverlay from './pluginOverlay.js';
 import PluginLabels from './pluginLabels.js';
 import { SunLight } from './lights.js';
 import Camera from './camera.js';
+import PngEncoder from './pngencoder.js';
 
 // private things
 let captureNextFrameCallback = null;
 
-function readPixelsAsImageData(gl, surface) {
+function readPixelsAsPng(gl, surface) {
   const isFloat = surface === 'float';
   const w = gl.drawingBufferWidth;
   const h = gl.drawingBufferHeight;
@@ -26,18 +27,22 @@ function readPixelsAsImageData(gl, surface) {
   if (isFloat) {
     const view = new DataView(new ArrayBuffer(4));
     clampedArray = new Uint8ClampedArray(w * h * 4);
+    console.log(pixels[0]);
     for (let i = 0; i < w * h; i += 1) {
       view.setFloat32(0, pixels[4 * i]);
       clampedArray[4 * i] = view.getUint8(0);
       clampedArray[4 * i + 1] = view.getUint8(1);
       clampedArray[4 * i + 2] = view.getUint8(2);
       clampedArray[4 * i + 3] = view.getUint8(3);
+      if (i === 0) {
+        console.log(`first: ${view.getUint8(0)} ${view.getUint8(1)} ${view.getUint8(2)} ${view.getUint8(3)}`);
+      }
     }
   } else {
     clampedArray = new Uint8ClampedArray(pixels);
   }
-  const imgData = new ImageData(clampedArray, w, h);
-  return imgData;
+  const png = new PngEncoder(clampedArray, w, h);
+  return png;
 }
 
 function createFloatFramebuffer(glState, width, height) {
@@ -189,8 +194,8 @@ class Renderer {
       plugin.draw(glState, scene, deltaTime);
     });
     if (captureNextFrameCallback) {
-      const imgData = readPixelsAsImageData(glState.gl, s);
-      captureNextFrameCallback(imgData);
+      const png = readPixelsAsPng(glState.gl, s);
+      captureNextFrameCallback(png);
       captureNextFrameCallback = null;
     }
     glState.popFramebuffer();
