@@ -1,6 +1,7 @@
 /* eslint-env qunit */
 import Gfx from '../js/gfx.js';
 import PngEncoder from '../js/pngencoder.js';
+import PamEncoder from '../js/pamencoder.js';
 
 const { PNGReader, pako } = window;
 
@@ -38,6 +39,14 @@ function waitForImage(src) {
   });
 }
 
+function createRepeatedColorBuffer(color, width, height) {
+  const buffer = new Uint8Array(height * width * 4);
+  for (let i = 0; i < buffer.length; i += 1) {
+    buffer[i] = color[i % 4];
+  }
+  return buffer;
+}
+
 QUnit.module('ImageEncoding');
 
 QUnit.test('decode Float32 from RGBA', (assert) => {
@@ -56,8 +65,8 @@ QUnit.test('decode Float32 from RGBA', (assert) => {
       assert.equal(count, 0);
       done[i]();
     })
-      .catch(() => {
-        assert.ok(false);
+      .catch((e) => {
+        assert.equal(e.message, '');
         done[i]();
       });
   });
@@ -67,10 +76,7 @@ QUnit.test('encode RGBA to PNG', (assert) => {
   const color = [242, 71, 69, 62];
   const width = 4;
   const height = 4;
-  const buffer = new Uint8Array(height * width * 4);
-  for (let i = 0; i < buffer.length; i += 1) {
-    buffer[i] = color[i % 4];
-  }
+  const buffer = createRepeatedColorBuffer(color, width, height);
   const pnge = new PngEncoder(buffer, width, height);
   const uint8buffer = new Uint8Array(pnge.rawBuffer);
   // inspected Test32FEncoding1.png in hex viewer (HxD)
@@ -93,4 +99,19 @@ QUnit.test('encode RGBA to PNG', (assert) => {
   // I'll leave this test here in case I want to pick it this up later.
   // assert.equal(uint8buffer.length, expected.length);
   // assert.deepEqual(expected, uint8buffer);
+});
+
+QUnit.test('encode RGBA to PAM', (assert) => {
+  const color = [242, 71, 69, 62];
+  const width = 4;
+  const height = 4;
+  const buffer = createRepeatedColorBuffer(color, width, height);
+  const pame = new PamEncoder(buffer, width, height);
+  const headerLength = pame.rawBuffer.byteLength - pame.buffer.length;
+  const dec = new TextDecoder('utf-8');
+  const header = dec.decode(new Uint8Array(pame.rawBuffer.slice(0, headerLength)));
+  let expectedHeader = `P7\nWIDTH ${width}\nHEIGHT ${height}\nDEPTH 4\n`;
+  expectedHeader += 'MAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n';
+  assert.equal(expectedHeader, header);
+  assert.deepEqual(pame.buffer, buffer);
 });

@@ -215,7 +215,10 @@ function captureDepth() {
       viewer.setOutputSurface('float');
     })
     .then(Viewer.readImageData)
-    .then(snapshot)
+    .then((imgData) => {
+      Gfx.savePamFile(imgData, 'depth.pam');
+      return snapshot(imgData);
+    })
     .then((img) => {
       addImageToBasket(img);
       viewer.setOutputSurface('default');

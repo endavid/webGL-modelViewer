@@ -2,6 +2,7 @@ import $ from './jquery.module.js';
 import VMath from './math.js';
 import WavefrontObj from './wavefrontObj.js';
 import Collada from './collada.js';
+import PamEncoder from './pamencoder.js';
 
 // Unfortunately, I wasn't able to import saveAs as a module
 const { saveAs } = window;
@@ -371,6 +372,18 @@ class Gfx {
       outArray.push(view.getFloat32(0));
     }
     return outArray;
+  }
+
+  // Use ImageMagick to convert the PAM file to a RGBA PNG file,
+  // > convert depth.pam png32:depth3.png
+  static savePamFile(imgData, filename) {
+    const opt = { flipY: true, shiftAlpha: true };
+    const pam = new PamEncoder(imgData.data, imgData.width, imgData.height, opt);
+    const bytes = new Uint8Array(pam.rawBuffer);
+    saveAs(
+      new Blob([bytes], { type: 'octet.stream' }),
+      filename,
+    );
   }
 }
 export { Gfx as default };
