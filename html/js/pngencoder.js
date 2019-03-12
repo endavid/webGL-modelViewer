@@ -100,7 +100,7 @@ function pushZeroesToEveryRow(buffer, width, height) {
 
 // RGBA images only
 class PngEncoder {
-  constructor(uint8buffer, width, height) {
+  constructor(uint8buffer, width, height, compressionLevel) {
     // https://en.wikipedia.org/wiki/Portable_Network_Graphics
     // http://www.libpng.org/pub/png/book/chapter11.html
     this.bitDepth = 32; // truecolor RBGA
@@ -114,8 +114,11 @@ class PngEncoder {
     const gammaChunkSize = 4;
 
     const paddedWithZeroes = pushZeroesToEveryRow(uint8buffer, width, height);
-    // { level: 0 } means no compression -- default is level 6
-    const compressed = pako.deflate(paddedWithZeroes, { level: 2 });
+    // level 0 means no compression -- default is level 6, but we'll make it explicit
+    const options = {
+      level: compressionLevel || 6,
+    };
+    const compressed = pako.deflate(paddedWithZeroes, options);
     const dataChunkSize = compressed.length;
 
     const numChunks = 5;
