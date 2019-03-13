@@ -31,6 +31,11 @@ function setError(e) {
   setInfo(`[ERROR] ${e}`);
 }
 
+function matrixToString(m) {
+  // we could split it in 4 lines, but let's keep it simple for now
+  return m.join(', ');
+}
+
 function removePoseGroup() {
   $('tr[id^=gPose]').remove();
 }
@@ -395,6 +400,18 @@ function populateControls() {
         Config.cameraFOV = parseFloat(value);
         updateCameraFOV();
       }),
+    UiUtils.createButtons('cameraDumps', [
+      {
+        id: 'dumpProjection',
+        text: 'Dump Projection M',
+        callback: () => setInfo(matrixToString(viewer.scene.camera.projectionMatrix)),
+      },
+      {
+        id: 'dumpView',
+        text: 'Dump View M',
+        callback: () => setInfo(matrixToString(viewer.scene.camera.viewMatrix)),
+      },
+    ]),
   ]);
   const sun = viewer.scene.lights[0];
   UiUtils.addGroup('gLight', 'Light Settings', [
