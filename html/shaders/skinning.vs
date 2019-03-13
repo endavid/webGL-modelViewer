@@ -22,7 +22,10 @@ void main(void) { // pre-built function
   p = p0 * boneWeights.x + p1 * boneWeights.y + p2 * boneWeights.z + p3 * boneWeights.w;
   vec4 worldPos = Mmatrix * p;
   worldPosition = worldPos.xyz;
-  gl_Position = Pmatrix * Vmatrix * worldPos;
+  vec4 projected = Pmatrix * Vmatrix * worldPos;
+  gl_Position = projected;
+  // normalized view depth
+  viewDepth = projected.z / projected.w;
   vec4 n = vec4(normal, 0.);
   vec4 n0 = joints[int(boneIndices.x)] * n;
   vec4 n1 = joints[int(boneIndices.y)] * n;
