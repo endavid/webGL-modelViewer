@@ -57,10 +57,26 @@ function getPolylistsAndTriangleLists(json) {
   return lists;
 }
 
+function sourceIdToSemantics(id) {
+  const s = id.toLowerCase();
+  if (s.indexOf('position') >= 0) {
+    return 'positions';
+  }
+  if (s.indexOf('normal') >= 0) {
+    return 'normals';
+  }
+  if (s.indexOf('map') >= 0 || s.indexOf('uv') >= 0) {
+    return 'uvs';
+  }
+  return null;
+}
+
 function readMeshes(json, defaultMaterial, skin) {
-  let positions = [];
-  let normals = [];
-  let uvs = [];
+  const d = {
+    positions: [],
+    normals: [],
+    uvs: [],
+  };
   const vertices = [];
   const meshes = [];
   const ngons = {};
@@ -70,12 +86,9 @@ function readMeshes(json, defaultMaterial, skin) {
     src = [src];
   }
   src.forEach((e) => {
-    if (e._id.indexOf('positions') >= 0) {
-      positions = floatStringToArray(e.float_array.__text);
-    } else if (e._id.indexOf('normals') >= 0) {
-      normals = floatStringToArray(e.float_array.__text);
-    } else if (e._id.indexOf('map') >= 0 || e._id.indexOf('uvs') >= 0) {
-      uvs = floatStringToArray(e.float_array.__text);
+    const key = sourceIdToSemantics(e._id);
+    if (key) {
+      d[key] = floatStringToArray(e.float_array.__text);
     }
   });
   const polylists = getPolylistsAndTriangleLists(json);
@@ -98,26 +111,26 @@ function readMeshes(json, defaultMaterial, skin) {
     // interleave vertex data as
     // position (3), normal (3), UVs (2)
     polygons.forEach((p) => {
-      vertices.push(positions[3 * p[0]]);
+      vertices.push(d.positions[3 * p[0]]);
       if (invertAxis) {
-        vertices.push(positions[3 * p[0] + 2]);
-        vertices.push(-positions[3 * p[0] + 1]);
+        vertices.push(d.positions[3 * p[0] + 2]);
+        vertices.push(-d.positions[3 * p[0] + 1]);
       } else {
-        vertices.push(positions[3 * p[0] + 1]);
-        vertices.push(positions[3 * p[0] + 2]);
+        vertices.push(d.positions[3 * p[0] + 1]);
+        vertices.push(d.positions[3 * p[0] + 2]);
       }
       const noNormals = p[1] === undefined;
-      vertices.push(noNormals ? 0 : normals[3 * p[1]]);
+      vertices.push(noNormals ? 0 : d.normals[3 * p[1]]);
       if (invertAxis) {
-        vertices.push(noNormals ? 0 : normals[3 * p[1] + 2]);
-        vertices.push(noNormals ? 0 : -normals[3 * p[1] + 1]);
+        vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 2]);
+        vertices.push(noNormals ? 0 : -d.normals[3 * p[1] + 1]);
       } else {
-        vertices.push(noNormals ? 0 : normals[3 * p[1] + 1]);
-        vertices.push(noNormals ? 0 : normals[3 * p[1] + 2]);
+        vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 1]);
+        vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 2]);
       }
       const noUVs = p[2] === undefined;
-      vertices.push(noUVs ? 0 : uvs[2 * p[2]] || 0);
-      vertices.push(noUVs ? 0 : uvs[2 * p[2] + 1] || 0);
+      vertices.push(noUVs ? 0 : d.uvs[2 * p[2]] || 0);
+      vertices.push(noUVs ? 0 : d.uvs[2 * p[2] + 1] || 0);
       if (skin) {
         const weights = [1.0, 0.0, 0.0, 0.0];
         const indices = [0, 0, 0, 0];
@@ -186,6 +199,20 @@ function mapWeightsPerVertex(vcount, jointWeightIndices, weightData) {
   return weights;
 }
 
+function skinSourceIdToSemantics(id) {
+  const s = id.toLowerCase();
+  if (s.indexOf('weights') >= 0) {
+    return 'weights';
+  }
+  if (s.indexOf('bind_poses') >= 0 || s.indexOf('matrices') >= 0) {
+    return 'bindPoses';
+  }
+  if (s.indexOf('joints') >= 0) {
+    return 'joints';
+  }
+  return null;
+}
+
 function readSkin(json) {
   const { controller } = json.COLLADA.library_controllers;
   const skin = controller ? controller.skin : controller;
@@ -196,9 +223,10 @@ function readSkin(json) {
   const invertAxis = isZUp(json);
   let weightData = [];
   skin.source.forEach((e) => {
-    if (e._id.indexOf('weights') >= 0) {
+    const key = skinSourceIdToSemantics(e._id);
+    if (key === 'weights') {
       weightData = floatStringToArray(e.float_array.__text);
-    } else if (e._id.indexOf('bind_poses') >= 0 || e._id.indexOf('Matrices') >= 0) {
+    } else if (key === 'bindPoses') {
       let bp = floatStringToArray(e.float_array.__text);
       bp = toVectorArray(bp, 16);
       if (invertAxis) {
@@ -206,7 +234,7 @@ function readSkin(json) {
       } else {
         skinData.bindPoses = bp;
       }
-    } else if (e._id.indexOf('joints') >= 0 || e._id.indexOf('Joints') >= 0) {
+    } else if (key === 'joints') {
       skinData.joints = e.Name_array.__text.split(/[\s,]+/);
     }
   });
@@ -329,24 +357,29 @@ function readAnimations(json) {
       animations[boneId] = {};
     }
     anim.source.forEach((src) => {
-      if (src.float_array) {
-        const id = src.float_array._id;
-        const floats = floatStringToArray(src.float_array.__text);
-        if (id.indexOf('input') >= 0) {
-          animations[boneId].keyframes = floats;
-        } else if (id.indexOf('output') >= 0) {
-          if (targetId.indexOf('translation') >= 0 || targetId.indexOf('scale') >= 0) {
-            animations[boneId][targetId] = toVectorArray(floats, 3);
-          } else if (targetId.indexOf('transform') >= 0 || targetId.indexOf('matrix') >= 0) {
-            const matrices = toVectorArray(floats, 16);
-            if (invertAxis) {
-              animations[boneId][targetId] = matrices.map(flipAxisForMatrix);
-            } else {
-              animations[boneId][targetId] = matrices;
-            }
+      if (!src.float_array) {
+        return;
+      }
+      const floatCount = parseInt(src.float_array._count || '0', 10);
+      if (floatCount <= 0) {
+        return;
+      }
+      const id = src.float_array._id;
+      const floats = floatStringToArray(src.float_array.__text);
+      if (id.indexOf('input') >= 0) {
+        animations[boneId].keyframes = floats;
+      } else if (id.indexOf('output') >= 0) {
+        if (targetId.indexOf('translation') >= 0 || targetId.indexOf('scale') >= 0) {
+          animations[boneId][targetId] = toVectorArray(floats, 3);
+        } else if (targetId.indexOf('transform') >= 0 || targetId.indexOf('matrix') >= 0) {
+          const matrices = toVectorArray(floats, 16);
+          if (invertAxis) {
+            animations[boneId][targetId] = matrices.map(flipAxisForMatrix);
           } else {
-            animations[boneId][targetId] = floats;
+            animations[boneId][targetId] = matrices;
           }
+        } else {
+          animations[boneId][targetId] = floats;
         }
       }
     });
