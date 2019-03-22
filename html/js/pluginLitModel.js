@@ -9,7 +9,7 @@ class PluginLitModel {
     const attribs = ['uv', 'position', 'normal'];
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'sampler'];
     const attribsSkin = attribs.concat(['boneWeights', 'boneIndices']);
-    const uniformsSkin = uniforms.concat(['sampler', 'joints']);
+    const uniformsSkin = uniforms.concat(['sampler', 'joints', 'jointDebugPalette']);
     const shaders = {};
     const fs = fragmentShader || 'shaders/lighting.fs';
     shaders.lit = await Shader.createAsync(gl, 'shaders/geometry.vs', fs, attribs, uniforms);
@@ -53,6 +53,7 @@ class PluginLitModel {
         gl.vertexAttribPointer(shader.attribs.boneIndices,
           4, gl.FLOAT, false, stride, 4 * (3 + 3 + 2 + 4));
         gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
+        gl.uniform4fv(shader.uniforms.jointDebugPalette, skinned.jointColorPalette);
       }
       // draw all submeshes
       model.meshes.forEach((mesh) => {

@@ -26,6 +26,18 @@ function substractJointTranslationsFromAnims(skeleton, anims) {
   return a;
 }
 
+function createJointColorPalette(joints) {
+  const count = joints.length;
+  const palette = new Float32Array(count * 4);
+  for (let i = 0; i < count; i += 1) {
+    palette[4 * i] = Math.random();
+    palette[4 * i + 1] = Math.random();
+    palette[4 * i + 2] = Math.random();
+    palette[4 * i + 3] = 1.0;
+  }
+  return palette;
+}
+
 class SkinnedModel {
   constructor(skin, skeleton, anims) {
     this.joints = new Array(MAX_JOINTS * 16);
@@ -43,6 +55,7 @@ class SkinnedModel {
     const animKeys = Object.keys(anims);
     this.keyframeCount = animKeys.length > 0 ? anims[animKeys[0]].keyframes.length : 0;
     this.anims = substractJointTranslationsFromAnims(skeleton, anims);
+    this.jointColorPalette = createJointColorPalette(skin.joints);
     // this.applyPose(0);
   }
   // JointMatrix * InvBindMatrix

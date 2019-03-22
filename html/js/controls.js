@@ -312,6 +312,7 @@ function populateControls() {
   const shaderPresets = [
     { name: 'default shading', value: 'shaders/lighting.fs' },
     { name: 'depth', value: 'shaders/debugDepth.fs' },
+    { name: 'skin weights', value: 'shaders/debugSkinWeights.fs' },
     { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },
   ];
 
