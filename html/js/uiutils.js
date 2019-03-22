@@ -153,6 +153,19 @@ const UiUtils = {
         .attr('multiple', multiple ? '' : false)
         .change(updateFunction)));
   },
+
+  createColorPicker(id, text, value, callback) {
+    const colorPicker = $('<input>')
+      .attr('id', id)
+      .attr('type', 'color')
+      .val(value)
+      .change(callback);
+    const td = $('<td>')
+      .append(colorPicker)
+      .append(` ${text}`);
+    return $('<tr>').attr('id', `${id}_parent`).append(td);
+  },
+
   createSubGroup(id, text, elements, parent) {
     return UiUtils.createGroup(id, text, elements, 'subgroup', parent);
   },

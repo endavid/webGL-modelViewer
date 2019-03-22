@@ -36,6 +36,28 @@ function matrixToString(m) {
   return m.join(', ');
 }
 
+function vectorToHexColor(v) {
+  // can't use 'map' because it returns another Float32Array...
+  let c = [];
+  v.forEach(a => c.push(Math.round(255 * a).toString(16)));
+  c = c.map((a) => {
+    if (a.length === 1) return `0${a}`;
+    return a;
+  });
+  return `#${c.join('')}`;
+}
+
+function hexColorToNormalizedVector(color) {
+  // e.g. #120e14
+  let v = [
+    color.slice(1, 3),
+    color.slice(3, 5),
+    color.slice(5, 7),
+  ];
+  v = v.map(a => parseInt(a, 16) / 255);
+  return v;
+}
+
 function removePoseGroup() {
   $('tr[id^=gPose]').remove();
 }
@@ -64,6 +86,23 @@ function addPoseGroup(skinnedModel) {
     slider.attr('parent', `${id}_${joint}`);
     return slider;
   }
+  function colorPicker(s, joint) {
+    const jointIndex = skinnedModel.jointIndices[joint];
+    if (jointIndex === undefined) {
+      return null;
+    }
+    const palette = skinnedModel.jointColorPalette;
+    const color = palette.slice(4 * jointIndex, 4 * jointIndex + 3);
+    const hexColor = vectorToHexColor(color);
+    const picker = UiUtils.createColorPicker(`${s}_color`, 'debug color', hexColor, (e) => {
+      const c = hexColorToNormalizedVector(e.target.value);
+      c.forEach((value, i) => {
+        palette[4 * jointIndex + i] = value;
+      });
+    });
+    picker.attr('parent', `${id}_${joint}`);
+    return picker;
+  }
   function createControls(skeleton, parent) {
     const joints = Object.keys(skeleton);
     let controls = [];
@@ -80,6 +119,10 @@ function addPoseGroup(skinnedModel) {
         angleSlider(subId, joint, [rx, ry, rz]),
         translationSlider(subId, joint, [tx, ty, tz]),
       ];
+      const picker = colorPicker(subId, joint);
+      if (picker) {
+        subcontrols.push(picker);
+      }
       const jointControls = createControls(skeleton[joint], subId);
       subcontrols = subcontrols.concat(jointControls);
       const jointGroup = UiUtils.createSubGroup(subId, joint, subcontrols, parent);
