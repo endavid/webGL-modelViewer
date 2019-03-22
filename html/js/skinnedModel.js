@@ -2,6 +2,36 @@ import VMath from './math.js';
 
 const MAX_JOINTS = 100;
 
+// generated with http://palettist.endavid.com/
+const JOINT_PALETTE = [
+  0, 0, 0, 1,
+  0.635, 0.733, 0.945, 1,
+  0.329, 0.541, 0.953, 1,
+  0.839, 0.624, 1, 1,
+  1, 0.655, 0.945, 1,
+  1, 0.651, 0.647, 1,
+  0.69, 0.988, 1, 1,
+  0.02, 0.871, 0.949, 1,
+  0.369, 1, 0.973, 1,
+  1, 0.318, 0.298, 1,
+  1, 0.937, 0.659, 1,
+  0.827, 1, 0.655, 1,
+  1, 0.31, 0.773, 1,
+  0.875, 0.773, 0.314, 1,
+  0.671, 1, 0.365, 1,
+  0.318, 1, 0.471, 1,
+  1, 0, 0.788, 1,
+  1, 0.02, 0, 1,
+  1, 0.831, 0, 1,
+  0.478, 1, 0.016, 1,
+  0.675, 0.373, 1, 1,
+  0.596, 0.024, 1, 1,
+  0, 0.239, 0.945, 1,
+  0.4, 1, 0.349, 1,
+  1, 0.5, 0, 1,
+  1, 1, 1, 1,
+];
+
 function arrayValueOrDefault(array, index, def) {
   if (array && array[index]) {
     return array[index];
@@ -27,13 +57,24 @@ function substractJointTranslationsFromAnims(skeleton, anims) {
 }
 
 function createJointColorPalette(joints) {
+  const numColors = JOINT_PALETTE.length / 4;
   const count = joints.length;
   const palette = new Float32Array(count * 4);
-  for (let i = 0; i < count; i += 1) {
-    palette[4 * i] = Math.random();
-    palette[4 * i + 1] = Math.random();
-    palette[4 * i + 2] = Math.random();
-    palette[4 * i + 3] = 1.0;
+  const jointColorHash = {};
+  for (let i = 0, j = 0; i < count; i += 1) {
+    // try to detect symmetric joints by removing starting or ending Ls/Rs
+    const jointKey = joints[i].substr(1, joints[i].length - 2);
+    const colorIndex = j % numColors;
+    let color = JOINT_PALETTE.slice(4 * colorIndex, 4 * colorIndex + 4);
+    if (jointColorHash[jointKey]) {
+      color = jointColorHash[jointKey];
+    } else {
+      jointColorHash[jointKey] = color;
+      j += 1;
+    }
+    for (let c = 0; c < 4; c += 1) {
+      palette[4 * i + c] = color[c];
+    }
   }
   return palette;
 }
