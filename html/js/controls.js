@@ -296,6 +296,21 @@ function populateControls() {
     }
   }
 
+  function onLoadLabels(values) {
+    const f = values[0];
+    if (!f) {
+      return;
+    }
+    const ext = Gfx.getFileExtension(f.name);
+    if (ext !== 'Json') {
+      setError('Labels must be in Json format');
+      return;
+    }
+    $.getJSON(f.uri, (labels) => {
+      viewer.scene.labels.model = labels;
+    });
+  }
+
   function onAddPoseFiles(values) {
     const model = viewer.scene.models[0];
     if (!model || !model.skinnedModel) {
@@ -363,6 +378,7 @@ function populateControls() {
   UiUtils.addGroup('gFile', 'File', [
     UiUtils.createFileBrowser('fileBrowser', 'load models & textures', true, onChangeFileBrowser),
     UiUtils.createDropdownList('Presets', modelPresets, reloadModel),
+    UiUtils.createFileBrowser('labelBrowser', 'load model labels', false, onLoadLabels),
     UiUtils.createButtonWithOptions('saveFile', 'Save', ' as ',
       [{ name: 'OBJ Wavefront', value: '.obj' }, { name: 'Json', value: '.json' }],
       (e) => {

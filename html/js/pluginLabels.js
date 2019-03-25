@@ -1,5 +1,12 @@
 import VMath from './math.js';
 
+function getLabelPosition(pos) {
+  if (pos.x !== undefined) {
+    return [pos.x, pos.y, pos.z, 1];
+  }
+  return [pos[0], pos[1], pos[2], 1];
+}
+
 class PluginLabels {
   constructor() {
     this.fillStyle = '#ffffff';
@@ -24,8 +31,7 @@ class PluginLabels {
       return [(clip[0] * 0.5 + 0.5) * canvas.width, (clip[1] * -0.5 + 0.5) * canvas.height];
     }
     Object.keys(labels.world).forEach((k) => {
-      const pos = labels.world[k];
-      pos[3] = 1;
+      const pos = getLabelPosition(labels.world[k]);
       const pix = worldToPixels(pos);
       PluginLabels.drawLabel(context, pix[0], pix[1], k);
     });
@@ -33,8 +39,7 @@ class PluginLabels {
     if (mainModel) {
       const modelMatrix = mainModel.transformMatrix;
       Object.keys(labels.model).forEach((k) => {
-        const pos = labels.model[k];
-        pos[3] = 1;
+        const pos = getLabelPosition(labels.model[k]);
         const world = VMath.mulVector(modelMatrix, pos);
         const pix = worldToPixels(world);
         PluginLabels.drawLabel(context, pix[0], pix[1], k);
