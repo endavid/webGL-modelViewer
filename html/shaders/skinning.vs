@@ -48,4 +48,5 @@ void main(void) { // pre-built function
   vec4 jointColor2 = jointDebugPalette[i2];
   vec4 jointColor3 = jointDebugPalette[i3];
   debugBoneWeightColor = jointColor0 * boneWeights.x + jointColor1 * boneWeights.y + jointColor2 * boneWeights.z + jointColor3 * boneWeights.w;
+  debugBoneWeightColor.a = 1.0;
 }

@@ -174,28 +174,31 @@ function readMeshes(json, defaultMaterial, skin) {
 }
 
 function mapWeightsPerVertex(vcount, jointWeightIndices, weightData) {
-  let moreThan4JointsCount = 0;
   const weights = [];
+  const overflowCount = {};
   let iv = 0;
   vcount.forEach((jointsPerVertex) => {
     if (jointsPerVertex > 4) {
-      moreThan4JointsCount += 1;
+      overflowCount[jointsPerVertex] = 1 + (overflowCount[jointsPerVertex] || 0);
     }
     const jointWeightPairs = [];
     for (let j = 0; j < jointsPerVertex; j += 1) {
-      if (j <= 4) { // if there are more joints, ignore
-        const jointIndex = jointWeightIndices[iv][0];
-        const weightIndex = jointWeightIndices[iv][1];
-        const weight = weightData[weightIndex];
-        jointWeightPairs.push([jointIndex, weight]);
-      }
+      const jointIndex = jointWeightIndices[iv][0];
+      const weightIndex = jointWeightIndices[iv][1];
+      const weight = weightData[weightIndex];
+      jointWeightPairs.push([jointIndex, weight]);
       iv += 1;
     }
-    weights.push(jointWeightPairs);
+    // sort them, so big weights come first, so we can slice below
+    jointWeightPairs.sort((a, b) => b[1] - a[1]);
+    // if there are more joints, ignore the least important ones
+    const mostImportant = jointWeightPairs.slice(0, 4);
+    weights.push(mostImportant);
   });
-  if (moreThan4JointsCount > 0) {
-    console.warn(`There are ${moreThan4JointsCount} vertices with more than 4 contributing joints! Ignoring the 5th onwards...`);
-  }
+  Object.keys(overflowCount).forEach((key) => {
+    const count = overflowCount[key];
+    console.warn(`There are ${count} vertices with ${key} contributing joints! Only taking the most important 4 and ignoring the rest...`);
+  });
   return weights;
 }
 
