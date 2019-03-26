@@ -2,6 +2,7 @@ import GlState from './glState.js';
 import Gfx from './gfx.js';
 import VMath from './math.js';
 import PluginLitModel from './pluginLitModel.js';
+import PluginDots from './pluginDots.js';
 import PluginOverlay from './pluginOverlay.js';
 import PluginLabels from './pluginLabels.js';
 import { SunLight } from './lights.js';
@@ -137,6 +138,7 @@ class Renderer {
     const self = this;
     Promise.all([
       PluginLitModel.createAsync(gl, this.whiteTexture),
+      PluginDots.createAsync(gl),
       PluginOverlay.createAsync(gl),
     ]).then((list) => {
       self.plugins = list;

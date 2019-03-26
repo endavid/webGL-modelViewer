@@ -36,28 +36,6 @@ function matrixToString(m) {
   return m.join(', ');
 }
 
-function vectorToHexColor(v) {
-  // can't use 'map' because it returns another Float32Array...
-  let c = [];
-  v.forEach(a => c.push(Math.round(255 * a).toString(16)));
-  c = c.map((a) => {
-    if (a.length === 1) return `0${a}`;
-    return a;
-  });
-  return `#${c.join('')}`;
-}
-
-function hexColorToNormalizedVector(color) {
-  // e.g. #120e14
-  let v = [
-    color.slice(1, 3),
-    color.slice(3, 5),
-    color.slice(5, 7),
-  ];
-  v = v.map(a => parseInt(a, 16) / 255);
-  return v;
-}
-
 function removePoseGroup() {
   $('tr[id^=gPose]').remove();
 }
@@ -93,9 +71,9 @@ function addPoseGroup(skinnedModel) {
     }
     const palette = skinnedModel.jointColorPalette;
     const color = palette.slice(4 * jointIndex, 4 * jointIndex + 3);
-    const hexColor = vectorToHexColor(color);
+    const hexColor = VMath.vectorToHexColor(color);
     const picker = UiUtils.createColorPicker(`${s}_color`, 'debug color', hexColor, (e) => {
-      const c = hexColorToNormalizedVector(e.target.value);
+      const c = VMath.hexColorToNormalizedVector(e.target.value);
       c.forEach((value, i) => {
         palette[4 * jointIndex + i] = value;
       });
@@ -311,6 +289,14 @@ function populateControls() {
     });
   }
 
+  function onBakeModelLabels() {
+    const model = viewer.scene.models[0];
+    if (model) {
+      model.setDots(viewer.glState.gl, viewer.scene.labels.model);
+      viewer.scene.labels.model = {};
+    }
+  }
+
   function onAddPoseFiles(values) {
     const model = viewer.scene.models[0];
     if (!model || !model.skinnedModel) {
@@ -379,6 +365,7 @@ function populateControls() {
     UiUtils.createFileBrowser('fileBrowser', 'load models & textures', true, onChangeFileBrowser),
     UiUtils.createDropdownList('Presets', modelPresets, reloadModel),
     UiUtils.createFileBrowser('labelBrowser', 'load model labels', false, onLoadLabels),
+    UiUtils.createButton('bakeLabels', 'Bake model labels', onBakeModelLabels),
     UiUtils.createButtonWithOptions('saveFile', 'Save', ' as ',
       [{ name: 'OBJ Wavefront', value: '.obj' }, { name: 'Json', value: '.json' }],
       (e) => {

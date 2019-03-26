@@ -28,7 +28,7 @@ void main(void) { // pre-built function
   p = p0 * boneWeights.x + p1 * boneWeights.y + p2 * boneWeights.z + p3 * boneWeights.w;
   vec4 worldPos = Mmatrix * p;
   worldPosition = worldPos.xyz;
-  vec4 projected = Pmatrix * Vmatrix * worldPos;
+  vec4 projected = Pmatrix * (Vmatrix * worldPos);
   gl_Position = projected;
   // normalized view depth
   viewDepth = projected.z / projected.w;

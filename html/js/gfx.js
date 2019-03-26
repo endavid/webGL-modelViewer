@@ -79,6 +79,10 @@ class Gfx {
       gl.deleteBuffer(modelData.vertexBuffer);
       modelRef.vertexBuffer = false;
     }
+    if (modelData.dotBuffer) {
+      gl.deleteBuffer(modelData.dotBuffer);
+      modelRef.dotBuffer = false;
+    }
     // empty texture cache
     const toKeep = [];
     Object.keys(gfx.textureCache).forEach((url) => {

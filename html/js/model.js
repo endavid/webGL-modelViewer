@@ -2,6 +2,21 @@ import Gfx from './gfx.js';
 import VMath from './math.js';
 import SkinnedModel from './skinnedModel.js';
 
+function readCoordinates(pos) {
+  let color = [1, 1, 1];
+  if (pos.color !== undefined) {
+    color = VMath.hexColorToNormalizedVector(pos.color);
+  }
+  let p = [];
+  if (pos.x !== undefined) {
+    p = [pos.x, pos.y, pos.z];
+  } else {
+    p = pos.slice(0, 3);
+  }
+  const alpha = 1;
+  return p.concat(color).concat(alpha);
+}
+
 class Model {
   // format:
   // { name: // model name
@@ -37,6 +52,9 @@ class Model {
     gl.bufferData(gl.ARRAY_BUFFER,
       new Float32Array(json.vertices),
       gl.STATIC_DRAW);
+    // for rendering purposes only, we don't need to remember .vertices,
+    // but we will need them if we want to do things on the CPU side.
+    this.vertices = json.vertices;
     // submeshes
     const meshes = [];
     json.meshes.forEach((m) => {
@@ -90,6 +108,25 @@ class Model {
         }
       })
       .catch(onError);
+  }
+  setDots(gl, landmarks) {
+    let vertices = [];
+    const landmarkList = Object.keys(landmarks);
+    landmarkList.forEach((key) => {
+      const p = landmarks[key];
+      vertices = vertices.concat(readCoordinates(p));
+    });
+    if (vertices.length === 0) {
+      return;
+    }
+    this.numDots = landmarkList.length;
+    if (this.dotBuffer) {
+      gl.deleteBuffer(this.dotBuffer);
+    }
+    this.dotBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.dotBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    this.dotBufferStride = 3 + 4; // position + rgba
   }
 }
 export { Model as default };

@@ -9,7 +9,7 @@ class PluginLitModel {
     const attribs = ['uv', 'position', 'normal'];
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'sampler'];
     const attribsSkin = attribs.concat(['boneWeights', 'boneIndices']);
-    const uniformsSkin = uniforms.concat(['sampler', 'joints', 'jointDebugPalette']);
+    const uniformsSkin = uniforms.concat(['joints', 'jointDebugPalette']);
     const shaders = {};
     const fs = fragmentShader || 'shaders/lighting.fs';
     shaders.lit = await Shader.createAsync(gl, 'shaders/geometry.vs', fs, attribs, uniforms);

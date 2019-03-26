@@ -5,6 +5,15 @@
   * need to be sent to the GPU.
   */
 const VMath = {
+  // checks for 2 possible formats, {x: 0, y: 0, z: 0}
+  // and [0, 0, 0], and returns a vector of 4 ending in 1, [0, 0, 0, 1]
+  readCoordinates: (pos) => {
+    if (pos.x !== undefined) {
+      return [pos.x, pos.y, pos.z, 1];
+    }
+    return [pos[0], pos[1], pos[2], 1];
+  },
+
   normalize: (v) => {
     let norm = v.reduce((acc, c) => acc + c * c, 0);
     norm = Math.sqrt(norm) || 1;
@@ -208,6 +217,28 @@ const VMath = {
     if (a < minA) return minA;
     if (a > maxA) return maxA;
     return a;
+  },
+
+  vectorToHexColor: (v) => {
+    // can't use 'map' because it returns another Float32Array...
+    let c = [];
+    v.forEach(a => c.push(Math.round(255 * a).toString(16)));
+    c = c.map((a) => {
+      if (a.length === 1) return `0${a}`;
+      return a;
+    });
+    return `#${c.join('')}`;
+  },
+
+  hexColorToNormalizedVector: (color) => {
+    // e.g. #120e14
+    let v = [
+      color.slice(1, 3),
+      color.slice(3, 5),
+      color.slice(5, 7),
+    ];
+    v = v.map(a => parseInt(a, 16) / 255);
+    return v;
   },
 };
 export { VMath as default };
