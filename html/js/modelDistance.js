@@ -63,7 +63,8 @@
       const worldPos = this.transformVertex(position, skinningWeights, skinningIndices);
       // update distance to every landmark, and remember closest vertex
       this.landmarks.forEach((key) => {
-        const d = VMath.distance(self.positions[key], worldPos);
+        const landmarkPos = self.getLandmarkWorldPos(key);
+        const d = VMath.distance(landmarkPos, worldPos);
         const current = self.distances[key] || Number.MAX_VALUE;
         if (d < current) {
           self.distances[key] = d;
@@ -90,6 +91,11 @@
     getJointMatrix(jointIndex) {
       const i = jointIndex * 16; // 4x4 matrix
       return this.joints.slice(i, i + 16);
+    }
+    getLandmarkWorldPos(landmark) {
+      const modelPos = this.positions[landmark].concat(1);
+      const worldPos = VMath.mulVector(this.transformMatrix, modelPos);
+      return worldPos.slice(0, 3);
     }
     transformVertex(position, skinningWeights, skinningIndices) {
       const self = this;
