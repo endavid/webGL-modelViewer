@@ -2,19 +2,13 @@ import Gfx from './gfx.js';
 import VMath from './math.js';
 import SkinnedModel from './skinnedModel.js';
 
-function readCoordinates(pos) {
+function readColor(landmark) {
   let color = [1, 1, 1];
-  if (pos.color !== undefined) {
-    color = VMath.hexColorToNormalizedVector(pos.color);
+  if (landmark.color !== undefined) {
+    color = VMath.hexColorToNormalizedVector(landmark.color);
   }
-  let p = [];
-  if (pos.x !== undefined) {
-    p = [pos.x, pos.y, pos.z];
-  } else {
-    p = pos.slice(0, 3);
-  }
-  const alpha = 1;
-  return p.concat(color).concat(alpha);
+  const alpha = 1.0;
+  return color.concat(alpha);
 }
 
 class Model {
@@ -109,12 +103,55 @@ class Model {
       })
       .catch(onError);
   }
-  setDots(gl, landmarks) {
-    let vertices = [];
+  setDots(gl, landmarks, onProgress, onDone, onError) {
+    const self = this;
     const landmarkList = Object.keys(landmarks);
+    const positions = {};
+    const colors = {};
     landmarkList.forEach((key) => {
       const p = landmarks[key];
-      vertices = vertices.concat(readCoordinates(p));
+      positions[key] = VMath.readCoordinates(p).slice(0, 3);
+      colors[key] = readColor(p);
+    });
+    if (this.skinnedModel) {
+      if (window.Worker) {
+        const worker = new Worker('./js/modelDistanceWorker.js');
+        const load = {
+          positions,
+          vertices: this.vertices,
+          stride: this.stride,
+          transformMatrix: this.transformMatrix,
+          joints: this.skinnedModel.joints,
+        };
+        worker.onmessage = (e) => {
+          onProgress(e.data.progress);
+          if (e.data.done && e.data.indices) {
+            const skinData = {};
+            landmarkList.forEach((key) => {
+              const index = e.data.indices[key];
+              skinData[key] = self.getSkinningData(index);
+            });
+            this.setDotsVertexData(gl, positions, colors, skinData);
+            onDone(self);
+          }
+        };
+        worker.postMessage(load);
+      } else {
+        onError(new Error("Can't create Worker to compute normals"));
+      }
+    } else {
+      this.setDotsVertexData(gl, positions, colors);
+      onDone(this);
+    }
+  }
+  setDotsVertexData(gl, positions, colors, skinData) {
+    let vertices = [];
+    const landmarkList = Object.keys(positions);
+    landmarkList.forEach((key) => {
+      vertices = vertices.concat(positions[key]).concat(colors[key]);
+      if (skinData) {
+        vertices = vertices.concat(skinData[key]);
+      }
     });
     if (vertices.length === 0) {
       return;
@@ -127,6 +164,13 @@ class Model {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.dotBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
     this.dotBufferStride = 3 + 4; // position + rgba
+    if (skinData) {
+      this.dotBufferStride += 4 + 4; // 4 weights + 4 indices
+    }
+  }
+  getSkinningData(vertexIndex) {
+    const i = vertexIndex * this.stride;
+    return this.vertices.slice(i + 8, i + 16);
   }
 }
 export { Model as default };

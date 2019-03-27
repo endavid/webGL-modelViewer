@@ -292,8 +292,12 @@ function populateControls() {
   function onBakeModelLabels() {
     const model = viewer.scene.models[0];
     if (model) {
-      model.setDots(viewer.glState.gl, viewer.scene.labels.model);
-      viewer.scene.labels.model = {};
+      progressBarUpdate(0);
+      $('#progressBarDiv').show();
+      model.setDots(viewer.glState.gl, viewer.scene.labels.model, progressBarUpdate, () => {
+        viewer.scene.labels.model = {};
+        $('#progressBarDiv').hide();
+      }, setError);
     }
   }
 
@@ -364,8 +368,6 @@ function populateControls() {
   UiUtils.addGroup('gFile', 'File', [
     UiUtils.createFileBrowser('fileBrowser', 'load models & textures', true, onChangeFileBrowser),
     UiUtils.createDropdownList('Presets', modelPresets, reloadModel),
-    UiUtils.createFileBrowser('labelBrowser', 'load model labels', false, onLoadLabels),
-    UiUtils.createButton('bakeLabels', 'Bake model labels', onBakeModelLabels),
     UiUtils.createButtonWithOptions('saveFile', 'Save', ' as ',
       [{ name: 'OBJ Wavefront', value: '.obj' }, { name: 'Json', value: '.json' }],
       (e) => {
@@ -395,6 +397,10 @@ function populateControls() {
       },
     }]),
     UiUtils.createEmptyRow('imageBasket'),
+  ]);
+  UiUtils.addGroup('gLabels', 'Labels', [
+    UiUtils.createFileBrowser('labelBrowser', 'load model labels', false, onLoadLabels),
+    UiUtils.createButton('bakeLabels', 'Bake model labels', onBakeModelLabels),
   ]);
   UiUtils.addGroup('gModel', 'Model Settings', [
     UiUtils.createCheckboxes('onLoadOptions', {
