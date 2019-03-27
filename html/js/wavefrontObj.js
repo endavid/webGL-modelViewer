@@ -64,14 +64,10 @@ class WavefrontObj {
         }
         return;
       }
-      m = /f\s(\d+(?:\/\d+){0,2})\s(\d+(?:\/\d+){0,2})\s(\d+(?:\/\d+){0,2})/.exec(s);
+      m = /f\s(\d+(?:\/\d*){0,2})\s(\d+(?:\/\d*){0,2})\s(\d+(?:\/\d*){0,2})/.exec(s);
       if (m) {
         m.slice(1, 4).forEach((val) => {
-          if (uniqueIndexTriplets[val] === undefined) {
-            uniqueIndexTriplets[val] = 1;
-          } else {
-            uniqueIndexTriplets[val] += 1;
-          }
+          uniqueIndexTriplets[val] = (uniqueIndexTriplets[val] || 0) + 1;
           meshes[meshes.length - 1].indices.push(val);
         });
       }
