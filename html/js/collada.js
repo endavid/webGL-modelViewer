@@ -42,6 +42,12 @@ function isZUp(json) {
   return json.COLLADA.asset.up_axis === 'Z_UP';
 }
 
+function getMeterUnits(json) {
+  const { unit } = json.COLLADA.asset;
+  const meter = parseFloat(unit._meter || '1');
+  return meter;
+}
+
 function getPolylistsAndTriangleLists(json) {
   const lists = [];
   const { mesh } = json.COLLADA.library_geometries.geometry;
@@ -407,6 +413,7 @@ class Collada {
     model.skin = skin;
     model.skeleton = skeleton;
     model.anims = anims;
+    model.meterUnits = getMeterUnits(json);
     return model;
   }
 }

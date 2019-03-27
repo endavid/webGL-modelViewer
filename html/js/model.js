@@ -29,6 +29,7 @@ class Model {
   // }
   constructor(gl, json, imageUrls) {
     this.name = json.name;
+    this.meterUnits = json.meterUnits || 1;
     this.transformMatrix = VMath.getI4();
     // vertices
     this.vertexBuffer = gl.createBuffer();

@@ -126,6 +126,11 @@ function updateModelTransform() {
   viewer.setModelRotationAndScale(0, phi, theta, Config.modelScale);
 }
 
+function updateModelScale(logValue) {
+  Config.modelScale = 10 ** parseFloat(logValue);
+  updateModelTransform();
+}
+
 function setRotation(phi, theta) {
   const round2 = v => Math.round(v * 100) / 100;
   const phiDeg = round2(VMath.radToDeg(phi));
@@ -137,6 +142,14 @@ function setRotation(phi, theta) {
   Config.modelRotationPhi = phiDeg;
   Config.modelRotationTheta = thetaDeg;
   updateModelTransform();
+}
+
+function setMeterUnits(unitMeters) {
+  let logScale = Math.log10(unitMeters);
+  logScale = Math.round(1e4 * logScale) * 1e-4;
+  $('#modelScaleExp10').val(logScale);
+  $('#modelScaleExp10_number').val(logScale);
+  updateModelScale(logScale);
 }
 
 function reloadModel() {
@@ -154,6 +167,7 @@ function reloadModel() {
       addPoseGroup(model.skinnedModel);
     }
     setRotation(0, 0);
+    setMeterUnits(model.meterUnits);
   }, setError);
 }
 
@@ -413,10 +427,7 @@ function populateControls() {
       Config[key] = value;
       reloadModel();
     }),
-    UiUtils.createSlider('modelScaleExp10', 'scale', 0, -3, 3, 0.2, (value) => {
-      Config.modelScale = 10 ** parseFloat(value);
-      updateModelTransform();
-    }),
+    UiUtils.createSlider('modelScaleExp10', 'scale (log10)', 0, -3, 3, 0.2, updateModelScale),
     UiUtils.createCheckboxes('axisLock', {
       isLockRotationX: { text: 'lock X', default: Config.isLockRotationX },
       isLockRotationY: { text: 'lock Y', default: Config.isLockRotationY },
