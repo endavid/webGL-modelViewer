@@ -401,6 +401,9 @@ function populateControls() {
   UiUtils.addGroup('gLabels', 'Labels', [
     UiUtils.createFileBrowser('labelBrowser', 'load model labels', false, onLoadLabels),
     UiUtils.createButton('bakeLabels', 'Bake model labels', onBakeModelLabels),
+    UiUtils.createSlider('pointSize', 'Point size', Config.pointSize, 0, 16, 1, (value) => {
+      viewer.setPointSize(value);
+    }),
   ]);
   UiUtils.addGroup('gModel', 'Model Settings', [
     UiUtils.createCheckboxes('onLoadOptions', {

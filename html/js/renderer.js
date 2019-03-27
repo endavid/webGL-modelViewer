@@ -331,5 +331,8 @@ class Renderer {
   setOutputSurface(id) {
     this.outputSurface = id;
   }
+  setPointSize(size) {
+    this.plugins[1].pointSize = size;
+  }
 }
 export { Renderer as default };

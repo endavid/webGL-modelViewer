@@ -13,5 +13,6 @@ const Config = {
   needsReload: false,
   keyframe: -1,
   backgroundColor: 0x3d4d4d,
+  pointSize: 3,
 };
 export { Config as default };
