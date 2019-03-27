@@ -14,5 +14,6 @@ const Config = {
   keyframe: -1,
   backgroundColor: 0x3d4d4d,
   pointSize: 3,
+  labelScale: 1,
 };
 export { Config as default };

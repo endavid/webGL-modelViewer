@@ -32,8 +32,9 @@ class PluginLabels {
     if (mainModel) {
       const modelMatrix = mainModel.transformMatrix;
       Object.keys(labels.model).forEach((k) => {
-        const pos = VMath.readCoordinates(labels.model[k]);
-        const world = VMath.mulVector(modelMatrix, pos);
+        const pos = VMath.readCoordinates(labels.model[k]).slice(0, 3);
+        const posScaled = VMath.mulScalar(pos, labels.scale).concat(1);
+        const world = VMath.mulVector(modelMatrix, posScaled);
         const pix = worldToPixels(world);
         PluginLabels.drawLabel(context, pix[0], pix[1], k);
       });

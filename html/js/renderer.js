@@ -107,6 +107,7 @@ class Renderer {
           origin: [0, 0, 0],
         },
         model: {},
+        scale: 1,
       },
     };
     this.plugins = [];
@@ -333,6 +334,9 @@ class Renderer {
   }
   setPointSize(size) {
     this.plugins[1].pointSize = size;
+  }
+  setLabelScale(scale) {
+    this.scene.labels.scale = scale;
   }
 }
 export { Renderer as default };

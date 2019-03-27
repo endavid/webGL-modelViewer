@@ -104,14 +104,16 @@ class Model {
       })
       .catch(onError);
   }
-  setDots(gl, landmarks, onProgress, onDone, onError) {
+  setDots(gl, landmarks, labelScale, onProgress, onDone, onError) {
     const self = this;
     const landmarkList = Object.keys(landmarks);
     const positions = {};
     const colors = {};
     landmarkList.forEach((key) => {
       const p = landmarks[key];
-      positions[key] = VMath.readCoordinates(p).slice(0, 3);
+      const pos = VMath.readCoordinates(p).slice(0, 3);
+      const posScaled = VMath.mulScalar(pos, labelScale);
+      positions[key] = posScaled;
       colors[key] = readColor(p);
     });
     if (this.skinnedModel) {

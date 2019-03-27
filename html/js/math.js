@@ -20,6 +20,10 @@ const VMath = {
     return v.map(c => c / norm);
   },
 
+  mulScalar(v, s) {
+    return v.map(a => s * a);
+  },
+
   degToRad: angle => (angle * Math.PI / 180.0),
 
   radToDeg: angle => angle * 180.0 / Math.PI,
