@@ -11,6 +11,9 @@ class Camera {
   reset() {
     VMath.setI4(this.viewMatrix);
   }
+  getPosition() {
+    return this.viewMatrix.slice(12, 15);
+  }
   setPosition(x, y, z) {
     this.viewMatrix[12] = x;
     this.viewMatrix[13] = y;

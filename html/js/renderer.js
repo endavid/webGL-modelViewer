@@ -83,6 +83,8 @@ class Renderer {
       lock: { x: false, y: false },
     };
     this.onRotation = () => {};
+    this.onCameraHeight = () => {};
+    this.onCameraDistance = () => {};
     this.cameraPosition = { x: 0, y: -100, z: -250 };
     // matrices
     this.projectionMatrix = VMath.getProjection(20, this.canvas.width / this.canvas.height, 1, 400);
@@ -235,15 +237,17 @@ class Renderer {
     }
     this.mouseState.old_x = e.pageX;
     this.mouseState.old_y = e.pageY;
-    if (this.onDrag) {
-      this.onDrag(this.mouseState);
-    }
     e.preventDefault();
   }
   onWheel(e) {
     // eslint-disable-next-line no-nested-ternary
     const direction = e.deltaY === 0 ? 0 : e.deltaY > 0 ? 1 : -1;
-    this.cameraPosition.z *= 1.0 + 0.1 * direction;
+    const { camera } = this.scene;
+    const pos = camera.getPosition();
+    const z = pos[2] * (1.0 + 0.1 * direction);
+    camera.setPosition(pos[0], pos[1], z);
+    // viewMatrix to camera transform => -pos
+    this.onCameraDistance(-z);
     e.preventDefault();
   }
   applyAngleDeltas() {
@@ -258,7 +262,12 @@ class Renderer {
     }
   }
   applyTranslationDeltas() {
-    this.cameraPosition.y += this.mouseState.dY * 100;
+    const { camera } = this.scene;
+    const pos = camera.getPosition();
+    const y = pos[1] + this.mouseState.dY * 10;
+    camera.setPosition(pos[0], y, pos[2]);
+    // viewMatrix to camera transform => -pos
+    this.onCameraHeight(-y);
   }
   init() {
     const self = this;
@@ -273,6 +282,8 @@ class Renderer {
       self.canvas.addEventListener('mouseout', self.mouseUp.bind(self), false);
       self.canvas.addEventListener('mousemove', self.mouseMove.bind(self), false);
       self.canvas.addEventListener('wheel', self.onWheel.bind(self), false);
+      // disable context menu on right-click
+      self.canvas.oncontextmenu = e => e.preventDefault();
       resolve();
     });
   }
@@ -290,6 +301,12 @@ class Renderer {
   }
   setRotationCallback(callback) {
     this.onRotation = callback;
+  }
+  setCameraHeightCallback(callback) {
+    this.onCameraHeight = callback;
+  }
+  setCameraDistanceCallback(callback) {
+    this.onCameraDistance = callback;
   }
   setRotationLock(x, y) {
     this.mouseState.lock.x = x;

@@ -144,6 +144,18 @@ function setRotation(phi, theta) {
   updateModelTransform();
 }
 
+function setCameraHeight(y) {
+  $('#cameraHeight').val(y);
+  $('#cameraHeight_number').val(y);
+  Config.cameraHeight = y;
+}
+
+function setCameraDistance(z) {
+  $('#cameraDistance').val(z);
+  $('#cameraDistance_number').val(z);
+  Config.cameraDistance = z;
+}
+
 function setMeterUnits(unitMeters) {
   let logScale = Math.log10(unitMeters);
   logScale = Math.round(1e4 * logScale) * 1e-4;
@@ -540,8 +552,11 @@ function makeCanvasFollowScroll() {
 $(document).ready(() => {
   viewer = new Viewer('glCanvas', 'canvas2D', ImageUrls.white);
   viewer.setRotationCallback(setRotation);
+  viewer.setCameraHeightCallback(setCameraHeight);
+  viewer.setCameraDistanceCallback(setCameraDistance);
   viewer.setBackgroundColor(Config.backgroundColor);
   updateCamera();
+  updateCameraFOV();
   populateControls();
   reloadModel();
   makeCanvasFollowScroll();
