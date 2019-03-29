@@ -63,6 +63,22 @@ function createFloatFramebuffer(glState, width, height) {
   return { fb, rb, texture };
 }
 
+// https://stackoverflow.com/a/17130415/1765629
+function getMousePos(canvas, evt) {
+  const rect = canvas.getBoundingClientRect();
+  const x = evt.clientX - rect.left;
+  const y = evt.clientY - rect.top;
+  // normalized coordinates
+  const u = x / canvas.width;
+  const v = 1 - y / canvas.height;
+  // clip coordinates (-1, 1)
+  const clipx = 2 * u - 1;
+  const clipy = 2 * v - 1;
+  return {
+    x, y, u, v, clipx, clipy,
+  };
+}
+
 class Renderer {
   constructor(canvasId, canvas2dId, whiteUrl) {
     const self = this;
@@ -85,11 +101,6 @@ class Renderer {
     this.onRotation = () => {};
     this.onCameraHeight = () => {};
     this.onCameraDistance = () => {};
-    this.cameraPosition = { x: 0, y: -100, z: -250 };
-    // matrices
-    this.projectionMatrix = VMath.getProjection(20, this.canvas.width / this.canvas.height, 1, 400);
-    this.modelMatrix = VMath.getI4();
-    this.viewMatrix = VMath.getI4();
     // Overwrite this function with your custom stuff
     this.drawModel = () => {};
     this.resources = {
@@ -213,14 +224,23 @@ class Renderer {
     }
   }
   mouseDown(e) {
-    this.mouseState.drag = true;
-    this.mouseState.old_x = e.pageX;
-    this.mouseState.old_y = e.pageY;
+    const midButton = 4;
+    const bothLeftAndRight = 3; // for mice without mid button
+    if (e.buttons === midButton || e.buttons === bothLeftAndRight) {
+      const screenCoords = getMousePos(this.canvas, e);
+      this.tryToAddLabelAt(screenCoords);
+    } else {
+      this.mouseState.drag = true;
+      this.mouseState.old_x = e.pageX;
+      this.mouseState.old_y = e.pageY;
+    }
     e.preventDefault();
     return false;
   }
-  mouseUp() {
+  mouseUp(e) {
     this.mouseState.drag = false;
+    e.preventDefault();
+    return false;
   }
   mouseMove(e) {
     if (!this.mouseState.drag) {
@@ -231,13 +251,14 @@ class Renderer {
     if (e.buttons === 1) {
       // handle rotations on left-button drag
       this.applyAngleDeltas();
-    } else {
+    } else if (e.buttons === 2) {
       // handle vertical translations
       this.applyTranslationDeltas();
     }
     this.mouseState.old_x = e.pageX;
     this.mouseState.old_y = e.pageY;
     e.preventDefault();
+    return false;
   }
   onWheel(e) {
     // eslint-disable-next-line no-nested-ternary
@@ -247,8 +268,9 @@ class Renderer {
     const z = pos[2] * (1.0 + 0.1 * direction);
     camera.setPosition(pos[0], pos[1], z);
     // viewMatrix to camera transform => -pos
-    this.onCameraDistance(-z);
+    this.onCameraDistance(z);
     e.preventDefault();
+    return false;
   }
   applyAngleDeltas() {
     const e = 0.001;
@@ -267,7 +289,7 @@ class Renderer {
     const y = pos[1] + this.mouseState.dY * 10;
     camera.setPosition(pos[0], y, pos[2]);
     // viewMatrix to camera transform => -pos
-    this.onCameraHeight(-y);
+    this.onCameraHeight(y);
   }
   init() {
     const self = this;
@@ -354,6 +376,23 @@ class Renderer {
   }
   setLabelScale(scale) {
     this.scene.labels.scale = scale;
+  }
+  tryToAddLabelAt(screenCoords) {
+    const { camera, labels } = this.scene;
+    const { clipx, clipy } = screenCoords;
+    const ray = camera.rayFromScreenCoordinates(clipx, clipy);
+    const model = this.scene.models[0];
+    /*
+    if (model) {
+      model.getSurfaceIntersection(ray, (si) => {
+        console.log(si);
+        labels.model.newLabel = si.point;
+      });
+    }
+    */
+    labels.world.newLabel = VMath.travelDistance(ray, 5);
+    console.log(ray.direction);
+
   }
 }
 export { Renderer as default };

@@ -50,3 +50,26 @@ QUnit.test('projection matrix', (assert) => {
     0, 0, -2.0408163265306123, 0];
   assert.deepEqual(m, expected);
 });
+
+// https://github.com/endavid/VidEngine/blob/master/VidTests/VidTestsTests/VidTestsTests.swift
+QUnit.test('projection square aspect', (assert) => {
+  const m = VMath.getProjection(90, 1, 0.1, 100);
+  // column-major
+  const expected = [
+    1.0000000000000002, 0, 0, 0,
+    0, 1.0000000000000002, 0, 0,
+    0, 0, -1.002002002002002, -1,
+    0, 0, -0.20020020020020018, 0];
+  assert.deepEqual(m, expected);
+});
+
+QUnit.test('projection inverse', (assert) => {
+  const m = VMath.getProjectionInverse(90, 1, 0.1, 100);
+  // column-major
+  const expected = [
+    0.9999999999999999, 0, 0, 0,
+    0, 0.9999999999999999, 0, 0,
+    0, 0, 0, -4.995,
+    0, 0, -1, 5.005];
+  assert.deepEqual(m, expected);
+});

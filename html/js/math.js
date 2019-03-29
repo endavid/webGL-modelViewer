@@ -7,14 +7,14 @@
 const VMath = {
   // checks for 2 possible formats, {x: 0, y: 0, z: 0}
   // and [0, 0, 0], and returns a vector of 4 ending in 1, [0, 0, 0, 1]
-  readCoordinates: (pos) => {
+  readCoordinates(pos) {
     if (pos.x !== undefined) {
       return [pos.x, pos.y, pos.z, 1];
     }
     return [pos[0], pos[1], pos[2], 1];
   },
 
-  normalize: (v) => {
+  normalize(v) {
     let norm = v.reduce((acc, c) => acc + c * c, 0);
     norm = Math.sqrt(norm) || 1;
     return v.map(c => c / norm);
@@ -28,7 +28,7 @@ const VMath = {
 
   radToDeg: angle => angle * 180.0 / Math.PI,
 
-  getProjection: (angle, a, zMin, zMax) => {
+  getProjection(angle, a, zMin, zMax) {
     // ref https://github.com/endavid/VidEngine/blob/master/VidFramework/VidFramework/sdk/math/Matrix.swift
     const tan = Math.tan(VMath.degToRad(0.5 * angle));
     const A = -(zMax + zMin) / (zMax - zMin);
@@ -38,6 +38,19 @@ const VMath = {
       0, 1.0 * a / tan, 0, 0,
       0, 0, A, -1,
       0, 0, B, 0];
+  },
+
+  getProjectionInverse(angle, a, zMin, zMax) {
+    // ref https://github.com/endavid/VidEngine/blob/master/VidFramework/VidFramework/sdk/math/Matrix.swift
+    // just work out the maths, substituting params in FrustumInverse
+    const tan = Math.tan(VMath.degToRad(0.5 * angle));
+    const A = (zMin - zMax) / (2 * zMin * zMax);
+    const B = (zMin + zMax) / (2 * zMin * zMax);
+    return [
+      tan, 0, 0, 0,
+      0, tan / a, 0, 0,
+      0, 0, 0, A,
+      0, 0, -1, B];
   },
 
   getI4: () => [
@@ -106,25 +119,29 @@ const VMath = {
     return m;
   },
 
-  translateX: (m, t) => {
-    m[12] += t;
+  setTranslation(m, position) {
+    m[12] = position[0];
+    m[13] = position[1];
+    m[14] = position[2];
   },
 
-  translateY: (m, t) => {
-    m[13] += t;
-  },
-
-  translateZ: (m, t) => {
-    m[14] += t;
-  },
-
-  mulVector: (m, v) => {
+  mulVector(m, v) {
     const out = [0, 0, 0, 0];
     // for row-major matrices
     out[0] = m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3];
     out[1] = m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * v[3];
     out[2] = m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * v[3];
     out[3] = m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3];
+    return out;
+  },
+
+  mulColumnVector(m, v) {
+    const out = [0, 0, 0, 0];
+    // for column-major matrices
+    out[0] = m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * v[3];
+    out[1] = m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * v[3];
+    out[2] = m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * v[3];
+    out[3] = m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15] * v[3];
     return out;
   },
 
@@ -173,28 +190,35 @@ const VMath = {
     return out;
   },
 
-  sum: (a, b) => {
+  sum(a, b) {
     const out = [];
     a.forEach((v, i) => {
       out.push(v + b[i]);
     });
     return out;
   },
-
-  diff: (a, b) => {
+  diff(a, b) {
     const out = [];
     a.forEach((v, i) => {
       out.push(v - b[i]);
     });
     return out;
   },
-
+  dot(a, b) {
+    let s = 0;
+    a.forEach((c, i) => { s += c * b[i]; });
+    return s;
+  },
+  distance(a, b) {
+    const ab = VMath.diff(a, b);
+    return Math.sqrt(VMath.dot(ab, ab));
+  },
   cross: (a, b) => [
     a[1] * b[2] - a[2] * b[1],
     a[2] * b[0] - a[0] * b[2],
     a[0] * b[1] - a[1] * b[0]],
 
-  isPowerOf2: (n) => {
+  isPowerOf2(n) {
     if (typeof n !== 'number') {
       return null;
     }
@@ -243,6 +267,11 @@ const VMath = {
     ];
     v = v.map(a => parseInt(a, 16) / 255);
     return v;
+  },
+
+  travelDistance(ray, distance) {
+    const m = ray.direction.map(a => distance * a);
+    return VMath.sum(ray.start, m);
   },
 };
 export { VMath as default };

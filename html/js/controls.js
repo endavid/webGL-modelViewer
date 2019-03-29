@@ -190,7 +190,7 @@ function updateRotationLock() {
 function updateCamera() {
   const { camera } = viewer.scene;
   camera.reset();
-  camera.setPosition(0, -Config.cameraHeight, -Config.cameraDistance);
+  camera.setPosition(0, Config.cameraHeight, Config.cameraDistance);
   camera.setPitch(Config.cameraPitch);
 }
 

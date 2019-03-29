@@ -52,6 +52,7 @@ class Model {
     this.vertices = json.vertices;
     // submeshes
     const meshes = [];
+    let triangles = []; // again, remember for CPU computations
     json.meshes.forEach((m) => {
       const mat = m.material !== undefined ? json.materials[m.material] || {} : {};
       const albedoMapName = mat.albedoMap || 'missing';
@@ -67,8 +68,10 @@ class Model {
         new Uint32Array(m.indices), // 32-bit for more than 64K verts
         gl.STATIC_DRAW);
       meshes.push(mesh);
+      triangles = triangles.concat(m.indices);
     });
     this.meshes = meshes;
+    this.triangles = triangles;
   }
   destroy(gl) {
     Gfx.destroyBuffers(gl, this);
@@ -174,6 +177,29 @@ class Model {
   getSkinningData(vertexIndex) {
     const i = vertexIndex * this.stride;
     return this.vertices.slice(i + 8, i + 16);
+  }
+  getSurfaceIntersection(ray, onDone) {
+    if (window.Worker) {
+      const worker = new Worker('./js/modelDistanceWorker.js');
+      const load = {
+        ray,
+        vertices: this.vertices,
+        triangles: this.triangles,
+        stride: this.stride,
+        transformMatrix: this.transformMatrix,
+      };
+      if (this.skinnedModel) {
+        load.joints = this.skinnedModel.joints;
+      }
+      worker.onmessage = (e) => {
+        if (e.data.done && e.data.surfaceIntersection) {
+          onDone(e.data.surfaceIntersection);
+        }
+      };
+      worker.postMessage(load);
+    } else {
+      console.error("Can't create Worker to compute normals");
+    }
   }
 }
 export { Model as default };
