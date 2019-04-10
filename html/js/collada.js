@@ -77,7 +77,7 @@ function sourceIdToSemantics(id) {
   return null;
 }
 
-function readMeshes(json, defaultMaterial, skin) {
+function readMeshes(json, skin) {
   const d = {
     positions: [],
     normals: [],
@@ -110,10 +110,10 @@ function readMeshes(json, defaultMaterial, skin) {
       vcount = Array(...Array(count)).map(() => 3);
     }
     const polygons = toVectorArray(intStringToArray(polylist.p), numInputs);
-    const submesh = { indices: [] };
-    if (defaultMaterial) {
-      submesh.material = defaultMaterial;
-    }
+    const submesh = {
+      material: polylist._material || 'unknown',
+      indices: [],
+    };
     // interleave vertex data as
     // position (3), normal (3), UVs (2)
     polygons.forEach((p) => {
@@ -396,23 +396,76 @@ function readAnimations(json) {
   return animations;
 }
 
+function urlToName(url) {
+  if (url[0] === '#') {
+    // local reference
+    return url.substring(1);
+  }
+  const pathSep = url.lastIndexOf('/');
+  return url.substring(pathSep + 1);
+}
+
+function readMaterials(json, defaultTexture) {
+  const mat = {};
+  const effects = {};
+  let fxArray = (json.COLLADA.library_effects || {}).effect;
+  if (fxArray) {
+    if (!Array.isArray(fxArray)) {
+      fxArray = [fxArray];
+    }
+    fxArray.forEach((fx) => {
+      const id = fx._id;
+      const param = fx.profile_COMMON.newparam;
+      if (param) {
+        fx.profile_COMMON.newparam.forEach((p) => {
+          if (p.surface) {
+            effects[id] = p.surface.init_from;
+          }
+        });
+      }
+    });
+  }
+  const images = {};
+  let imageArray = (json.COLLADA.library_images || {}).image;
+  if (imageArray) {
+    if (!Array.isArray(imageArray)) {
+      imageArray = [imageArray];
+    }
+    imageArray.forEach((img) => {
+      const id = img._id;
+      images[id] = urlToName(img.init_from);
+    });
+  }
+  let materials = (json.COLLADA.library_materials || {}).material;
+  if (materials) {
+    if (!Array.isArray(materials)) {
+      materials = [materials];
+    }
+    materials.forEach((m) => {
+      const id = m._id;
+      const fxId = urlToName(m.instance_effect._url);
+      const fx = effects[fxId] || '';
+      const img = images[fx] || defaultTexture;
+      mat[id] = {
+        albedoMap: img,
+      };
+    });
+  }
+  return mat;
+}
+
+
 class Collada {
-  static parse(xmlText, defaultMaterial) {
+  static parse(xmlText, defaultTexture) {
     // https://github.com/abdmob/x2js
     const x2js = new X2JS();
     const json = x2js.xml_str2json(xmlText);
     const skin = readSkin(json);
-    const model = readMeshes(json, defaultMaterial, skin);
-    const skeleton = readSkeleton(json);
-    const anims = readAnimations(json);
-    if (defaultMaterial) {
-      model.materials[defaultMaterial] = {
-        albedoMap: defaultMaterial,
-      };
-    }
+    const model = readMeshes(json, skin);
     model.skin = skin;
-    model.skeleton = skeleton;
-    model.anims = anims;
+    model.skeleton = readSkeleton(json);
+    model.anims = readAnimations(json);
+    model.materials = readMaterials(json, defaultTexture);
     model.meterUnits = getMeterUnits(json);
     return model;
   }
