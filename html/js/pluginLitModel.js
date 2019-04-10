@@ -55,8 +55,13 @@ class PluginLitModel {
         gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
         gl.uniform4fv(shader.uniforms.jointDebugPalette, skinned.jointColorPalette);
       }
-      // draw all submeshes
+      // draw submeshes
       model.meshes.forEach((mesh) => {
+        if (scene.selectedMesh) {
+          if (mesh.id !== scene.selectedMesh) {
+            return;
+          }
+        }
         gl.activeTexture(gl.TEXTURE0);
         const albedoMap = mesh.albedoMap || whiteTexture;
         const glTexture = albedoMap.webglTexture || whiteTexture.webglTexture;

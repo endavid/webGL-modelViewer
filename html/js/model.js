@@ -65,11 +65,13 @@ class Model {
     const meshes = [];
     let triangles = []; // again, remember for CPU computations
     json.meshes.forEach((m) => {
-      const mat = m.material !== undefined ? json.materials[m.material] || {} : {};
+      const id = m.material || '';
+      const mat = json.materials[id] || {};
       const albedoMapName = mat.albedoMap || 'missing';
       // if the .dds texture is missing, try to find equivalent .png
       const albedoMapUrl = imageUrls[albedoMapName] || imageUrls[`${Gfx.getFileNameWithoutExtension(albedoMapName)}.png`];
       const mesh = {
+        id,
         indexBuffer: gl.createBuffer(),
         numPoints: m.indices.length,
         albedoMap: albedoMapUrl !== undefined ? Gfx.loadTexture(gl, albedoMapUrl) : false,

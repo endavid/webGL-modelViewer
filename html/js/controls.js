@@ -170,6 +170,15 @@ function setMeterUnits(unitMeters) {
   updateModelScale(logScale);
 }
 
+function populateSubmeshList(meshes) {
+  const ctrl = $('#submesh');
+  ctrl.empty();
+  ctrl.append($('<option>').attr('value', 'all').append('all'));
+  meshes.forEach((m) => {
+    ctrl.append($('<option>').attr('value', m.id).append(m.id));
+  });
+}
+
 function reloadModel() {
   const url = $('#Presets').val();
   const name = $('#Presets option:selected').text();
@@ -189,6 +198,7 @@ function reloadModel() {
     }
     setRotation(0, 0);
     setMeterUnits(model.meterUnits);
+    populateSubmeshList(model.meshes);
   }, setError);
 }
 
@@ -475,6 +485,9 @@ function populateControls() {
         Config.modelRotationPhi = parseFloat(value);
         updateModelTransform();
       }),
+    UiUtils.createDropdownList('submesh', [], (obj) => {
+      viewer.selectSubmesh(obj.value);
+    }),
   ]);
   UiUtils.addGroup('gCamera', 'Camera Settings', [
     UiUtils.createSlider('cameraDistance', 'distance',

@@ -381,8 +381,8 @@ class Renderer {
     const { camera, labels } = this.scene;
     const { clipx, clipy } = screenCoords;
     const ray = camera.rayFromScreenCoordinates(clipx, clipy);
-    const model = this.scene.models[0];
     /*
+    const model = this.scene.models[0];
     if (model) {
       model.getSurfaceIntersection(ray, (si) => {
         console.log(si);
@@ -392,7 +392,9 @@ class Renderer {
     */
     labels.world.newLabel = VMath.travelDistance(ray, 5);
     console.log(ray.direction);
-
+  }
+  selectSubmesh(name) {
+    this.scene.selectedMesh = name === 'all' ? false : name;
   }
 }
 export { Renderer as default };
