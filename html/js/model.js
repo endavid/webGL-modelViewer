@@ -11,6 +11,17 @@ function readColor(landmark) {
   return color.concat(alpha);
 }
 
+function getModelStats(json) {
+  const stats = {
+    vertexCount: json.vertices.length / json.stride,
+    meshCount: json.meshes.length,
+  };
+  if (json.skin) {
+    stats.jointCount = json.skin.joints.length;
+  }
+  return stats;
+}
+
 class Model {
   // format:
   // { name: // model name
@@ -34,7 +45,7 @@ class Model {
     // vertices
     this.vertexBuffer = gl.createBuffer();
     this.stride = json.stride;
-    console.log(`#vertices: ${json.vertices.length / json.stride}`);
+    this.stats = getModelStats(json);
     if (json.skin) {
       this.skinnedModel = new SkinnedModel(json.skin, json.skeleton, json.anims);
     } else {

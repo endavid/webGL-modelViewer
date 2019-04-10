@@ -31,6 +31,12 @@ function setError(e) {
   setInfo(`[ERROR] ${e}`);
 }
 
+function dumpObject(obj) {
+  const keys = Object.keys(obj);
+  const lines = keys.map(k => `${k}: ${obj[k]}`);
+  setInfo(lines.join(', '));
+}
+
 function matrixToString(m) {
   // we could split it in 4 lines, but let's keep it simple for now
   return m.join(', ');
@@ -172,6 +178,9 @@ function reloadModel() {
   viewer.loadModel(name, url, Config, ImageUrls, MaterialUrls, progressBarUpdate, (model) => {
     removePoseGroup();
     $('#progressBarDiv').hide();
+    if (model.stats) {
+      dumpObject(model.stats);
+    }
     if (model.skinnedModel) {
       $('#keyframe').attr('max', model.skinnedModel.keyframeCount - 1);
       $('#keyframe_number').val(-1);
