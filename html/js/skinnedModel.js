@@ -117,6 +117,9 @@ class SkinnedModel {
   getDefaultPoseMatrix(i) {
     const name = this.jointNames[i];
     let node = this.skeleton[name];
+    if (!node) {
+      return VMath.getI4();
+    }
     let m = node.transform;
     let { parent } = node;
     while (parent) {
