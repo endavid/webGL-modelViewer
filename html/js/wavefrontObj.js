@@ -66,6 +66,10 @@ class WavefrontObj {
       }
       m = /f\s(\d+(?:\/\d*){0,2})\s(\d+(?:\/\d*){0,2})\s(\d+(?:\/\d*){0,2})/.exec(s);
       if (m) {
+        if (meshes.length === 0) {
+          // file with no 'g', so create a default mesh
+          meshes.push({ name: 'unknown', indices: [] });
+        }
         m.slice(1, 4).forEach((val) => {
           uniqueIndexTriplets[val] = (uniqueIndexTriplets[val] || 0) + 1;
           meshes[meshes.length - 1].indices.push(val);
