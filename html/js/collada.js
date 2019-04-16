@@ -87,6 +87,10 @@ function readMeshes(json, skin) {
   const meshes = [];
   const ngons = {};
   const invertAxis = isZUp(json);
+  if (Array.isArray(json.COLLADA.library_geometries.geometry)) {
+    console.error(json.COLLADA.library_geometries.geometry);
+    throw new Error('Collada files with more than 1 geometries are not supported');
+  }
   let src = json.COLLADA.library_geometries.geometry.mesh.source;
   if (!Array.isArray(src)) {
     src = [src];
