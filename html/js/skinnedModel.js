@@ -46,6 +46,11 @@ function substractJointTranslationsFromAnims(skeleton, anims) {
     if (anims[joint].translation) {
       for (let i = 0; i < anims[joint].translation.length; i += 1) {
         if (anims[joint].translation[i]) {
+          if (!skeleton[joint]) {
+            console.warn(`Skipping animation for non-existing joint: ${joint}`);
+            // eslint-disable-next-line no-continue
+            continue;
+          }
           a[joint].translation[i][0] -= skeleton[joint].transform[3];
           a[joint].translation[i][1] -= skeleton[joint].transform[7];
           a[joint].translation[i][2] -= skeleton[joint].transform[11];

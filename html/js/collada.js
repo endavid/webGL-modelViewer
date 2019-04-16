@@ -363,6 +363,10 @@ function readAnimations(json) {
     if (anim.animation) {
       anim = anim.animation;
     }
+    if (!anim.channel) {
+      // empty animation
+      return;
+    }
     const target = anim.channel._target.split('/');
     const boneId = target[0];
     const targetId = target[1];
