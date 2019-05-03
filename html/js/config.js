@@ -9,6 +9,7 @@ const Config = {
   cameraDistance: 3,
   cameraHeight: 0.95,
   cameraPitch: 7,
+  cameraRotationY: 0,
   cameraFOV: 29.6,
   needsReload: false,
   keyframe: -1,

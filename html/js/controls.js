@@ -211,6 +211,7 @@ function updateCamera() {
   camera.reset();
   camera.setPosition(0, Config.cameraHeight, Config.cameraDistance);
   camera.setPitch(Config.cameraPitch);
+  camera.setRotationYFromOrigin(Config.cameraRotationY);
 }
 
 function updateCameraFOV() {
@@ -503,6 +504,11 @@ function populateControls() {
     UiUtils.createSlider('cameraPitch', 'pitch',
       Config.cameraPitch, -90, 90, 1, (value) => {
         Config.cameraPitch = parseFloat(value);
+        updateCamera();
+      }),
+    UiUtils.createSlider('cameraRotationY', 'rotation Y',
+      Config.cameraRotationY, -180, 180, 1, (value) => {
+        Config.cameraRotationY = parseFloat(value);
         updateCamera();
       }),
     UiUtils.createSlider('cameraFOV', 'Field of View',

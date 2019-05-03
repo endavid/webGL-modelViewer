@@ -27,6 +27,14 @@ class Camera {
     const rp = rotateInverse(this.viewMatrix, [x, y, z]);
     VMath.setTranslation(this.transformMatrix, rp);
   }
+  setRotationYFromOrigin(degrees) {
+    const a = VMath.degToRad(degrees);
+    VMath.rotateY(this.viewMatrix, a);
+    const p = this.getPosition();
+    const rp = rotateInverse(this.viewMatrix, p);
+    VMath.rotateY(this.transformMatrix, -a);
+    VMath.setTranslation(this.transformMatrix, rp);
+  }
   setPitch(degrees) {
     const a = VMath.degToRad(degrees);
     VMath.rotateX(this.viewMatrix, a);
