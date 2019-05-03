@@ -208,10 +208,12 @@ function updateRotationLock() {
 
 function updateCamera() {
   const { camera } = viewer.scene;
-  camera.reset();
-  camera.setPosition(0, Config.cameraHeight, Config.cameraDistance);
-  camera.setPitch(Config.cameraPitch);
-  camera.setRotationYFromOrigin(Config.cameraRotationY);
+  camera.setLocation(
+    Config.cameraHeight,
+    Config.cameraDistance,
+    Config.cameraPitch,
+    Config.cameraRotationY,
+  );
 }
 
 function updateCameraFOV() {

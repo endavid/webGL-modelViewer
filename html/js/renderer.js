@@ -264,9 +264,8 @@ class Renderer {
     // eslint-disable-next-line no-nested-ternary
     const direction = e.deltaY === 0 ? 0 : e.deltaY > 0 ? 1 : -1;
     const { camera } = this.scene;
-    const pos = camera.getPosition();
-    const z = pos[2] * (1.0 + 0.1 * direction);
-    camera.setPosition(pos[0], pos[1], z);
+    const z = camera.distance * (1.0 + 0.1 * direction);
+    camera.setLocation(camera.height, z);
     // viewMatrix to camera transform => -pos
     this.onCameraDistance(z);
     e.preventDefault();
@@ -285,9 +284,8 @@ class Renderer {
   }
   applyTranslationDeltas() {
     const { camera } = this.scene;
-    const pos = camera.getPosition();
-    const y = pos[1] + this.mouseState.dY * 10;
-    camera.setPosition(pos[0], y, pos[2]);
+    const y = camera.height + this.mouseState.dY * 10;
+    camera.setLocation(y);
     // viewMatrix to camera transform => -pos
     this.onCameraHeight(y);
   }

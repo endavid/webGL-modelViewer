@@ -14,6 +14,10 @@ class Camera {
     this.setFOV(fov);
     this.viewMatrix = VMath.getI4();
     this.transformMatrix = VMath.getI4();
+    this.height = 0;
+    this.distance = 0;
+    this.pitch = 0;
+    this.rotationY = 0;
   }
   reset() {
     VMath.setI4(this.viewMatrix);
@@ -21,6 +25,16 @@ class Camera {
   }
   getPosition() {
     return this.viewMatrix.slice(12, 15).map(a => -a);
+  }
+  setLocation(height, distance, pitch, rotationY) {
+    this.height = height;
+    this.distance = distance || this.distance;
+    this.pitch = pitch || this.pitch;
+    this.rotationY = rotationY || this.rotationY;
+    this.reset();
+    this.setPosition(0, this.height, this.distance);
+    this.setRotationYFromOrigin(this.rotationY);
+    this.setPitch(this.pitch);
   }
   setPosition(x, y, z) {
     VMath.setTranslation(this.viewMatrix, [-x, -y, -z]);
