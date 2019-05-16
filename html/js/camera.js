@@ -1,9 +1,11 @@
 import VMath from './math.js';
+import Transform from './transform.js';
 
-function rotateInverse(matrix, p) {
-  const m = matrix.slice(0, 16);
-  VMath.setTranslation(m, [0, 0, 0]);
-  return VMath.mulColumnVector(m, p.concat(1));
+// Unfortunately, I wasn't able to import math.js as a module
+const { math } = window;
+
+function valueOrDefault(v, d) {
+  return (v == null) ? d : v;
 }
 
 class Camera {
@@ -12,50 +14,30 @@ class Camera {
     this.near = near;
     this.far = far;
     this.setFOV(fov);
+    this.transform = new Transform({});
     this.viewMatrix = VMath.getI4();
-    this.transformMatrix = VMath.getI4();
     this.height = 0;
     this.distance = 0;
     this.pitch = 0;
     this.rotationY = 0;
   }
-  reset() {
-    VMath.setI4(this.viewMatrix);
-    VMath.setI4(this.transformMatrix);
-  }
   getPosition() {
-    return this.viewMatrix.slice(12, 15).map(a => -a);
+    return this.transform.position;
   }
   setLocation(height, distance, pitch, rotationY) {
     this.height = height;
-    this.distance = distance || this.distance;
-    this.pitch = pitch || this.pitch;
-    this.rotationY = rotationY || this.rotationY;
-    this.reset();
-    this.setPosition(0, this.height, this.distance);
-    this.setRotationYFromOrigin(this.rotationY);
-    this.setPitch(this.pitch);
-  }
-  setPosition(x, y, z) {
-    VMath.setTranslation(this.viewMatrix, [-x, -y, -z]);
-    const rp = rotateInverse(this.viewMatrix, [x, y, z]);
-    VMath.setTranslation(this.transformMatrix, rp);
-  }
-  setRotationYFromOrigin(degrees) {
-    const a = VMath.degToRad(degrees);
-    VMath.rotateY(this.viewMatrix, a);
-    const p = this.getPosition();
-    const rp = rotateInverse(this.viewMatrix, p);
-    VMath.rotateY(this.transformMatrix, -a);
-    VMath.setTranslation(this.transformMatrix, rp);
-  }
-  setPitch(degrees) {
-    const a = VMath.degToRad(degrees);
-    VMath.rotateX(this.viewMatrix, a);
-    const p = this.getPosition();
-    const rp = rotateInverse(this.viewMatrix, p);
-    VMath.rotateX(this.transformMatrix, -a);
-    VMath.setTranslation(this.transformMatrix, rp);
+    this.distance = valueOrDefault(distance, this.distance);
+    this.pitch = valueOrDefault(pitch, this.pitch);
+    this.rotationY = valueOrDefault(rotationY, this.rotationY);
+    const Ry = VMath.rotationMatrixAroundY(VMath.degToRad(this.rotationY));
+    const p = math.multiply(Ry, [0, this.height, this.distance]);
+    this.transform.position = p;
+    this.transform.eulerAngles = [this.pitch, this.rotationY, 0];
+    const M = this.transform.toMatrix();
+    // viewMatrix is the inverse, and we transpose it because
+    // the shader expects matrices in column order
+    const V = math.transpose(math.inv(M));
+    this.viewMatrix = [].concat(...V);
   }
   setFOV(fov) {
     this.fov = fov;
@@ -67,9 +49,10 @@ class Camera {
     const screenHalfway = [clipx, clipy, 0.75, 1];
     const viewW = VMath.mulVector(this.projectionInverse, screenHalfway);
     const viewHalfway = viewW.map(a => a / viewW[3]);
-    const worldHalfway = VMath.mulVector(this.transformMatrix, viewHalfway);
+    const M = this.transform.toMatrix();
+    const worldHalfway = math.multiply(M, viewHalfway);
     console.log(worldHalfway);
-    const start = this.transformMatrix.slice(12, 15);
+    const start = this.transform.position;
     const direction = VMath.normalize(VMath.diff(worldHalfway.slice(0, 3), start));
     return { start, direction };
   }

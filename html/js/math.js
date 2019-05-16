@@ -118,6 +118,45 @@ const VMath = {
     m[9] = c * m[9] + s * mv8;
     return m;
   },
+  // Rx http://www.songho.ca/opengl/gl_anglestoaxes.html
+  // Also, math.js expects matrices in row-major order
+  rotationMatrixAroundX(angle) {
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    const m = [
+      [1, 0, 0],
+      [0, c, -s],
+      [0, s, c],
+    ];
+    return m;
+  },
+  rotationMatrixAroundY(angle) {
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    const m = [
+      [c, 0, s],
+      [0, 1, 0],
+      [-s, 0, c],
+    ];
+    return m;
+  },
+  rotationMatrixAroundZ(angle) {
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    const m = [
+      [c, -s, 0],
+      [s, c, 0],
+      [0, 0, 1],
+    ];
+    return m;
+  },
+  scaleMatrix(s) {
+    return [
+      [s[0], 0, 0],
+      [0, s[1], 0],
+      [0, 0, s[2]],
+    ];
+  },
 
   setTranslation(m, position) {
     m[12] = position[0];

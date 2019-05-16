@@ -7,14 +7,14 @@ const Config = {
   modelRotationPhi: 0,
   modelScale: 1,
   cameraDistance: 3,
-  cameraHeight: 0.95,
-  cameraPitch: 7,
+  cameraHeight: 1.35,
+  cameraPitch: -7,
   cameraRotationY: 0,
-  cameraFOV: 29.6,
+  cameraFOV: 26.9,
   needsReload: false,
   keyframe: -1,
   backgroundColor: 0x3d4d4d,
   pointSize: 3,
   labelScale: 1,
 };
-export { Config as default };
+export default Config;
