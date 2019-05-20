@@ -391,9 +391,9 @@ function readAnimations(json) {
         } else if (targetId.indexOf('transform') >= 0 || targetId.indexOf('matrix') >= 0) {
           const matrices = toVectorArray(floats, 16);
           if (invertAxis) {
-            animations[boneId][targetId] = matrices.map(flipAxisForMatrix);
+            animations[boneId].transform = matrices.map(flipAxisForMatrix);
           } else {
-            animations[boneId][targetId] = matrices;
+            animations[boneId].transform = matrices;
           }
         } else {
           animations[boneId][targetId] = floats;
