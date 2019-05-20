@@ -7,6 +7,14 @@ function floatStringToArray(text) {
 function intStringToArray(text) {
   return text.split(/[\s,]+/).map(e => parseInt(e, 10));
 }
+function simplifyName(name) {
+  if (!name) {
+    return name;
+  }
+  // Collada files exported from FBX have some ugly _ncl1_1 appended
+  // to every joint name
+  return name.replace('_ncl1_1', '');
+}
 // [a b c d e ...] -> [ [a b], [b c], ...]
 function toVectorArray(array, stride) {
   const hash = {}; // to avoid duplicated entries
@@ -248,7 +256,8 @@ function readSkin(json) {
         skinData.bindPoses = bp;
       }
     } else if (key === 'joints') {
-      skinData.joints = e.Name_array.__text.split(/[\s,]+/);
+      const joints = e.Name_array.__text.split(/[\s,]+/);
+      skinData.joints = joints.map(simplifyName);
     }
   });
   const v = intStringToArray(skin.vertex_weights.v);
@@ -326,8 +335,9 @@ function extractBoneTree(joint, parent, invertAxis) {
   }
   const skeleton = {};
   const t = extractTransform(joint, invertAxis);
-  skeleton[joint._id] = {
-    parent,
+  const jointId = simplifyName(joint._id);
+  skeleton[jointId] = {
+    parent: simplifyName(parent),
     transform: t.transform,
     rotationOrder: t.rotationOrder,
   };
@@ -368,7 +378,7 @@ function readAnimations(json) {
       return;
     }
     const target = anim.channel._target.split('/');
-    const boneId = target[0];
+    const boneId = simplifyName(target[0]);
     const targetId = target[1];
     if (animations[boneId] === undefined) {
       animations[boneId] = {};
