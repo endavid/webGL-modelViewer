@@ -333,7 +333,10 @@ function populateControls() {
       return;
     }
     $.getJSON(f.uri, (labels) => {
-      viewer.scene.labels.model = labels;
+      const model = viewer.scene.models[0];
+      if (model) {
+        model.labels = labels;
+      }
     });
   }
 
@@ -348,10 +351,10 @@ function populateControls() {
       progressBarUpdate(0);
       $('#progressBarDiv').show();
       model.setDots(viewer.glState.gl,
-        viewer.scene.labels.model,
+        model.labels,
         Config.labelScale,
         progressBarUpdate, () => {
-          viewer.scene.labels.model = {};
+          model.labels = {};
           $('#progressBarDiv').hide();
         }, setError);
     }

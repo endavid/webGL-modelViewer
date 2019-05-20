@@ -85,6 +85,7 @@ class Model {
     });
     this.meshes = meshes;
     this.triangles = triangles;
+    this.labels = json.labels;
   }
   destroy(gl) {
     Gfx.destroyBuffers(gl, this);

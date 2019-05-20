@@ -46,6 +46,10 @@ function flipAxisForMatrix(m) {
   ];
 }
 
+function getTranslation(m) {
+  return [m[3], m[7], m[11]];
+}
+
 function isZUp(json) {
   return json.COLLADA.asset.up_axis === 'Z_UP';
 }
@@ -360,6 +364,22 @@ function readSkeleton(json) {
   return extractBoneTree(rootJoint, null, invertAxis);
 }
 
+function readLabels(json) {
+  const labels = {};
+  const { node } = json.COLLADA.library_visual_scenes.visual_scene;
+  if (!Array.isArray(node)) {
+    return labels;
+  }
+  node.forEach((n) => {
+    if (!n.node && n.matrix) {
+      const labelId = simplifyName(n._id);
+      const transform = floatStringToArray(n.matrix.__text || n.matrix);
+      labels[labelId] = getTranslation(transform);
+    }
+  });
+  return labels;
+}
+
 function readAnimations(json) {
   let anims = json.COLLADA.library_animations;
   if (!anims) {
@@ -485,6 +505,7 @@ class Collada {
     model.anims = readAnimations(json);
     model.materials = readMaterials(json, defaultTexture);
     model.meterUnits = getMeterUnits(json);
+    model.labels = readLabels(json);
     return model;
   }
 }

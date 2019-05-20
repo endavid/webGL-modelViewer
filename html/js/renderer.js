@@ -119,7 +119,6 @@ class Renderer {
         world: {
           origin: [0, 0, 0],
         },
-        model: {},
         scale: 1,
       },
     };

@@ -57,14 +57,14 @@ this.scene = {
     world: {
       origin: [0, 0, 0]
     },
-    model: {}
+    scale: 1
   }
 }
 ```
 
 `PluginLitModel` takes care of rendering all the `models` in the scene, but at the moment the viewer only lets you load one model at a time.
 
-The labels inside the `world` section are labels with coordinates in world space, while the `model` section is used for model space (not implemented yet).
+The labels inside the `world` section are labels with coordinates in world space. Labels in model space are inside `model.labels`.
 
 
 
