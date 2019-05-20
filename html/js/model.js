@@ -96,7 +96,7 @@ class Model {
         if (config.isZAxisUp) {
           Gfx.flipAxisZ(json);
         }
-        if (config.recomputeNormals) {
+        if (config.recomputeNormals || json.missingNormals) {
           if (window.Worker) {
             const worker = new Worker('./js/modelWorker.js');
             const load = {

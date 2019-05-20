@@ -99,6 +99,8 @@ function readMeshes(json, skin) {
   const meshes = [];
   const ngons = {};
   const invertAxis = isZUp(json);
+  let missingNormals = false;
+  let missingUVs = false;
   if (Array.isArray(json.COLLADA.library_geometries.geometry)) {
     console.error(json.COLLADA.library_geometries.geometry);
     throw new Error('Collada files with more than 1 geometries are not supported');
@@ -142,6 +144,9 @@ function readMeshes(json, skin) {
         vertices.push(d.positions[3 * p[0] + 2]);
       }
       const noNormals = p[1] === undefined;
+      if (noNormals) {
+        missingNormals = true;
+      }
       vertices.push(noNormals ? 0 : d.normals[3 * p[1]]);
       if (invertAxis) {
         vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 2]);
@@ -151,6 +156,9 @@ function readMeshes(json, skin) {
         vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 2]);
       }
       const noUVs = p[2] === undefined;
+      if (noUVs) {
+        missingUVs = true;
+      }
       vertices.push(noUVs ? 0 : d.uvs[2 * p[2]] || 0);
       vertices.push(noUVs ? 0 : d.uvs[2 * p[2] + 1] || 0);
       if (skin) {
@@ -192,6 +200,8 @@ function readMeshes(json, skin) {
     stride: skin ? 16 : 8,
     vertices,
     materials: {},
+    missingNormals,
+    missingUVs,
   };
 }
 
