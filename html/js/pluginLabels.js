@@ -16,6 +16,9 @@ class PluginLabels {
     context.clearRect(0, 0, canvas.width, canvas.height);
     this.setStyle(context);
     const { labels } = scene;
+    if (!labels.showLabels) {
+      return;
+    }
     function worldToPixels(world) {
       const view = VMath.mulVector(scene.camera.viewMatrix, world);
       const clip = VMath.mulVector(scene.camera.projectionMatrix, view);
@@ -32,7 +35,14 @@ class PluginLabels {
     if (mainModel && mainModel.labels) {
       const modelMatrix = mainModel.transformMatrix;
       Object.keys(mainModel.labels).forEach((k) => {
-        const pos = VMath.readCoordinates(mainModel.labels[k]).slice(0, 3);
+        const label = mainModel.labels[k];
+        let pos = [0, 0, 0];
+        if (label.index) {
+          // after baking, we store a vertex index so we can skin the labels
+          pos = mainModel.getSkinnedPosition(label.index);
+        } else {
+          pos = VMath.readCoordinates(mainModel.labels[k]).slice(0, 3);
+        }
         const posScaled = VMath.mulScalar(pos, labels.scale).concat(1);
         const world = VMath.mulVector(modelMatrix, posScaled);
         const pix = worldToPixels(world);

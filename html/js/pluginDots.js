@@ -24,6 +24,9 @@ class PluginDots {
     glState.setBlend(false);
   }
   draw(glState, scene) {
+    if (!scene.labels.showPoints) {
+      return;
+    }
     const self = this;
     const { gl } = glState;
     const { camera } = scene;

@@ -16,5 +16,7 @@ const Config = {
   backgroundColor: 0x3d4d4d,
   pointSize: 3,
   labelScale: 1,
+  showLabels: true,
+  showPoints: true,
 };
 export default Config;

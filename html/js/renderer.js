@@ -120,6 +120,8 @@ class Renderer {
           origin: [0, 0, 0],
         },
         scale: 1,
+        showLabels: true,
+        showPoints: true,
       },
     };
     this.plugins = [];

@@ -1,5 +1,7 @@
 import VMath from './math.js';
 
+const { math } = window;
+
 const MAX_JOINTS = 100;
 
 // generated with http://palettist.endavid.com/
@@ -83,6 +85,13 @@ function createJointColorPalette(joints) {
   }
   return palette;
 }
+
+function getJointMatrix(index, matrices) {
+  const i = index * 16;
+  const m = matrices.slice(i, i + 16);
+  return math.reshape(m, [4, 4]);
+}
+
 
 class SkinnedModel {
   constructor(skin, skeleton, anims) {
@@ -290,6 +299,22 @@ class SkinnedModel {
       }
     });
     return topo;
+  }
+  // CPU skinning (slow, so use it only for a few labels)
+  getSkinnedVertex(position, weights, indices) {
+    const self = this;
+    const p = position.slice(0, 3);
+    p[3] = 1;
+    let sum = [0, 0, 0, 1];
+    indices.forEach((index, i) => {
+      const w = weights[i];
+      const M = getJointMatrix(index, self.joints);
+      // multiply from left, because the matrix is transposed
+      // since it's stored in column order
+      const pi = math.multiply(p, M);
+      sum = math.add(sum, math.multiply(pi, w));
+    });
+    return sum;
   }
 }
 export { SkinnedModel as default };

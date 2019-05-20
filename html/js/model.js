@@ -121,8 +121,9 @@ class Model {
       })
       .catch(onError);
   }
-  setDots(gl, landmarks, labelScale, onProgress, onDone, onError) {
+  bakeLabels(gl, labelScale, onProgress, onDone, onError) {
     const self = this;
+    const landmarks = self.labels || {};
     const landmarkList = Object.keys(landmarks);
     const positions = {};
     const colors = {};
@@ -150,8 +151,9 @@ class Model {
             landmarkList.forEach((key) => {
               const index = e.data.indices[key];
               skinData[key] = self.getSkinningData(index);
+              self.labels[key] = { index };
             });
-            this.setDotsVertexData(gl, positions, colors, skinData);
+            self.setDotsVertexData(gl, positions, colors, skinData);
             onDone(self);
           }
         };
@@ -188,9 +190,26 @@ class Model {
       this.dotBufferStride += 4 + 4; // 4 weights + 4 indices
     }
   }
+  getPosition(vertexIndex) {
+    const i = vertexIndex * this.stride;
+    return this.vertices.slice(i, i + 3);
+  }
   getSkinningData(vertexIndex) {
     const i = vertexIndex * this.stride;
     return this.vertices.slice(i + 8, i + 16);
+  }
+  getSkinnedPosition(vertexIndex) {
+    const pos = this.getPosition(vertexIndex);
+    if (!this.skinnedModel) {
+      return pos;
+    }
+    const skinning = this.getSkinningData(vertexIndex);
+    const skinnedPos = this.skinnedModel.getSkinnedVertex(
+      pos,
+      skinning.slice(0, 4), // weights
+      skinning.slice(4, 8), // indices
+    );
+    return skinnedPos.slice(0, 3);
   }
   getSurfaceIntersection(ray, onDone) {
     if (window.Worker) {

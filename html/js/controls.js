@@ -345,16 +345,21 @@ function populateControls() {
     viewer.setLabelScale(Config.labelScale);
   }
 
+  function setLabelOptions(key, value) {
+    Config[key] = value;
+    viewer.scene.labels[key] = value;
+    $(`#${key}`).prop('checked', value);
+  }
+
   function onBakeModelLabels() {
     const model = viewer.scene.models[0];
     if (model) {
       progressBarUpdate(0);
       $('#progressBarDiv').show();
-      model.setDots(viewer.glState.gl,
-        model.labels,
+      model.bakeLabels(viewer.glState.gl,
         Config.labelScale,
         progressBarUpdate, () => {
-          model.labels = {};
+          setLabelOptions('showLabels', false);
           $('#progressBarDiv').hide();
         }, setError);
     }
@@ -464,6 +469,10 @@ function populateControls() {
     UiUtils.createSlider('pointSize', 'Point size', Config.pointSize, 0, 16, 1, (value) => {
       viewer.setPointSize(value);
     }),
+    UiUtils.createCheckboxes('labelOptions', {
+      showLabels: { text: 'show labels', default: Config.showLabels },
+      showPoints: { text: 'show points', default: Config.showPoints },
+    }, setLabelOptions),
   ]);
   UiUtils.addGroup('gModel', 'Model Settings', [
     UiUtils.createCheckboxes('onLoadOptions', {
