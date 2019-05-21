@@ -9,13 +9,17 @@ class Transform {
     this.scale = scale || [1, 1, 1];
     // ZYX rotation order (X applied first), stored in degrees
     this.eulerAngles = eulerAngles || [0, 0, 0];
+    this.rotationOrder = [0, 1, 2];
   }
   toMatrix() {
     const angles = this.eulerAngles.map(a => VMath.degToRad(a));
-    const Rx = VMath.rotationMatrixAroundX(angles[0]);
-    const Ry = VMath.rotationMatrixAroundY(angles[1]);
-    const Rz = VMath.rotationMatrixAroundY(angles[2]);
-    const R = math.multiply(Rz, math.multiply(Ry, Rx));
+    const ro = this.rotationOrder;
+    const Rs = [
+      VMath.rotationMatrixAroundX(angles[0]),
+      VMath.rotationMatrixAroundY(angles[1]),
+      VMath.rotationMatrixAroundZ(angles[2]),
+    ];
+    const R = math.multiply(Rs[ro[2]], math.multiply(Rs[ro[1]], Rs[ro[0]]));
     const RS = math.multiply(R, VMath.scaleMatrix(this.scale));
     const M = math.resize(RS, [4, 4]);
     /* eslint-disable prefer-destructuring */
@@ -25,6 +29,10 @@ class Transform {
     M[3][3] = 1;
     /* eslint-enable prefer-destructuring */
     return M;
+  }
+  toColumnMajorArray() {
+    const M = math.transpose(this.toMatrix());
+    return [].concat(...M);
   }
 }
 

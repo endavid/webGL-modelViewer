@@ -95,7 +95,7 @@ class Renderer {
       dX: 0,
       dY: 0,
       theta: 0,
-      phi: 0.22,
+      phi: 0,
       lock: { x: false, y: false },
     };
     this.onRotation = () => {};
@@ -277,9 +277,9 @@ class Renderer {
     const dX = this.mouseState.lock.x ? 0 : this.mouseState.dX;
     const dY = this.mouseState.lock.y ? 0 : this.mouseState.dY;
     if (Math.abs(dX) > e || Math.abs(dY) > e) {
-      this.mouseState.theta = VMath.clampAngle(this.mouseState.theta + Math.PI * dX);
-      this.mouseState.phi = VMath.clampAngle(this.mouseState.phi + Math.PI * dY);
-      this.mouseState.phi = VMath.clamp(this.mouseState.phi, -Math.PI * 0.5, Math.PI * 0.5);
+      this.mouseState.theta = VMath.clampAngleDeg(this.mouseState.theta + 180 * dX);
+      this.mouseState.phi = VMath.clampAngleDeg(this.mouseState.phi + 180 * dY);
+      this.mouseState.phi = VMath.clamp(this.mouseState.phi, -90, 90);
       this.onRotation(this.mouseState.phi, this.mouseState.theta);
     }
   }
@@ -338,10 +338,21 @@ class Renderer {
     this.mouseState.theta = ry;
     const model = this.scene.models[index];
     if (model) {
-      VMath.setScale4(model.transformMatrix, scale);
-      VMath.rotateY(model.transformMatrix, ry);
-      VMath.rotateX(model.transformMatrix, rx);
+      model.transform.scale = [scale, scale, scale];
+      model.transform.eulerAngles = [rx, ry, 0];
     }
+  }
+  centerModelAround(modelIndex, labelId) {
+    const model = this.scene.models[modelIndex];
+    if (model) {
+      const pos = model.getPositionForLabel(labelId);
+      const { scale } = model.transform;
+      const p = pos.map((a, i) => -a * scale[i]);
+      p[1] = 0; // do not translate vertically
+      model.transform.position = p;
+      return pos;
+    }
+    return null;
   }
   setKeyframe(index, keyframe) {
     const model = this.scene.models[index];

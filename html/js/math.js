@@ -279,6 +279,11 @@ const VMath = {
     while (a > Math.PI) a -= Math.PI * 2;
     return a;
   },
+  clampAngleDeg: (a) => {
+    while (a < -180) a += 360;
+    while (a > 180) a -= 360;
+    return a;
+  },
 
   clamp: (a, minA, maxA) => {
     if (a < minA) return minA;

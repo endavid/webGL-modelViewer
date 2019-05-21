@@ -84,10 +84,12 @@ const UiUtils = {
   addUrisToDropdownList(id, list) {
     const select = $(`#${id}`);
     list.forEach((obj) => {
+      const val = obj.uri || obj;
+      const name = obj.name || obj;
       const option = $('<option>')
-        .attr('value', obj.uri)
+        .attr('value', val)
         .attr('selected', true)
-        .append(obj.name);
+        .append(name);
       select.append(option);
     });
   },

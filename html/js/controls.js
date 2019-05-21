@@ -42,6 +42,11 @@ function matrixToString(m) {
   return m.join(', ');
 }
 
+function vectorToString(v) {
+  const p = v.map(a => Math.round(a * 100000) / 100000);
+  return p.join(', ');
+}
+
 function removePoseGroup() {
   $('tr[id^=gPose]').remove();
 }
@@ -127,8 +132,8 @@ function progressBarUpdate(ratio) {
 }
 
 function updateModelTransform() {
-  const phi = VMath.degToRad(Config.modelRotationPhi);
-  const theta = VMath.degToRad(Config.modelRotationTheta);
+  const phi = Config.modelRotationPhi;
+  const theta = Config.modelRotationTheta;
   viewer.setModelRotationAndScale(0, phi, theta, Config.modelScale);
 }
 
@@ -139,8 +144,8 @@ function updateModelScale(logValue) {
 
 function setRotation(phi, theta) {
   const round2 = v => Math.round(v * 100) / 100;
-  const phiDeg = round2(VMath.radToDeg(phi));
-  const thetaDeg = round2(VMath.radToDeg(theta));
+  const phiDeg = round2(phi);
+  const thetaDeg = round2(theta);
   $('#modelRotationTheta').val(thetaDeg);
   $('#modelRotationTheta_number').val(thetaDeg);
   $('#modelRotationPhi').val(phiDeg);
@@ -179,6 +184,13 @@ function populateSubmeshList(meshes) {
   });
 }
 
+function populateLabelList(labels) {
+  const select = $('#centerModel_select');
+  const names = ['origin'].concat(Object.keys(labels || {}));
+  select.empty();
+  UiUtils.addUrisToDropdownList('centerModel_select', names);
+}
+
 function reloadModel() {
   const url = $('#Presets').val();
   const name = $('#Presets option:selected').text();
@@ -199,6 +211,7 @@ function reloadModel() {
     setRotation(0, 0);
     setMeterUnits(model.meterUnits);
     populateSubmeshList(model.meshes);
+    populateLabelList(model.labels);
   }, setError);
 }
 
@@ -336,6 +349,7 @@ function populateControls() {
       const model = viewer.scene.models[0];
       if (model) {
         model.labels = labels;
+        populateLabelList(labels);
       }
     });
   }
@@ -499,6 +513,15 @@ function populateControls() {
       Config.modelRotationPhi, -90, 90, 0.1, (value) => {
         Config.modelRotationPhi = parseFloat(value);
         updateModelTransform();
+      }),
+    UiUtils.createButtonWithOptions('centerModel', 'Center', ' around ',
+      [{ name: 'origin', value: 'origin' }],
+      (e) => {
+        const label = $(`#${e.target.id}_select`).val();
+        const pos = viewer.centerModelAround(0, label);
+        const str = vectorToString(pos);
+        setInfo(`${label} at: [${str}]`);
+        setRotation(0, 0);
       }),
     UiUtils.createDropdownList('submesh', [], (obj) => {
       viewer.selectSubmesh(obj.value);

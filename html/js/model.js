@@ -1,6 +1,7 @@
 import Gfx from './gfx.js';
 import VMath from './math.js';
 import SkinnedModel from './skinnedModel.js';
+import Transform from './transform.js';
 
 function readColor(landmark) {
   let color = [1, 1, 1];
@@ -41,7 +42,9 @@ class Model {
   constructor(gl, json, imageUrls) {
     this.name = json.name;
     this.meterUnits = json.meterUnits || 1;
-    this.transformMatrix = VMath.getI4();
+    this.transform = new Transform({});
+    // apply Y rotation (1) before X (0)
+    this.transform.rotationOrder = [2, 1, 0];
     // vertices
     this.vertexBuffer = gl.createBuffer();
     this.stride = json.stride;
@@ -85,7 +88,7 @@ class Model {
     });
     this.meshes = meshes;
     this.triangles = triangles;
-    this.labels = json.labels;
+    this.labels = json.labels || {};
   }
   destroy(gl) {
     Gfx.destroyBuffers(gl, this);
@@ -141,7 +144,7 @@ class Model {
           positions,
           vertices: this.vertices,
           stride: this.stride,
-          transformMatrix: this.transformMatrix,
+          transformMatrix: this.getTransformMatrix(),
           joints: this.skinnedModel.joints,
         };
         worker.onmessage = (e) => {
@@ -190,6 +193,9 @@ class Model {
       this.dotBufferStride += 4 + 4; // 4 weights + 4 indices
     }
   }
+  getTransformMatrix() {
+    return this.transform.toColumnMajorArray();
+  }
   getPosition(vertexIndex) {
     const i = vertexIndex * this.stride;
     return this.vertices.slice(i, i + 3);
@@ -211,6 +217,19 @@ class Model {
     );
     return skinnedPos.slice(0, 3);
   }
+  getPositionForLabel(labelId) {
+    let pos = [0, 0, 0];
+    const label = this.labels[labelId];
+    if (label) {
+      if (label.index) {
+        // after baking, we store a vertex index so we can skin the labels
+        pos = this.getSkinnedPosition(label.index);
+      } else {
+        pos = VMath.readCoordinates(label).slice(0, 3);
+      }
+    }
+    return pos;
+  }
   getSurfaceIntersection(ray, onDone) {
     if (window.Worker) {
       const worker = new Worker('./js/modelDistanceWorker.js');
@@ -219,7 +238,7 @@ class Model {
         vertices: this.vertices,
         triangles: this.triangles,
         stride: this.stride,
-        transformMatrix: this.transformMatrix,
+        transformMatrix: this.getTransformMatrix(),
       };
       if (this.skinnedModel) {
         load.joints = this.skinnedModel.joints;

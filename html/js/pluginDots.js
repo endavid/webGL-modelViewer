@@ -41,7 +41,7 @@ class PluginDots {
       shader.use(gl);
       gl.uniformMatrix4fv(shader.uniforms.Pmatrix, false, camera.projectionMatrix);
       gl.uniformMatrix4fv(shader.uniforms.Vmatrix, false, camera.viewMatrix);
-      gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.transformMatrix);
+      gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.getTransformMatrix());
       gl.uniform1f(shader.uniforms.pointSize, self.pointSize);
       gl.bindBuffer(gl.ARRAY_BUFFER, model.dotBuffer);
       gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);

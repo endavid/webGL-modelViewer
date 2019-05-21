@@ -40,7 +40,7 @@ class PluginLitModel {
       gl.uniform1i(shader.uniforms.sampler, 0);
       gl.uniformMatrix4fv(shader.uniforms.Pmatrix, false, camera.projectionMatrix);
       gl.uniformMatrix4fv(shader.uniforms.Vmatrix, false, camera.viewMatrix);
-      gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.transformMatrix);
+      gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.getTransformMatrix());
       gl.uniform3f(shader.uniforms.lightDirection,
         light0.direction[0], light0.direction[1], light0.direction[2]);
       gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexBuffer);
