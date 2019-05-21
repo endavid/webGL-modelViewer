@@ -9,16 +9,16 @@ class Transform {
     this.scale = scale || [1, 1, 1];
     // ZYX rotation order (X applied first), stored in degrees
     this.eulerAngles = eulerAngles || [0, 0, 0];
-    this.rotationOrder = [0, 1, 2];
+    this.rotationOrder = 'xyz';
   }
   toMatrix() {
     const angles = this.eulerAngles.map(a => VMath.degToRad(a));
     const ro = this.rotationOrder;
-    const Rs = [
-      VMath.rotationMatrixAroundX(angles[0]),
-      VMath.rotationMatrixAroundY(angles[1]),
-      VMath.rotationMatrixAroundZ(angles[2]),
-    ];
+    const Rs = {
+      x: VMath.rotationMatrixAroundX(angles[0]),
+      y: VMath.rotationMatrixAroundY(angles[1]),
+      z: VMath.rotationMatrixAroundZ(angles[2]),
+    };
     const R = math.multiply(Rs[ro[2]], math.multiply(Rs[ro[1]], Rs[ro[0]]));
     const RS = math.multiply(R, VMath.scaleMatrix(this.scale));
     const M = math.resize(RS, [4, 4]);

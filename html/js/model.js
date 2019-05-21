@@ -44,7 +44,7 @@ class Model {
     this.meterUnits = json.meterUnits || 1;
     this.transform = new Transform({});
     // apply Y rotation (1) before X (0)
-    this.transform.rotationOrder = [2, 1, 0];
+    this.transform.rotationOrder = 'zyx';
     // vertices
     this.vertexBuffer = gl.createBuffer();
     this.stride = json.stride;
