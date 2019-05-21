@@ -1,3 +1,5 @@
+const { math } = window;
+
 /* eslint-disable no-param-reassign */
 /* eslint-disable prefer-destructuring */
 /**
@@ -74,50 +76,6 @@ const VMath = {
     m[10] = scale;
   },
 
-  rotateX: (m, angle) => {
-    const c = Math.cos(angle);
-    const s = Math.sin(angle);
-    const mv1 = m[1];
-    const mv5 = m[5];
-    const mv9 = m[9];
-    m[1] = m[1] * c - m[2] * s;
-    m[5] = m[5] * c - m[6] * s;
-    m[9] = m[9] * c - m[10] * s;
-    m[2] = m[2] * c + mv1 * s;
-    m[6] = m[6] * c + mv5 * s;
-    m[10] = m[10] * c + mv9 * s;
-    return m;
-  },
-
-  rotateY: (m, angle) => {
-    const c = Math.cos(angle);
-    const s = Math.sin(angle);
-    const mv0 = m[0];
-    const mv4 = m[4];
-    const mv8 = m[8];
-    m[0] = c * m[0] + s * m[2];
-    m[4] = c * m[4] + s * m[6];
-    m[8] = c * m[8] + s * m[10];
-    m[2] = c * m[2] - s * mv0;
-    m[6] = c * m[6] - s * mv4;
-    m[10] = c * m[10] - s * mv8;
-    return m;
-  },
-
-  rotateZ: (m, angle) => {
-    const c = Math.cos(angle);
-    const s = Math.sin(angle);
-    const mv0 = m[0];
-    const mv4 = m[4];
-    const mv8 = m[8];
-    m[0] = c * m[0] - s * m[1];
-    m[4] = c * m[4] - s * m[5];
-    m[8] = c * m[8] - s * m[9];
-    m[1] = c * m[1] + s * mv0;
-    m[5] = c * m[5] + s * mv4;
-    m[9] = c * m[9] + s * mv8;
-    return m;
-  },
   // Rx http://www.songho.ca/opengl/gl_anglestoaxes.html
   // Also, math.js expects matrices in row-major order
   rotationMatrixAroundX(angle) {
@@ -149,6 +107,16 @@ const VMath = {
       [0, 0, 1],
     ];
     return m;
+  },
+  rotationMatrixFromEuler(angles, rotationOrder) {
+    const ro = rotationOrder;
+    const Rs = {
+      x: VMath.rotationMatrixAroundX(angles[0]),
+      y: VMath.rotationMatrixAroundY(angles[1]),
+      z: VMath.rotationMatrixAroundZ(angles[2]),
+    };
+    const R = math.multiply(Rs[ro[0]], math.multiply(Rs[ro[1]], Rs[ro[2]]));
+    return R;
   },
   scaleMatrix(s) {
     return [

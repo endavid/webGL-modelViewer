@@ -150,38 +150,28 @@ class SkinnedModel {
     if (jointAnim.transform && jointAnim.transform[keyframe]) {
       return jointAnim.transform[keyframe];
     }
+    // we'll use the transform to get only the translation and
+    // assume the rig does not contains rotations or scalings... ^^;
     const { transform } = this.skeleton[name];
     const s = arrayValueOrDefault(jointAnim.scale, keyframe, [1, 1, 1]);
     const t = arrayValueOrDefault(jointAnim.translation, keyframe, [0, 0, 0]);
     const rx = VMath.degToRad(arrayValueOrDefault(jointAnim['rotateX.ANGLE'], keyframe, 0));
     const ry = VMath.degToRad(arrayValueOrDefault(jointAnim['rotateY.ANGLE'], keyframe, 0));
     const rz = VMath.degToRad(arrayValueOrDefault(jointAnim['rotateZ.ANGLE'], keyframe, 0));
-    const ms = VMath.getI4();
-    /* eslint-disable prefer-destructuring */
-    ms[0] = s[0];
-    ms[5] = s[1];
-    ms[10] = s[2];
-    /* eslint-enable prefer-destructuring */
-    const mt = VMath.getI4();
+    const ms = math.diag(s.concat(1));
+    const mt = math.diag([1, 1, 1, 1]); // identity
     // row-major
-    mt[3] = transform[3] + t[0];
-    mt[7] = transform[7] + t[1];
-    mt[11] = transform[11] + t[2];
-    const mr = {
-      x: VMath.rotateX(VMath.getI4(), rx),
-      y: VMath.rotateY(VMath.getI4(), ry),
-      z: VMath.rotateZ(VMath.getI4(), rz),
-    };
-    // rotations are column-major! convert to row-major
-    mr.x = VMath.transpose(mr.x);
-    mr.y = VMath.transpose(mr.y);
-    mr.z = VMath.transpose(mr.z);
+    mt[0][3] = transform[3] + t[0];
+    mt[1][3] = transform[7] + t[1];
+    mt[2][3] = transform[11] + t[2];
     const order = this.skeleton[name].rotationOrder || 'xyz';
-    let m = VMath.mulMatrix(mr[order[0]], mr[order[1]]);
-    m = VMath.mulMatrix(m, mr[order[2]]);
-    m = VMath.mulMatrix(m, ms);
-    m = VMath.mulMatrix(mt, m);
-    return m;
+    let m = VMath.rotationMatrixFromEuler([rx, ry, rz], order);
+    m = math.resize(m, [4, 4]);
+    m[3][3] = 1;
+    m = math.multiply(m, ms);
+    m = math.multiply(mt, m);
+    // flatten row-major matrix
+    return [].concat(...m);
   }
   getAnimMatrix(i, keyframe) {
     const name = this.jointNames[i];
