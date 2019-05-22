@@ -73,3 +73,41 @@ QUnit.test('projection inverse', (assert) => {
     0, 0, -1, 5.005];
   assert.deepEqual(m, expected);
 });
+
+QUnit.test('euler conversion cwY', (assert) => {
+  const angleAxis = { angle: VMath.degToRad(45), axis: [0, -1, 0] };
+  const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, 'zyx');
+  const eulearAngles = angles.map(VMath.radToDeg);
+  assert.deepEqual(VMath.round(eulearAngles), [0, -45, 0]);
+});
+
+QUnit.test('euler conversion ccwX', (assert) => {
+  const angleAxis = { angle: VMath.degToRad(45), axis: [1, 0, 0] };
+  const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, 'xyz');
+  const eulearAngles = angles.map(VMath.radToDeg);
+  assert.deepEqual(VMath.round(eulearAngles), [45, 0, 0]);
+});
+
+QUnit.test('euler conversion ccwZ', (assert) => {
+  const angleAxis = { angle: VMath.degToRad(45), axis: [0, 0, 1] };
+  const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, 'xyz');
+  const eulearAngles = angles.map(VMath.radToDeg);
+  assert.deepEqual(VMath.round(eulearAngles), [0, 0, 45]);
+});
+
+QUnit.test('euler conversion ccwXY', (assert) => {
+  const angleAxis = { angle: 2 * Math.PI / 3, axis: [0.57735, 0.57735, 0.57735] };
+  const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, 'xyz');
+  const eulearAngles = angles.map(VMath.radToDeg);
+  assert.deepEqual(VMath.round(eulearAngles), [90, 90, 0]);
+});
+
+QUnit.test('euler conversion collar', (assert) => {
+  const angleAxis = {
+    angle: VMath.degToRad(18.4609678396),
+    axis: [0.375040562039, -0.926971164802, -0.0083088177441],
+  };
+  const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, 'zyx');
+  const eulearAngles = angles.map(VMath.radToDeg);
+  assert.deepEqual(VMath.round(eulearAngles), [7.16, -17.06, -1.23]);
+});

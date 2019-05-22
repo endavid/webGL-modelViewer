@@ -7,6 +7,17 @@ const { math } = window;
   * need to be sent to the GPU.
   */
 const VMath = {
+  isClose(a, b, epsilon) {
+    const e = epsilon || 1e-6;
+    return Math.abs(a - b) < e;
+  },
+
+  round(vector, numDigits) {
+    const p = numDigits || 6;
+    const c = 10 ** p;
+    return vector.map(a => Math.round(a * c) / c);
+  },
+
   // checks for 2 possible formats, {x: 0, y: 0, z: 0}
   // and [0, 0, 0], and returns a vector of 4 ending in 1, [0, 0, 0, 1]
   readCoordinates(pos) {
@@ -16,9 +27,12 @@ const VMath = {
     return [pos[0], pos[1], pos[2], 1];
   },
 
+  length(v) {
+    const norm = v.reduce((acc, c) => acc + c * c, 0);
+    return Math.sqrt(norm);
+  },
   normalize(v) {
-    let norm = v.reduce((acc, c) => acc + c * c, 0);
-    norm = Math.sqrt(norm) || 1;
+    const norm = VMath.length(v) || 1;
     return v.map(c => c / norm);
   },
 
@@ -124,6 +138,74 @@ const VMath = {
       [0, s[1], 0],
       [0, 0, s[2]],
     ];
+  },
+
+  angleAxisFromRotationMatrix(R) {
+    const angle = Math.acos((R[0][0] + R[1][1] + R[2][2] - 1) / 2);
+    let axis = [0, 0, 1];
+    if (!VMath.isClose(angle, 0)) {
+      const d = [
+        R[1][2] - R[2][1],
+        R[2][0] - R[0][2],
+        R[0][1] - R[1][0],
+      ];
+      const dd = VMath.length(d);
+      if (!VMath.isClose(dd, 0)) {
+        axis = VMath.normalize(d);
+      }
+    }
+    return { angle, axis };
+  },
+
+  eulerAnglesFromAngleAxis(angleAxis, rotationOrder) {
+    // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToEuler/index.htm
+    const { angle, axis } = angleAxis;
+    const p = { x: axis[0], y: axis[1], z: axis[2] };
+    // 'xyz', 'yzx', ...
+    const a = rotationOrder[0];
+    const b = rotationOrder[1];
+    const c = rotationOrder[2];
+    let x = p[a];
+    const y = p[c];
+    const z = p[b];
+    if (rotationOrder === 'xzy' || rotationOrder === 'yxz' || rotationOrder === 'zyx') {
+      x = -x;
+    }
+    const sa = Math.sin(angle);
+    const t = 1 - Math.cos(angle);
+    const epsilon = 1e-6;
+    let v = { x: 0, y: 0, z: 0 };
+    if (1.0 - x * y * t + z * sa < epsilon) {
+      // north pole singularity
+      v = {
+        x: 2 * Math.atan2(x * Math.sin(angle / 2), Math.cos(angle / 2)),
+        y: Math.PI / 2,
+        z: 0,
+      };
+    } else if (1.0 + x * y * t + z * sa < epsilon) {
+      // south pole singularity
+      v = {
+        x: -2 * Math.atan2(x * Math.sin(angle / 2), Math.cos(angle / 2)),
+        y: -Math.PI / 2,
+        z: 0,
+      };
+    } else {
+      v = {
+        x: Math.atan2(y * sa - x * z * t, 1 - (y * y + z * z) * t),
+        y: Math.asin(x * y * t + z * sa),
+        z: Math.atan2(x * sa - y * z * t, 1 - (x * x + z * z) * t),
+      };
+    }
+    switch (rotationOrder) {
+      case 'xzy':
+        return [-v[b], v[a], v[c]];
+      case 'yxz':
+        return [v[a], -v[c], v[b]];
+      case 'zyx':
+        return [v[c], v[b], -v[a]];
+      default:
+        return [v[c], v[b], v[a]];
+    }
   },
 
   setTranslation(m, position) {

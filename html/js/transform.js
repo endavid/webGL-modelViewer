@@ -1,15 +1,31 @@
+/* eslint-disable object-curly-newline */
 import VMath from './math.js';
 
 // Unfortunately, I wasn't able to import math.js as a module
 const { math } = window;
 
 class Transform {
-  constructor({ position, scale, eulerAngles }) {
+  constructor({ position, scale, eulerAngles, rotationOrder }) {
     this.position = position || [0, 0, 0];
     this.scale = scale || [1, 1, 1];
     // ZYX rotation order (X applied first), stored in degrees
     this.eulerAngles = eulerAngles || [0, 0, 0];
-    this.rotationOrder = 'zyx';
+    this.rotationOrder = rotationOrder || 'zyx';
+  }
+  static fromMatrix(M, rotationOrder) {
+    // ref. https://math.stackexchange.com/a/1463487
+    // ref. https://github.com/endavid/VidEngine/blob/master/VidFramework/VidFramework/sdk/math/Transform.swift
+    const position = [M[0][3], M[1][3], M[2][3]];
+    const RS = math.resize(M, [3, 3]);
+    const RSt = math.transpose(RS);
+    // only works if there's no shear (isotropic scale)
+    const scale = RSt.map(column => VMath.length(column));
+    const Rt = RSt.map((col, i) => math.divide(col, scale[i]));
+    const R = math.transpose(Rt);
+    const angleAxis = VMath.angleAxisFromRotationMatrix(R);
+    const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, rotationOrder);
+    const eulerAngles = angles.map(VMath.radToDeg);
+    return new Transform({ position, scale, eulerAngles, rotationOrder });
   }
   toMatrix() {
     const angles = this.eulerAngles.map(a => VMath.degToRad(a));
