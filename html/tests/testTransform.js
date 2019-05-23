@@ -58,10 +58,11 @@ QUnit.test('from 30deg rotation matrix', (assert) => {
   const ro = 'xyz';
   const t = Transform.fromMatrix(M, ro);
   const angleAxis = { angle: Math.PI / 6, axis: VMath.normalize([1, 2, 3]) };
-  const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, ro);
+  const R = VMath.rotationMatrixFromAngleAxis(angleAxis);
+  const angles = VMath.eulerAnglesFromRotationMatrix(R, ro);
   const eulerAngles = angles.map(VMath.radToDeg);
   assert.deepEqual(t.position, [0, 0, 0]);
   assert.deepEqual(VMath.round(t.scale), [1, 1, 1]);
-  assert.deepEqual(t.eulerAngles, eulerAngles);
+  assert.deepEqual(VMath.round(t.eulerAngles), VMath.round(eulerAngles));
   assert.equal(t.rotationOrder, ro);
 });

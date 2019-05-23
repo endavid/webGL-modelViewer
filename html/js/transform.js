@@ -22,8 +22,7 @@ class Transform {
     const scale = RSt.map(column => VMath.length(column));
     const Rt = RSt.map((col, i) => math.divide(col, scale[i]));
     const R = math.transpose(Rt);
-    const angleAxis = VMath.angleAxisFromRotationMatrix(R);
-    const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, rotationOrder);
+    const angles = VMath.eulerAnglesFromRotationMatrix(R, rotationOrder);
     const eulerAngles = angles.map(VMath.radToDeg);
     return new Transform({ position, scale, eulerAngles, rotationOrder });
   }

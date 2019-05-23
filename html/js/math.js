@@ -1,46 +1,6 @@
-const { math } = window;
-
 /* eslint-disable no-param-reassign */
 /* eslint-disable prefer-destructuring */
-
-function bruteForceEulerize(inputOrder, sign, outputOrder, winding, angleAxis) {
-  const { angle, axis } = angleAxis;
-  const p = { x: axis[0], y: axis[1], z: axis[2] };
-  const x = p[inputOrder[0]] * sign[0];
-  const y = p[inputOrder[1]] * sign[1];
-  const z = p[inputOrder[2]] * sign[2];
-  const sa = winding * Math.sin(angle);
-  const t = 1 - Math.cos(angle);
-  const epsilon = 1e-6;
-  let v = { x: 0, y: 0, z: 0 };
-  if (1.0 - (x * y * t + z * sa) < epsilon) {
-    // north pole singularity
-    v = {
-      x: 2 * Math.atan2(x * winding * Math.sin(angle / 2), Math.cos(angle / 2)),
-      y: Math.PI / 2,
-      z: 0,
-    };
-  } else if (1.0 + x * y * t + z * sa < epsilon) {
-    // south pole singularity
-    v = {
-      x: -2 * Math.atan2(x * winding * Math.sin(angle / 2), Math.cos(angle / 2)),
-      y: -Math.PI / 2,
-      z: 0,
-    };
-  } else {
-    v = {
-      x: Math.atan2(y * sa - x * z * t, 1 - (y * y + z * z) * t),
-      y: Math.asin(x * y * t + z * sa),
-      z: Math.atan2(x * sa - y * z * t, 1 - (x * x + z * z) * t),
-    };
-  }
-  return [
-    v[outputOrder[0]],
-    v[outputOrder[1]],
-    v[outputOrder[2]],
-  ];
-}
-
+const { math } = window;
 /**
   * Matrices are stored column-major, because this is the way they
   * need to be sent to the GPU.
@@ -180,6 +140,21 @@ const VMath = {
     const R = math.multiply(Rs[ro[0]], math.multiply(Rs[ro[1]], Rs[ro[2]]));
     return R;
   },
+  rotationMatrixFromAngleAxis({ angle, axis }) {
+    // https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+    const ux = axis[0];
+    const uy = axis[1];
+    const uz = axis[2];
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const t = 1 - cos;
+    const R = [
+      [cos + ux * ux * t, uy * ux * t - uz * sin, uz * ux * t + uy * sin],
+      [uy * ux * t + uz * sin, cos + uy * uy * t, uz * uy * t - ux * sin],
+      [uz * ux * t - uy * sin, uz * uy * t + ux * sin, cos + uz * uz * t],
+    ];
+    return R;
+  },
   scaleMatrix(s) {
     return [
       [s[0], 0, 0],
@@ -187,114 +162,77 @@ const VMath = {
       [0, 0, s[2]],
     ];
   },
-
-  angleAxisFromRotationMatrix(R) {
-    const angle = Math.acos((R[0][0] + R[1][1] + R[2][2] - 1) / 2);
-    let axis = [0, 0, 1];
-    if (!VMath.isClose(angle, 0)) {
-      const d = [
-        R[1][2] - R[2][1],
-        R[2][0] - R[0][2],
-        R[0][1] - R[1][0],
-      ];
-      const dd = VMath.length(d);
-      if (!VMath.isClose(dd, 0)) {
-        axis = VMath.normalize(d);
-      }
-    }
-    return { angle, axis };
-  },
-
-  eulerAnglesFromAngleAxis(angleAxis, rotationOrder) {
-    // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToEuler/index.htm
-    // http://www.euclideanspace.com/maths/standards/index.htm
-    // In the above,
-    //  heading: rotation about Y
-    //  attitude: rotation about Z
-    //  bank: rotation about X
-    // Rotation order: XZY (Y applied first)
-    const { angle, axis } = angleAxis;
-    const sa = Math.sin(angle);
-    const t = 1 - Math.cos(angle);
+  eulerAnglesFromRotationMatrix(R, rotationOrder) {
+    // ref. https://github.com/mrdoob/three.js/blob/dev/src/math/Euler.js
+    let x = 0;
+    let y = 0;
+    let z = 0;
     const epsilon = 1e-6;
-    function eulerize(x, y, z) {
-      let v = { x: 0, y: 0, z: 0 };
-      if (1.0 - (x * y * t + z * sa) < epsilon) {
-        // north pole singularity
-        v = {
-          x: 2 * Math.atan2(x * Math.sin(angle / 2), Math.cos(angle / 2)),
-          y: Math.PI / 2,
-          z: 0,
-        };
-      } else if (1.0 + x * y * t + z * sa < epsilon) {
-        // south pole singularity
-        v = {
-          x: -2 * Math.atan2(x * Math.sin(angle / 2), Math.cos(angle / 2)),
-          y: -Math.PI / 2,
-          z: 0,
-        };
-      } else {
-        v = {
-          x: Math.atan2(y * sa - x * z * t, 1 - (y * y + z * z) * t),
-          y: Math.asin(x * y * t + z * sa),
-          z: Math.atan2(x * sa - y * z * t, 1 - (x * x + z * z) * t),
-        };
-      }
-      console.log(v);
-      return v;
-    }
-    const p = { x: axis[0], y: axis[1], z: axis[2] };
-    let v;
     switch (rotationOrder) {
       case 'xyz':
-        v = eulerize(p.z, p.x, p.y);
-        return [v.x, v.y, v.z];
-      case 'xzy':
-        v = eulerize(p.z, p.x, p.y);
-        return [v.x, v.y, v.z];
+        y = VMath.asin(R[0][2]);
+        if (Math.abs(R[0][2]) < 1 - epsilon) {
+          x = Math.atan2(-R[1][2], R[2][2]);
+          z = Math.atan2(-R[0][1], R[0][0]);
+        } else {
+          x = Math.atan2(R[2][1], R[1][1]);
+          z = 0;
+        }
+        break;
       case 'yxz':
-        v = eulerize(p.x, p.z, p.y);
-        return [v.z, v.y, v.x];
-      case 'yzx':
-        v = eulerize(p.x, p.y, p.z);
-        return [v.z, v.x, v.y];
+        x = VMath.asin(-R[1][2]);
+        if (Math.abs(R[1][2]) < 1 - epsilon) {
+          y = Math.atan2(R[0][2], R[2][2]);
+          z = Math.atan2(R[1][0], R[1][1]);
+        } else {
+          y = Math.atan2(-R[2][0], R[0][0]);
+          z = 0;
+        }
+        break;
       case 'zxy':
-        v = eulerize(p.y, p.z, p.x);
-        return [v.y, v.z, v.x];
+        x = VMath.asin(R[2][1]);
+        if (Math.abs(R[2][1]) < 1 - epsilon) {
+          y = Math.atan2(-R[2][0], R[2][2]);
+          z = Math.atan2(-R[0][1], R[1][1]);
+        } else {
+          y = 0;
+          z = Math.atan2(R[1][0], R[0][0]);
+        }
+        break;
       case 'zyx':
-        console.log(bruteForceEulerize('yxz', [1, 1, 1], 'xzy', angleAxis).map(VMath.radToDeg));
-        console.log(bruteForceEulerize('yzx', [1, 1, 1], 'yzx', angleAxis).map(VMath.radToDeg));
-        v = eulerize(p.y, p.x, p.z);
-        return [v.x, v.z, v.y];
+        y = VMath.asin(-R[2][0]);
+        if (Math.abs(R[2][0]) < 1 - epsilon) {
+          x = Math.atan2(R[2][1], R[2][2]);
+          z = Math.atan2(R[1][0], R[0][0]);
+        } else {
+          x = 0;
+          z = Math.atan2(-R[0][1], R[1][1]);
+        }
+        break;
+      case 'yzx':
+        z = VMath.asin(R[1][0]);
+        if (Math.abs(R[1][0]) < 1 - epsilon) {
+          x = Math.atan2(-R[1][2], R[1][1]);
+          y = Math.atan2(-R[2][0], R[0][0]);
+        } else {
+          x = 0;
+          y = Math.atan2(R[0][2], R[2][2]);
+        }
+        break;
+      case 'xzy':
+        z = VMath.asin(-R[0][1]);
+        if (Math.abs(R[0][1]) < 1 - epsilon) {
+          x = Math.atan2(R[2][1], R[1][1]);
+          y = Math.atan2(R[0][2], R[0][0]);
+        } else {
+          x = Math.atan2(-R[1][2], R[2][2]);
+          y = 0;
+        }
+        break;
       default:
         return null;
     }
-  },
-
-  bruteForceEulerizeOrderCheck(testFn) {
-    const orders = ['xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'];
-    const signs = [[1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1], [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1]];
-    const windings = [1, -1];
-    const validOrders = [];
-    orders.forEach((inputOrder) => {
-      signs.forEach((sign) => {
-        orders.forEach((outputOrder) => {
-          windings.forEach((winding) => {
-            const eulerize = bruteForceEulerize.bind(null, inputOrder, sign, outputOrder, winding);
-            if (testFn(eulerize)) {
-              validOrders.push({
-                inputOrder,
-                sign,
-                outputOrder,
-                winding,
-              });
-            }
-          });
-        });
-      });
-    });
-    console.log(validOrders);
-    return validOrders;
+    return [x, y, z];
   },
 
   setTranslation(m, position) {
@@ -423,11 +361,14 @@ const VMath = {
     while (a > 180) a -= 360;
     return a;
   },
-
   clamp: (a, minA, maxA) => {
     if (a < minA) return minA;
     if (a > maxA) return maxA;
     return a;
+  },
+  asin(value) {
+    // safe asin, with clamp, so it won't NaN
+    return Math.asin(VMath.clamp(value, -1, 1));
   },
 
   vectorToHexColor: (v) => {
