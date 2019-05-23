@@ -2,6 +2,45 @@ const { math } = window;
 
 /* eslint-disable no-param-reassign */
 /* eslint-disable prefer-destructuring */
+
+function bruteForceEulerize(inputOrder, sign, outputOrder, winding, angleAxis) {
+  const { angle, axis } = angleAxis;
+  const p = { x: axis[0], y: axis[1], z: axis[2] };
+  const x = p[inputOrder[0]] * sign[0];
+  const y = p[inputOrder[1]] * sign[1];
+  const z = p[inputOrder[2]] * sign[2];
+  const sa = winding * Math.sin(angle);
+  const t = 1 - Math.cos(angle);
+  const epsilon = 1e-6;
+  let v = { x: 0, y: 0, z: 0 };
+  if (1.0 - (x * y * t + z * sa) < epsilon) {
+    // north pole singularity
+    v = {
+      x: 2 * Math.atan2(x * winding * Math.sin(angle / 2), Math.cos(angle / 2)),
+      y: Math.PI / 2,
+      z: 0,
+    };
+  } else if (1.0 + x * y * t + z * sa < epsilon) {
+    // south pole singularity
+    v = {
+      x: -2 * Math.atan2(x * winding * Math.sin(angle / 2), Math.cos(angle / 2)),
+      y: -Math.PI / 2,
+      z: 0,
+    };
+  } else {
+    v = {
+      x: Math.atan2(y * sa - x * z * t, 1 - (y * y + z * z) * t),
+      y: Math.asin(x * y * t + z * sa),
+      z: Math.atan2(x * sa - y * z * t, 1 - (x * x + z * z) * t),
+    };
+  }
+  return [
+    v[outputOrder[0]],
+    v[outputOrder[1]],
+    v[outputOrder[2]],
+  ];
+}
+
 /**
   * Matrices are stored column-major, because this is the way they
   * need to be sent to the GPU.
@@ -10,6 +49,15 @@ const VMath = {
   isClose(a, b, epsilon) {
     const e = epsilon || 1e-6;
     return Math.abs(a - b) < e;
+  },
+
+  isCloseVector(v0, v1, epsilon) {
+    for (let i = 0; i < v0.length; i += 1) {
+      if (!VMath.isClose(v0[i], v1[i], epsilon)) {
+        return false;
+      }
+    }
+    return true;
   },
 
   round(vector, numDigits) {
@@ -159,53 +207,94 @@ const VMath = {
 
   eulerAnglesFromAngleAxis(angleAxis, rotationOrder) {
     // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToEuler/index.htm
+    // http://www.euclideanspace.com/maths/standards/index.htm
+    // In the above,
+    //  heading: rotation about Y
+    //  attitude: rotation about Z
+    //  bank: rotation about X
+    // Rotation order: XZY (Y applied first)
     const { angle, axis } = angleAxis;
-    const p = { x: axis[0], y: axis[1], z: axis[2] };
-    // 'xyz', 'yzx', ...
-    const a = rotationOrder[0];
-    const b = rotationOrder[1];
-    const c = rotationOrder[2];
-    let x = p[a];
-    const y = p[c];
-    const z = p[b];
-    if (rotationOrder === 'xzy' || rotationOrder === 'yxz' || rotationOrder === 'zyx') {
-      x = -x;
-    }
     const sa = Math.sin(angle);
     const t = 1 - Math.cos(angle);
     const epsilon = 1e-6;
-    let v = { x: 0, y: 0, z: 0 };
-    if (1.0 - x * y * t + z * sa < epsilon) {
-      // north pole singularity
-      v = {
-        x: 2 * Math.atan2(x * Math.sin(angle / 2), Math.cos(angle / 2)),
-        y: Math.PI / 2,
-        z: 0,
-      };
-    } else if (1.0 + x * y * t + z * sa < epsilon) {
-      // south pole singularity
-      v = {
-        x: -2 * Math.atan2(x * Math.sin(angle / 2), Math.cos(angle / 2)),
-        y: -Math.PI / 2,
-        z: 0,
-      };
-    } else {
-      v = {
-        x: Math.atan2(y * sa - x * z * t, 1 - (y * y + z * z) * t),
-        y: Math.asin(x * y * t + z * sa),
-        z: Math.atan2(x * sa - y * z * t, 1 - (x * x + z * z) * t),
-      };
+    function eulerize(x, y, z) {
+      let v = { x: 0, y: 0, z: 0 };
+      if (1.0 - (x * y * t + z * sa) < epsilon) {
+        // north pole singularity
+        v = {
+          x: 2 * Math.atan2(x * Math.sin(angle / 2), Math.cos(angle / 2)),
+          y: Math.PI / 2,
+          z: 0,
+        };
+      } else if (1.0 + x * y * t + z * sa < epsilon) {
+        // south pole singularity
+        v = {
+          x: -2 * Math.atan2(x * Math.sin(angle / 2), Math.cos(angle / 2)),
+          y: -Math.PI / 2,
+          z: 0,
+        };
+      } else {
+        v = {
+          x: Math.atan2(y * sa - x * z * t, 1 - (y * y + z * z) * t),
+          y: Math.asin(x * y * t + z * sa),
+          z: Math.atan2(x * sa - y * z * t, 1 - (x * x + z * z) * t),
+        };
+      }
+      console.log(v);
+      return v;
     }
+    const p = { x: axis[0], y: axis[1], z: axis[2] };
+    let v;
     switch (rotationOrder) {
+      case 'xyz':
+        v = eulerize(p.z, p.x, p.y);
+        return [v.x, v.y, v.z];
       case 'xzy':
-        return [-v[b], v[a], v[c]];
+        v = eulerize(p.z, p.x, p.y);
+        return [v.x, v.y, v.z];
       case 'yxz':
-        return [v[a], -v[c], v[b]];
+        v = eulerize(p.x, p.z, p.y);
+        return [v.z, v.y, v.x];
+      case 'yzx':
+        v = eulerize(p.x, p.y, p.z);
+        return [v.z, v.x, v.y];
+      case 'zxy':
+        v = eulerize(p.y, p.z, p.x);
+        return [v.y, v.z, v.x];
       case 'zyx':
-        return [v[c], v[b], -v[a]];
+        console.log(bruteForceEulerize('yxz', [1, 1, 1], 'xzy', angleAxis).map(VMath.radToDeg));
+        console.log(bruteForceEulerize('yzx', [1, 1, 1], 'yzx', angleAxis).map(VMath.radToDeg));
+        v = eulerize(p.y, p.x, p.z);
+        return [v.x, v.z, v.y];
       default:
-        return [v[c], v[b], v[a]];
+        return null;
     }
+  },
+
+  bruteForceEulerizeOrderCheck(testFn) {
+    const orders = ['xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'];
+    const signs = [[1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1], [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1]];
+    const windings = [1, -1];
+    const validOrders = [];
+    orders.forEach((inputOrder) => {
+      signs.forEach((sign) => {
+        orders.forEach((outputOrder) => {
+          windings.forEach((winding) => {
+            const eulerize = bruteForceEulerize.bind(null, inputOrder, sign, outputOrder, winding);
+            if (testFn(eulerize)) {
+              validOrders.push({
+                inputOrder,
+                sign,
+                outputOrder,
+                winding,
+              });
+            }
+          });
+        });
+      });
+    });
+    console.log(validOrders);
+    return validOrders;
   },
 
   setTranslation(m, position) {
@@ -366,6 +455,12 @@ const VMath = {
   travelDistance(ray, distance) {
     const m = ray.direction.map(a => distance * a);
     return VMath.sum(ray.start, m);
+  },
+
+  matrixToString(M) {
+    const rows = M.map(row => row.join(', '));
+    const matrix = rows.join(';\n');
+    return `[${matrix}]`;
   },
 };
 export { VMath as default };

@@ -1,7 +1,19 @@
 /* eslint-env qunit */
 import VMath from '../js/math.js';
 
+const { math } = window;
+
 QUnit.module('VMath');
+
+function roundedAngles(angleAxis, rotationOrder, conversion) {
+  const fn = conversion || VMath.eulerAnglesFromAngleAxis;
+  const angles = fn(angleAxis, rotationOrder);
+  const eulearAngles = angles.map(VMath.radToDeg);
+  const rounded = VMath.round(eulearAngles, 1);
+  return rounded;
+}
+
+const allRotations = ['xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'];
 
 QUnit.test('matrix × vector', (assert) => {
   // row-major
@@ -74,32 +86,79 @@ QUnit.test('projection inverse', (assert) => {
   assert.deepEqual(m, expected);
 });
 
+// To generate AngleAxis / Euler references:
+// https://www.andre-gaschler.com/rotationconverter/
+
 QUnit.test('euler conversion cwY', (assert) => {
   const angleAxis = { angle: VMath.degToRad(45), axis: [0, -1, 0] };
-  const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, 'zyx');
-  const eulearAngles = angles.map(VMath.radToDeg);
-  assert.deepEqual(VMath.round(eulearAngles), [0, -45, 0]);
+  allRotations.forEach((ro) => {
+    assert.deepEqual(roundedAngles(angleAxis, ro), [0, -45, 0]);
+  });
 });
 
 QUnit.test('euler conversion ccwX', (assert) => {
   const angleAxis = { angle: VMath.degToRad(45), axis: [1, 0, 0] };
-  const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, 'xyz');
-  const eulearAngles = angles.map(VMath.radToDeg);
-  assert.deepEqual(VMath.round(eulearAngles), [45, 0, 0]);
+  allRotations.forEach((ro) => {
+    assert.deepEqual(roundedAngles(angleAxis, ro), [45, 0, 0]);
+  });
 });
 
 QUnit.test('euler conversion ccwZ', (assert) => {
   const angleAxis = { angle: VMath.degToRad(45), axis: [0, 0, 1] };
-  const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, 'xyz');
-  const eulearAngles = angles.map(VMath.radToDeg);
-  assert.deepEqual(VMath.round(eulearAngles), [0, 0, 45]);
+  allRotations.forEach((ro) => {
+    assert.deepEqual(roundedAngles(angleAxis, ro), [0, 0, 45]);
+  });
 });
 
 QUnit.test('euler conversion ccwXY', (assert) => {
   const angleAxis = { angle: 2 * Math.PI / 3, axis: [0.57735, 0.57735, 0.57735] };
-  const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, 'xyz');
-  const eulearAngles = angles.map(VMath.radToDeg);
-  assert.deepEqual(VMath.round(eulearAngles), [90, 90, 0]);
+  assert.deepEqual(roundedAngles(angleAxis, 'xyz'), [90, 90, 0]);
+  assert.deepEqual(roundedAngles(angleAxis, 'xzy'), [90, 90, 0]);
+  assert.deepEqual(roundedAngles(angleAxis, 'yxz'), [0, 90, 90]);
+  assert.deepEqual(roundedAngles(angleAxis, 'yzx'), [0, 90, 90]);
+  assert.deepEqual(roundedAngles(angleAxis, 'zxy'), [90, 0, 90]);
+  assert.deepEqual(roundedAngles(angleAxis, 'zyx'), [90, 0, 90]);
+});
+
+QUnit.test('euler conversion ccwXZ', (assert) => {
+  const angleAxis = { angle: VMath.degToRad(62.8), axis: [0.6785983, -0.2810846, 0.6785983] };
+  assert.deepEqual(roundedAngles(angleAxis, 'xyz'), [45, 0, 45]);
+  assert.deepEqual(roundedAngles(angleAxis, 'xzy'), [45, 0, 45]);
+  assert.deepEqual(roundedAngles(angleAxis, 'yxz'), [45, 0, 45]);
+  assert.deepEqual(roundedAngles(angleAxis, 'yzx'), [54.74, -35.26, 30]);
+  assert.deepEqual(roundedAngles(angleAxis, 'zxy'), [30, -35.26, 54.74]);
+  assert.deepEqual(roundedAngles(angleAxis, 'zyx'), [35.26, -30, 35.26]);
+});
+
+QUnit.test('euler to matrix', (assert) => {
+  let Rx = VMath.rotationMatrixAroundX(VMath.degToRad(35.26));
+  let Ry = VMath.rotationMatrixAroundY(VMath.degToRad(-30));
+  let Rz = VMath.rotationMatrixAroundZ(VMath.degToRad(35.26));
+  // zyx, x applied first
+  let R = math.multiply(Rz, math.multiply(Ry, Rx));
+  console.log(VMath.matrixToString(R));
+  Rx = VMath.rotationMatrixAroundX(VMath.degToRad(54.74));
+  Ry = VMath.rotationMatrixAroundY(VMath.degToRad(-35.26));
+  Rz = VMath.rotationMatrixAroundZ(VMath.degToRad(30));
+  // zyx, x applied first
+  R = math.multiply(Rz, math.multiply(Ry, Rx));
+  console.log(VMath.matrixToString(R));
+  Rx = VMath.rotationMatrixAroundX(VMath.degToRad(30));
+  Ry = VMath.rotationMatrixAroundY(VMath.degToRad(-35.26));
+  Rz = VMath.rotationMatrixAroundZ(VMath.degToRad(54));
+  // zyx, x applied first
+  R = math.multiply(Rz, math.multiply(Ry, Rx));
+  console.log(VMath.matrixToString(R));
+});
+
+QUnit.test('euler arbitrary', (assert) => {
+  const angleAxis = { angle: VMath.degToRad(129), axis: [0.6215149, 0.4769051, 0.6215149] };
+  assert.deepEqual(roundedAngles(angleAxis, 'xyz'), [105, 90, 0]);
+  assert.deepEqual(roundedAngles(angleAxis, 'xzy'), [105, 90, 0]);
+  assert.deepEqual(roundedAngles(angleAxis, 'yxz'), [0, 90, 105]);
+  assert.deepEqual(roundedAngles(angleAxis, 'yzx'), [180, -90, 75]);
+  assert.deepEqual(roundedAngles(angleAxis, 'zxy'), [75, -90, 180]);
+  assert.deepEqual(roundedAngles(angleAxis, 'zyx'), [180, -90, 75]);
 });
 
 QUnit.test('euler conversion collar', (assert) => {
@@ -110,4 +169,63 @@ QUnit.test('euler conversion collar', (assert) => {
   const angles = VMath.eulerAnglesFromAngleAxis(angleAxis, 'zyx');
   const eulearAngles = angles.map(VMath.radToDeg);
   assert.deepEqual(VMath.round(eulearAngles), [7.16, -17.06, -1.23]);
+});
+
+QUnit.test('dummy brute force', () => {
+  function testFn(aaList, expectations, ro, eulerize) {
+    for (let i = 0; i < aaList.length; i += 1) {
+      const euler = roundedAngles(aaList[i], ro, eulerize);
+      if (!VMath.isCloseVector(euler, expectations[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  // verified with https://www.andre-gaschler.com/rotationconverter/
+  const angleAxes = [
+    { angle: VMath.degToRad(45), axis: [0, -1, 0] },
+    { angle: VMath.degToRad(45), axis: [1, 0, 0] },
+    { angle: VMath.degToRad(45), axis: [0, 0, 1] },
+    { angle: 2 * Math.PI / 3, axis: [0.57735, 0.57735, 0.57735] },
+    { angle: VMath.degToRad(129), axis: [0.6215149, 0.4769051, 0.6215149] },
+    { angle: VMath.degToRad(62.8), axis: [0.6785983, -0.2810846, 0.6785983] },
+  ];
+  VMath.bruteForceEulerizeOrderCheck(testFn.bind(
+    null,
+    angleAxes,
+    [[0, -45, 0], [45, 0, 0], [0, 0, 45], [90, 90, 0], [105, 90, 0], [45, 0, 45]],
+    'xyz',
+  ));
+  VMath.bruteForceEulerizeOrderCheck(testFn.bind(
+    null,
+    angleAxes,
+    [[0, -45, 0], [45, 0, 0], [0, 0, 45], [90, 90, 0], [105, 90, 0], [45, 0, 45]],
+    'xzy',
+  ));
+  VMath.bruteForceEulerizeOrderCheck(testFn.bind(
+    null,
+    angleAxes,
+    [[0, -45, 0], [45, 0, 0], [0, 0, 45], [0, 90, 90], [0, 90, 105], [45, 0, 45]],
+    'yxz',
+  ));
+  VMath.bruteForceEulerizeOrderCheck(testFn.bind(
+    null,
+    angleAxes,
+    [[0, -45, 0], [45, 0, 0], [0, 0, 45], [0, 90, 90], [180, -90, 75], [54.74, -35.26, 30]],
+    'yzx',
+  ));
+  VMath.bruteForceEulerizeOrderCheck(testFn.bind(
+    null,
+    angleAxes,
+    [[0, -45, 0], [45, 0, 0], [0, 0, 45], [90, 0, 90], [75, -90, 180], [30, -35.26, 54.74]],
+    'zxy',
+  ));
+  // For [0.6215149, 0.4769051, 0.6215149], 129deg -> [90, -15, 90]
+  // but that's = same axis, 231deg -> [180, -90, 75], or [75, -90, 180]
+  VMath.bruteForceEulerizeOrderCheck(testFn.bind(
+    null,
+    angleAxes,
+    [[0, -45, 0], [45, 0, 0], [0, 0, 45], [90, 0, 90], [180, -90, 75], [35.26, -30, 35.26]],
+    'zyx',
+  ));
 });
