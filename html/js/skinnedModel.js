@@ -53,9 +53,9 @@ function substractJointTranslationsFromAnims(skeleton, anims) {
             // eslint-disable-next-line no-continue
             continue;
           }
-          a[joint].translation[i][0] -= skeleton[joint].transform[3];
-          a[joint].translation[i][1] -= skeleton[joint].transform[7];
-          a[joint].translation[i][2] -= skeleton[joint].transform[11];
+          a[joint].translation[i][0] -= skeleton[joint].matrix[3];
+          a[joint].translation[i][1] -= skeleton[joint].matrix[7];
+          a[joint].translation[i][2] -= skeleton[joint].matrix[11];
         }
       }
     }
@@ -134,11 +134,11 @@ class SkinnedModel {
     if (!node) {
       return VMath.getI4();
     }
-    let m = node.transform;
+    let m = node.matrix;
     let { parent } = node;
     while (parent) {
       node = this.skeleton[parent];
-      m = VMath.mulMatrix(node.transform, m);
+      m = VMath.mulMatrix(node.matrix, m);
       // eslint-disable-next-line prefer-destructuring
       parent = node.parent;
     }
@@ -147,12 +147,12 @@ class SkinnedModel {
   }
   getJointMatrix(name, keyframe) {
     const jointAnim = this.anims[name] || {};
-    if (jointAnim.transform && jointAnim.transform[keyframe]) {
-      return jointAnim.transform[keyframe];
+    if (jointAnim.matrix && jointAnim.matrix[keyframe]) {
+      return jointAnim.matrix[keyframe];
     }
     // we'll use the transform to get only the translation and
     // assume the rig does not contains rotations or scalings... ^^;
-    const { transform } = this.skeleton[name];
+    const { matrix } = this.skeleton[name];
     const s = arrayValueOrDefault(jointAnim.scale, keyframe, [1, 1, 1]);
     const t = arrayValueOrDefault(jointAnim.translation, keyframe, [0, 0, 0]);
     const rx = VMath.degToRad(arrayValueOrDefault(jointAnim['rotateX.ANGLE'], keyframe, 0));
@@ -161,9 +161,9 @@ class SkinnedModel {
     const ms = math.diag(s.concat(1));
     const mt = math.diag([1, 1, 1, 1]); // identity
     // row-major
-    mt[0][3] = transform[3] + t[0];
-    mt[1][3] = transform[7] + t[1];
-    mt[2][3] = transform[11] + t[2];
+    mt[0][3] = matrix[3] + t[0];
+    mt[1][3] = matrix[7] + t[1];
+    mt[2][3] = matrix[11] + t[2];
     const order = this.skeleton[name].rotationOrder || 'xyz';
     let m = VMath.rotationMatrixFromEuler([rx, ry, rz], order);
     m = math.resize(m, [4, 4]);

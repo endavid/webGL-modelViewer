@@ -305,11 +305,11 @@ function findRootNode(node) {
 
 function extractTransform(joint, invertAxis) {
   const data = {
-    transform: [],
+    matrix: [],
     rotationOrder: '',
   };
   if (joint.matrix) {
-    data.transform = floatStringToArray(joint.matrix.__text || joint.matrix);
+    data.matrix = floatStringToArray(joint.matrix.__text || joint.matrix);
   } else {
     const t = floatStringToArray(joint.translate.__text || joint.translate);
     const s = floatStringToArray(joint.scale.__text || joint.scale);
@@ -329,7 +329,7 @@ function extractTransform(joint, invertAxis) {
         rz = floatStringToArray(r.__text);
       }
     }
-    data.transform = [
+    data.matrix = [
       rx[0] * s[0], ry[0] * s[1], rz[0] * s[2], t[0],
       rx[1] * s[0], ry[1] * s[1], rz[1] * s[2], t[1],
       rx[2] * s[0], ry[2] * s[1], rz[2] * s[2], t[2],
@@ -338,7 +338,7 @@ function extractTransform(joint, invertAxis) {
     ];
   }
   if (invertAxis) {
-    data.transform = flipAxisForMatrix(data.transform);
+    data.matrix = flipAxisForMatrix(data.matrix);
   }
   return data;
 }
@@ -352,7 +352,7 @@ function extractBoneTree(joint, parent, invertAxis) {
   const jointId = simplifyName(joint._id);
   skeleton[jointId] = {
     parent: simplifyName(parent),
-    transform: t.transform,
+    matrix: t.matrix,
     rotationOrder: t.rotationOrder,
   };
   const children = Array.isArray(joint.node) ? joint.node : [joint.node];
@@ -383,8 +383,8 @@ function readLabels(json) {
   node.forEach((n) => {
     if (!n.node && n.matrix) {
       const labelId = simplifyName(n._id);
-      const transform = floatStringToArray(n.matrix.__text || n.matrix);
-      labels[labelId] = getTranslation(transform);
+      const matrix = floatStringToArray(n.matrix.__text || n.matrix);
+      labels[labelId] = getTranslation(matrix);
     }
   });
   return labels;
@@ -431,9 +431,9 @@ function readAnimations(json) {
         } else if (targetId.indexOf('transform') >= 0 || targetId.indexOf('matrix') >= 0) {
           const matrices = toVectorArray(floats, 16);
           if (invertAxis) {
-            animations[boneId].transform = matrices.map(flipAxisForMatrix);
+            animations[boneId].matrix = matrices.map(flipAxisForMatrix);
           } else {
-            animations[boneId].transform = matrices;
+            animations[boneId].matrix = matrices;
           }
         } else {
           animations[boneId][targetId] = floats;
