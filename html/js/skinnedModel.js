@@ -42,6 +42,30 @@ function arrayValueOrDefault(array, index, def) {
   return def;
 }
 
+function guessRotationOrder(jointName) {
+  const cheatSheet = {
+    xyz: ['foot', 'toe', 'jaw', 'tongue', 'pectoral'],
+    // vertical bones, so twist is along Y, therefore applied first
+    xzy: ['hip', 'pelvis', 'thigh', 'shin', 'abdomen', 'chest', 'neck', 'head'],
+    yxz: ['eye'],
+    yzx: ['arm', 'thumb'],
+    zxy: [],
+    zyx: ['collar', 'shoulder', 'shldr', 'hand', 'carpal', 'index', 'mid', 'ring', 'pinky'],
+  };
+  const rs = Object.keys(cheatSheet);
+  const name = jointName.toLowerCase();
+  for (let i = 0; i < rs.length; i += 1) {
+    const ro = rs[i];
+    for (let j = 0; j < cheatSheet[ro].length; j += 1) {
+      if (name.indexOf(cheatSheet[ro][j]) >= 0) {
+        return ro;
+      }
+    }
+  }
+  // root joint will be 'zxy' by default
+  return 'zxy';
+}
+
 function standardizeAnimsToUseTransforms(skeleton, anims) {
   const animKeys = Object.keys(anims);
   const standardized = anims;
@@ -51,7 +75,7 @@ function standardizeAnimsToUseTransforms(skeleton, anims) {
       return;
     }
     const a = anims[joint];
-    const rotationOrder = skeleton[joint].rotationOrder || 'xyz';
+    const rotationOrder = skeleton[joint].rotationOrder || guessRotationOrder(joint);
     const keyframes = a.keyframes.slice(0);
     const transforms = a.keyframes.map(() => new Transform({
       position: [0, 0, 0],
@@ -200,7 +224,7 @@ class SkinnedModel {
     mt[0][3] = matrix[3] + t[0];
     mt[1][3] = matrix[7] + t[1];
     mt[2][3] = matrix[11] + t[2];
-    const order = this.skeleton[name].rotationOrder || 'xyz';
+    const order = this.skeleton[name].rotationOrder || guessRotationOrder(name);
     let m = VMath.rotationMatrixFromEuler(angles, order);
     m = math.resize(m, [4, 4]);
     m[3][3] = 1;
