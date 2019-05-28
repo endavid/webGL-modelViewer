@@ -26,6 +26,9 @@ class Transform {
     const eulerAngles = angles.map(VMath.radToDeg);
     return new Transform({ position, scale, eulerAngles, rotationOrder });
   }
+  static identity() {
+    return new Transform({});
+  }
   toMatrix() {
     const angles = this.eulerAngles.map(a => VMath.degToRad(a));
     const R = VMath.rotationMatrixFromEuler(angles, this.rotationOrder);

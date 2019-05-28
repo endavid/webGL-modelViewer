@@ -55,9 +55,13 @@ function addPoseGroup(skinnedModel) {
   const id = 'gPose';
   const frame = Config.keyframe;
   const { pose } = skinnedModel.getPoseFile(frame);
-  function updateJointWithValue(joint, value, sub) {
-    const key = `rotate${sub}.ANGLE`;
-    skinnedModel.setAnimValue(joint, frame, key, parseFloat(value));
+  const axisToIndex = { X: 0, Y: 1, Z: 2 };
+  function updateJointWithValue(joint, v, sub) {
+    const key = 'eulerAngles';
+    const value = parseFloat(v);
+    const index = axisToIndex[sub];
+    // eslint-disable-next-line object-curly-newline
+    skinnedModel.setAnimValue({ joint, frame, key, value, index });
     skinnedModel.applyPose(frame);
   }
   function angleSlider(s, joint, values) {
@@ -65,9 +69,12 @@ function addPoseGroup(skinnedModel) {
     slider.attr('parent', `${id}_${joint}`);
     return slider;
   }
-  function updateJointTrWithValue(joint, value, sub) {
-    const indices = { X: 0, Y: 1, Z: 2 };
-    skinnedModel.setAnimValue(joint, frame, 'translation', parseFloat(value), indices[sub]);
+  function updateJointTrWithValue(joint, v, sub) {
+    const key = 'position';
+    const value = parseFloat(v);
+    const index = axisToIndex[sub];
+    // eslint-disable-next-line object-curly-newline
+    skinnedModel.setAnimValue({ joint, frame, key, value, index });
     skinnedModel.applyPose(frame);
   }
   function translationSlider(s, joint, values) {

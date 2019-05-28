@@ -1,4 +1,5 @@
 import VMath from './math.js';
+import Transform from './transform.js';
 
 const { math } = window;
 
@@ -41,26 +42,62 @@ function arrayValueOrDefault(array, index, def) {
   return def;
 }
 
-function substractJointTranslationsFromAnims(skeleton, anims) {
+function standardizeAnimsToUseTransforms(skeleton, anims) {
   const animKeys = Object.keys(anims);
-  const a = anims;
+  const standardized = anims;
   animKeys.forEach((joint) => {
-    if (anims[joint].translation) {
-      for (let i = 0; i < anims[joint].translation.length; i += 1) {
-        if (anims[joint].translation[i]) {
-          if (!skeleton[joint]) {
-            console.warn(`Skipping animation for non-existing joint: ${joint}`);
-            // eslint-disable-next-line no-continue
-            continue;
-          }
-          a[joint].translation[i][0] -= skeleton[joint].matrix[3];
-          a[joint].translation[i][1] -= skeleton[joint].matrix[7];
-          a[joint].translation[i][2] -= skeleton[joint].matrix[11];
-        }
-      }
+    if (!skeleton[joint]) {
+      console.warn(`Skipping animation for non-existing joint: ${joint}`);
+      return;
     }
+    const a = anims[joint];
+    const rotationOrder = skeleton[joint].rotationOrder || 'xyz';
+    const keyframes = a.keyframes.slice(0);
+    const transforms = a.keyframes.map(() => new Transform({
+      position: [0, 0, 0],
+      scale: [1, 1, 1],
+      eulerAngles: [0, 0, 0],
+      rotationOrder,
+    }));
+    if (a.matrix) {
+      a.matrix.forEach((matrix, i) => {
+        if (Array.isArray(matrix)) {
+          const m = math.reshape(matrix, [4, 4]);
+          const t = Transform.fromMatrix(m, rotationOrder);
+          transforms[i] = t;
+          const jm = skeleton[joint].matrix;
+          const rigTranslation = [jm[3], jm[7], jm[11]];
+          transforms[i].position = math.subtract(t.position, rigTranslation);
+        }
+      });
+    }
+    if (a.translation) {
+      a.translation.forEach((translation, i) => {
+        if (Array.isArray(translation)) {
+          const jm = skeleton[joint].matrix;
+          const rigTranslation = [jm[3], jm[7], jm[11]];
+          transforms[i].position = math.subtract(translation, rigTranslation);
+        }
+      });
+    }
+    if (a.scale) {
+      a.scale.forEach((scale, i) => {
+        if (Array.isArray(scale)) {
+          transforms[i].scale = scale;
+        }
+      });
+    }
+    ['X', 'Y', 'Z'].forEach((axis, k) => {
+      const key = `rotate${axis}.ANGLE`;
+      if (a[key]) {
+        a[key].forEach((angle, i) => {
+          transforms[i].eulerAngles[k] = angle;
+        });
+      }
+    });
+    standardized[joint] = { keyframes, transforms };
   });
-  return a;
+  return standardized;
 }
 
 function createJointColorPalette(joints) {
@@ -109,7 +146,7 @@ class SkinnedModel {
     this.applyDefaultPose();
     const animKeys = Object.keys(anims);
     this.keyframeCount = animKeys.length > 0 ? anims[animKeys[0]].keyframes.length : 0;
-    this.anims = substractJointTranslationsFromAnims(skeleton, anims);
+    this.anims = standardizeAnimsToUseTransforms(skeleton, anims);
     this.jointColorPalette = createJointColorPalette(skin.joints);
     // this.applyPose(0);
   }
@@ -153,11 +190,10 @@ class SkinnedModel {
     // we'll use the transform to get only the translation and
     // assume the rig does not contains rotations or scalings... ^^;
     const { matrix } = this.skeleton[name];
-    const s = arrayValueOrDefault(jointAnim.scale, keyframe, [1, 1, 1]);
-    const t = arrayValueOrDefault(jointAnim.translation, keyframe, [0, 0, 0]);
-    const rx = VMath.degToRad(arrayValueOrDefault(jointAnim['rotateX.ANGLE'], keyframe, 0));
-    const ry = VMath.degToRad(arrayValueOrDefault(jointAnim['rotateY.ANGLE'], keyframe, 0));
-    const rz = VMath.degToRad(arrayValueOrDefault(jointAnim['rotateZ.ANGLE'], keyframe, 0));
+    const transform = arrayValueOrDefault(jointAnim.transforms, keyframe, Transform.identity());
+    const s = transform.scale;
+    const t = transform.position;
+    const angles = transform.eulerAngles.map(VMath.degToRad);
     const ms = math.diag(s.concat(1));
     const mt = math.diag([1, 1, 1, 1]); // identity
     // row-major
@@ -165,7 +201,7 @@ class SkinnedModel {
     mt[1][3] = matrix[7] + t[1];
     mt[2][3] = matrix[11] + t[2];
     const order = this.skeleton[name].rotationOrder || 'xyz';
-    let m = VMath.rotationMatrixFromEuler([rx, ry, rz], order);
+    let m = VMath.rotationMatrixFromEuler(angles, order);
     m = math.resize(m, [4, 4]);
     m[3][3] = 1;
     m = math.multiply(m, ms);
@@ -233,26 +269,15 @@ class SkinnedModel {
     const pose = {};
     joints.forEach((joint) => {
       const jointAnim = anims[joint];
-      let hasRotation = false;
-      ['X', 'Y', 'Z'].forEach((axis) => {
-        const k = `rotate${axis}.ANGLE`;
-        hasRotation = hasRotation || (jointAnim[k] && jointAnim[k][keyframe]);
-      });
-      const hasScale = jointAnim.scale && jointAnim.scale[keyframe];
-      const hasTranslation = jointAnim.translation && jointAnim.translation[keyframe];
-      if (hasRotation || hasScale || hasTranslation) {
-        const t = [];
-        ['X', 'Y', 'Z'].forEach((axis) => {
-          const k = `rotate${axis}.ANGLE`;
-          const r = arrayValueOrDefault(jointAnim[k], keyframe, 0);
-          t.push(r);
-        });
+      const transform = jointAnim.transforms[keyframe];
+      if (transform) {
+        let t = VMath.round(transform.eulerAngles, 2);
+        const hasScale = !VMath.isClose(transform.scale, [1, 1, 1]);
+        const hasTranslation = !VMath.isClose(transform.position, [0, 0, 0]);
         if (hasScale || hasTranslation) {
-          const s = arrayValueOrDefault(jointAnim.scale, keyframe, [1, 1, 1]);
-          s.forEach((v) => { t.push(v); });
+          t = t.concat(VMath.round(transform.scale));
           if (hasTranslation) {
-            const x = arrayValueOrDefault(jointAnim.translation, keyframe, [0, 0, 0]);
-            x.forEach((v) => { t.push(v); });
+            t = t.concat(VMath.round(transform.position));
           }
         }
         pose[joint] = t;
@@ -260,22 +285,19 @@ class SkinnedModel {
     });
     return { pose };
   }
-  setAnimValue(joint, frame, key, value, index) {
+  // eslint-disable-next-line object-curly-newline
+  setAnimValue({ joint, frame, key, value, index }) {
     if (!this.anims[joint]) {
       this.anims[joint] = {};
     }
     const jointAnim = this.anims[joint];
-    if (!jointAnim[key]) {
-      jointAnim[key] = [];
+    if (!jointAnim.transforms) {
+      jointAnim.transforms = [];
     }
-    if (index !== undefined) {
-      if (!jointAnim[key][frame]) {
-        jointAnim[key][frame] = [0, 0, 0];
-      }
-      jointAnim[key][frame][index] = value;
-    } else {
-      jointAnim[key][frame] = value;
+    if (!jointAnim.transforms[frame]) {
+      jointAnim.transforms[frame] = new Transform({});
     }
+    jointAnim.transforms[frame][key][index] = value;
   }
   getSkeletonTopology(parentJoint) {
     const self = this;
