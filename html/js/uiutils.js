@@ -47,6 +47,32 @@ const UiUtils = {
     controls.forEach((c) => { td.append(c); });
     return $('<tr>').attr('id', `${id}_parent`).append(td);
   },
+  createAngleSliders(id, parentId, values, callback) {
+    const slider = UiUtils.createMultiSlider(
+      `${id}_angle`,
+      ['x', 'y', 'z'],
+      'rotation XYZ',
+      values, -180, 180, 0.1,
+      callback,
+    );
+    if (parentId) {
+      slider.attr('parent', parentId);
+    }
+    return slider;
+  },
+  createTranslationSliders(id, parentId, values, callback) {
+    const slider = UiUtils.createMultiSlider(
+      `${id}_translation`,
+      ['x', 'y', 'z'],
+      'translation XYZ',
+      values, -10, 10, 0.1,
+      callback,
+    );
+    if (parentId) {
+      slider.attr('parent', parentId);
+    }
+    return slider;
+  },
   createCheckbox(id, text, checked, callback) {
     const config = {};
     config[id] = { text, default: checked };

@@ -12,7 +12,7 @@ body {
 
 #page {
   background-color: #2b2626;
-  width: 1295px;
+  width: 1350px;
   margin:auto;
   margin-top: 10px;
   padding: auto;
@@ -21,7 +21,7 @@ body {
 #sidemenu {
   color: #e6e6e6;
   float:left;
-  width:285px;
+  width:340px;
   padding-left: 10px;
   padding-right: 10px;
   padding-top: 20px;

@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 import GlState from './glState.js';
 import Gfx from './gfx.js';
 import VMath from './math.js';
@@ -280,7 +281,7 @@ class Renderer {
       this.mouseState.theta = VMath.clampAngleDeg(this.mouseState.theta + 180 * dX);
       this.mouseState.phi = VMath.clampAngleDeg(this.mouseState.phi + 180 * dY);
       this.mouseState.phi = VMath.clamp(this.mouseState.phi, -90, 90);
-      this.onRotation(this.mouseState.phi, this.mouseState.theta);
+      this.onRotation([this.mouseState.phi, this.mouseState.theta]);
     }
   }
   applyTranslationDeltas() {
@@ -333,24 +334,28 @@ class Renderer {
     this.mouseState.lock.x = x;
     this.mouseState.lock.y = y;
   }
-  setModelRotationAndScale(index, rx, ry, scale) {
-    this.mouseState.phi = rx;
-    this.mouseState.theta = ry;
-    const model = this.scene.models[index];
+  // eslint-disable-next-line object-curly-newline
+  setModelTransform({ index, position, rotation, scale }) {
+    const i = index || 0;
+    const model = this.scene.models[i];
     if (model) {
-      model.transform.scale = [scale, scale, scale];
-      model.transform.eulerAngles = [rx, ry, 0];
+      const p = position || model.transform.position;
+      const r = rotation || model.transform.eulerAngles;
+      const s = scale || model.transform.scale;
+      this.mouseState.phi = r[0];
+      this.mouseState.theta = r[1];
+      model.transform.scale = s;
+      model.transform.eulerAngles = r;
+      model.transform.position = p;
     }
   }
-  centerModelAround(modelIndex, labelId) {
+  getPositionForLabel(modelIndex, labelId) {
     const model = this.scene.models[modelIndex];
     if (model) {
-      const pos = model.getPositionForLabel(labelId);
+      const position = model.getPositionForLabel(labelId);
       const { scale } = model.transform;
-      const p = pos.map((a, i) => -a * scale[i]);
-      p[1] = 0; // do not translate vertically
-      model.transform.position = p;
-      return pos;
+      const scaled = position.map((a, i) => -a * scale[i]);
+      return { position, scaled };
     }
     return null;
   }

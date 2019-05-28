@@ -55,8 +55,8 @@ function addPoseGroup(skinnedModel) {
   const id = 'gPose';
   const frame = Config.keyframe;
   const { pose } = skinnedModel.getPoseFile(frame);
-  const axisToIndex = { X: 0, Y: 1, Z: 2 };
-  function updateJointWithValue(joint, v, sub) {
+  const axisToIndex = { x: 0, y: 1, z: 2 };
+  function updateJointAngle(joint, v, sub) {
     const key = 'eulerAngles';
     const value = parseFloat(v);
     const index = axisToIndex[sub];
@@ -65,11 +65,10 @@ function addPoseGroup(skinnedModel) {
     skinnedModel.applyPose(frame);
   }
   function angleSlider(s, joint, values) {
-    const slider = UiUtils.createMultiSlider(`${s}_angle`, ['X', 'Y', 'Z'], 'rotation XYZ', values, -180, 180, 0.1, updateJointWithValue.bind(null, joint));
-    slider.attr('parent', `${id}_${joint}`);
-    return slider;
+    const parentId = `${id}_${joint}`;
+    return UiUtils.createAngleSliders(s, parentId, values, updateJointAngle.bind(null, joint));
   }
-  function updateJointTrWithValue(joint, v, sub) {
+  function updateJointPos(joint, v, sub) {
     const key = 'position';
     const value = parseFloat(v);
     const index = axisToIndex[sub];
@@ -78,9 +77,8 @@ function addPoseGroup(skinnedModel) {
     skinnedModel.applyPose(frame);
   }
   function translationSlider(s, joint, values) {
-    const slider = UiUtils.createMultiSlider(`${s}_translation`, ['X', 'Y', 'Z'], 'translation XYZ', values, -10, 10, 0.1, updateJointTrWithValue.bind(null, joint));
-    slider.attr('parent', `${id}_${joint}`);
-    return slider;
+    const parentId = `${id}_${joint}`;
+    return UiUtils.createTranslationSliders(s, parentId, values, updateJointPos.bind(null, joint));
   }
   function colorPicker(s, joint) {
     const jointIndex = skinnedModel.jointIndices[joint];
@@ -139,9 +137,14 @@ function progressBarUpdate(ratio) {
 }
 
 function updateModelTransform() {
-  const phi = Config.modelRotationPhi;
-  const theta = Config.modelRotationTheta;
-  viewer.setModelRotationAndScale(0, phi, theta, Config.modelScale);
+  const p = Config.modelPosition;
+  const r = Config.modelRotation;
+  const s = Config.modelScale;
+  viewer.setModelTransform({
+    position: [p.x, p.y, p.z],
+    rotation: [r.x, r.y, r.z],
+    scale: [s, s, s],
+  });
 }
 
 function updateModelScale(logValue) {
@@ -149,16 +152,24 @@ function updateModelScale(logValue) {
   updateModelTransform();
 }
 
-function setRotation(phi, theta) {
-  const round2 = v => Math.round(v * 100) / 100;
-  const phiDeg = round2(phi);
-  const thetaDeg = round2(theta);
-  $('#modelRotationTheta').val(thetaDeg);
-  $('#modelRotationTheta_number').val(thetaDeg);
-  $('#modelRotationPhi').val(phiDeg);
-  $('#modelRotationPhi_number').val(phiDeg);
-  Config.modelRotationPhi = phiDeg;
-  Config.modelRotationTheta = thetaDeg;
+function setRotation(rotation) {
+  ['x', 'y', 'z'].forEach((axis, i) => {
+    const angle = rotation[i] !== undefined
+      ? VMath.round(rotation[i], 2) : Config.modelRotation[axis];
+    Config.modelRotation[axis] = angle;
+    $(`#armature_angle${axis}`).val(angle);
+    $(`#armature_angle${axis}_number`).val(angle);
+  });
+  updateModelTransform();
+}
+
+function setTranslation(translation) {
+  const p = VMath.round(translation, 4);
+  ['x', 'y', 'z'].forEach((axis, i) => {
+    Config.modelPosition[axis] = p[i];
+    $(`#armature_translation${axis}`).val(p[i]);
+    $(`#armature_translation${axis}_number`).val(p[i]);
+  });
   updateModelTransform();
 }
 
@@ -215,7 +226,8 @@ function reloadModel() {
       Config.keyframe = -1;
       addPoseGroup(model.skinnedModel);
     }
-    setRotation(0, 0);
+    setTranslation(model.transform.position);
+    setRotation([0, 0, 0]);
     setMeterUnits(model.meterUnits);
     populateSubmeshList(model.meshes);
     populateLabelList(model.labels);
@@ -511,24 +523,25 @@ function populateControls() {
       Config[key] = value;
       updateRotationLock();
     }),
-    UiUtils.createSlider('modelRotationTheta', 'rotation Y axis',
-      Config.modelRotationTheta, -180, 180, 0.1, (value) => {
-        Config.modelRotationTheta = parseFloat(value);
-        updateModelTransform();
-      }),
-    UiUtils.createSlider('modelRotationPhi', 'rotation X axis',
-      Config.modelRotationPhi, -90, 90, 0.1, (value) => {
-        Config.modelRotationPhi = parseFloat(value);
-        updateModelTransform();
-      }),
+    UiUtils.createAngleSliders('armature', null, [0, 0, 0], (value, axis) => {
+      Config.modelRotation[axis] = parseFloat(value);
+      updateModelTransform();
+    }),
+    UiUtils.createTranslationSliders('armature', null, [0, 0, 0], (value, axis) => {
+      Config.modelPosition[axis] = parseFloat(value);
+      updateModelTransform();
+    }),
     UiUtils.createButtonWithOptions('centerModel', 'Center', ' around ',
       [{ name: 'origin', value: 'origin' }],
       (e) => {
         const label = $(`#${e.target.id}_select`).val();
-        const pos = viewer.centerModelAround(0, label);
-        const str = vectorToString(pos);
+        const { position, scaled } = viewer.getPositionForLabel(0, label);
+        // do not translate vertically
+        scaled[1] = 0;
+        const str = vectorToString(position);
         setInfo(`${label} at: [${str}]`);
-        setRotation(0, 0);
+        setRotation([0, 0, 0]);
+        setTranslation(scaled);
       }),
     UiUtils.createDropdownList('submesh', [], (obj) => {
       viewer.selectSubmesh(obj.value);

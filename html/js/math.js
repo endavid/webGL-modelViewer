@@ -8,6 +8,12 @@ function isClose(a, b, epsilon) {
   return Math.abs(a - b) < e;
 }
 
+function round(v, numDigits) {
+  const p = numDigits || 6;
+  const c = 10 ** p;
+  return Math.round(v * c) / c;
+}
+
 /**
   * Matrices are stored column-major, because this is the way they
   * need to be sent to the GPU.
@@ -25,10 +31,11 @@ const VMath = {
     return isClose(v0, v1, epsilon);
   },
 
-  round(vector, numDigits) {
-    const p = numDigits || 6;
-    const c = 10 ** p;
-    return vector.map(a => Math.round(a * c) / c);
+  round(v, numDigits) {
+    if (Array.isArray(v)) {
+      return v.map(a => round(a, numDigits));
+    }
+    return round(v, numDigits);
   },
 
   // checks for 2 possible formats, {x: 0, y: 0, z: 0}
