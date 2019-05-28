@@ -249,31 +249,28 @@ class SkinnedModel {
     return m;
   }
   addPose(pose) {
-    const { anims } = this;
+    const { anims, skeleton } = this;
     const keys = Object.keys(pose);
     const frame = this.keyframeCount;
     keys.forEach((joint) => {
       if (!anims[joint]) {
-        anims[joint] = {};
+        anims[joint] = { transforms: [] };
       }
-      ['X', 'Y', 'Z'].forEach((axis, i) => {
-        const k = `rotate${axis}.ANGLE`;
-        if (!anims[joint][k]) {
-          anims[joint][k] = [];
+      if (!anims[joint].transforms[frame]) {
+        anims[joint].transforms[frame] = new Transform({});
+        if (skeleton[joint]) {
+          const ro = skeleton[joint].rotationOrder || guessRotationOrder(joint);
+          anims[joint].transforms[frame].rotationOrder = ro;
         }
-        anims[joint][k][frame] = pose[joint][i];
-      });
-      if (pose[joint][5] !== undefined) {
-        if (!anims[joint].scale) {
-          anims[joint].scale = [];
-        }
-        anims[joint].scale[frame] = pose[joint].slice(3, 6);
       }
-      if (pose[joint][8] !== undefined) {
-        if (!anims[joint].translation) {
-          anims[joint].translation = [];
-        }
-        anims[joint].translation[frame] = pose[joint].slice(6, 9);
+      for (let i = 0; i < 3; i += 1) {
+        anims[joint].transforms[frame].eulerAngles[i] = pose[joint][i];
+      }
+      for (let i = 3; i < Math.min(pose[joint].length, 6); i += 1) {
+        anims[joint].transforms[frame].scale[i - 3] = pose[joint][i];
+      }
+      for (let i = 6; i < Math.min(pose[joint].length, 9); i += 1) {
+        anims[joint].transforms[frame].position[i - 6] = pose[joint][i];
       }
     });
     this.keyframeCount += 1;

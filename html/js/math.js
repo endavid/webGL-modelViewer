@@ -1,23 +1,28 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable prefer-destructuring */
 const { math } = window;
+
+
+function isClose(a, b, epsilon) {
+  const e = epsilon || 1e-6;
+  return Math.abs(a - b) < e;
+};
+
 /**
   * Matrices are stored column-major, because this is the way they
   * need to be sent to the GPU.
   */
 const VMath = {
-  isClose(a, b, epsilon) {
-    const e = epsilon || 1e-6;
-    return Math.abs(a - b) < e;
-  },
-
-  isCloseVector(v0, v1, epsilon) {
-    for (let i = 0; i < v0.length; i += 1) {
-      if (!VMath.isClose(v0[i], v1[i], epsilon)) {
-        return false;
+  isClose(v0, v1, epsilon) {
+    if (Array.isArray(v0)) {
+      for (let i = 0; i < v0.length; i += 1) {
+        if (!isClose(v0[i], v1[i], epsilon)) {
+          return false;
+        }
       }
+      return true;
     }
-    return true;
+    return isClose(v0, v1, epsilon);
   },
 
   round(vector, numDigits) {

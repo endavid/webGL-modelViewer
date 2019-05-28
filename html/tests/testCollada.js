@@ -30,13 +30,18 @@ QUnit.test('read Collada anim', (assert) => {
         -8.49334e-8, 0.9856594, 0.1687469, 0,
         1.45408e-8, -0.1687469, 0.9856594, -1.73887,
         0, 0, -0, 1];
-      assert.deepEqual(skinnedModel.skeleton.Chest.transform, expectedChestBM);
-      const expectedChestAnim0 = [
-        1, 8.14801e-8, 4.32017e-10, -1.2512e-9,
-        -8.11541e-8, 0.9856593, 0.1687469, 0,
-        1.4442e-8, -0.1687469, 0.9856594,
-        -1.73887, 0, 0, -0, 1];
-      assert.deepEqual(skinnedModel.anims.Chest.transform[0], expectedChestAnim0);
+      assert.deepEqual(skinnedModel.skeleton.Chest.matrix, expectedChestBM);
+      const expectedChestTransform = {
+        rotationOrder: 'xzy',
+        eulerAngles: [-9.714970289473104, 2.4752751160729792e-8, -0.000004668466376658244],
+        position: [-1.2512e-9, 0, 0],
+        scale: [1.0000000000000033, 0.9999998859680468, 0.9999999845339849],
+      };
+      const t = skinnedModel.anims.Chest.transforms[0];
+      assert.deepEqual(t.rotationOrder, expectedChestTransform.rotationOrder);
+      assert.deepEqual(t.eulerAngles, expectedChestTransform.eulerAngles);
+      assert.deepEqual(t.position, expectedChestTransform.position);
+      assert.deepEqual(t.scale, expectedChestTransform.scale);
       // this is after applying the pose
       const expectedStomachJM = [ // column-major
         0.9999999, -4.84881e-9, 8.72882e-8, 0,
