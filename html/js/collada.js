@@ -287,14 +287,14 @@ function readSkin(json) {
   return skinData;
 }
 
-function findRootNode(node) {
+function findRootNode(node, parent) {
   const nodes = Array.isArray(node) ? node : [node];
   for (let i = 0; i < nodes.length; i += 1) {
     if (nodes[i]._type === 'JOINT') {
-      return nodes[i];
+      return { rootJoint: nodes[i], armatureNode: parent };
     }
     if (nodes[i].node) {
-      const joint = findRootNode(nodes[i].node);
+      const joint = findRootNode(nodes[i].node, nodes[i]);
       if (joint) {
         return joint;
       }
@@ -318,13 +318,13 @@ function extractTransform(joint, invertAxis) {
     let rz = [];
     for (let i = 0; i < 3; i += 1) {
       const r = joint.rotate[i];
-      if (r._sid === 'rotateX') {
+      if (r._sid === 'rotateX' || r._sid === 'rotationX') {
         data.rotationOrder += 'x';
         rx = floatStringToArray(r.__text);
-      } else if (r._sid === 'rotateY') {
+      } else if (r._sid === 'rotateY' || r._sid === 'rotationY') {
         data.rotationOrder += 'y';
         ry = floatStringToArray(r.__text);
-      } else if (r._sid === 'rotateZ') {
+      } else if (r._sid === 'rotateZ' || r._sid === 'rotationZ') {
         data.rotationOrder += 'z';
         rz = floatStringToArray(r.__text);
       }
@@ -369,9 +369,12 @@ function extractBoneTree(joint, parent, invertAxis) {
 
 function readSkeleton(json) {
   const { node } = json.COLLADA.library_visual_scenes.visual_scene;
-  const rootJoint = findRootNode(node);
+  const { rootJoint, armatureNode } = findRootNode(node, null);
   const invertAxis = isZUp(json);
-  return extractBoneTree(rootJoint, null, invertAxis);
+  const skeleton = extractBoneTree(rootJoint, null, invertAxis);
+  const armature = extractTransform(armatureNode, invertAxis);
+  armature.name = armatureNode._id;
+  return { skeleton, armature };
 }
 
 function readLabels(json) {
@@ -511,7 +514,9 @@ class Collada {
     const skin = readSkin(json);
     const model = readMeshes(json, skin);
     model.skin = skin;
-    model.skeleton = readSkeleton(json);
+    const { skeleton, armature } = readSkeleton(json);
+    model.skeleton = skeleton;
+    model.armature = armature;
     model.anims = readAnimations(json);
     model.materials = readMaterials(json, defaultTexture);
     model.meterUnits = getMeterUnits(json);

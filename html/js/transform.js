@@ -26,6 +26,10 @@ class Transform {
     const eulerAngles = angles.map(VMath.radToDeg);
     return new Transform({ position, scale, eulerAngles, rotationOrder });
   }
+  static fromRowMajorArray(array, rotationOrder) {
+    const M = math.reshape(array, [4, 4]);
+    return Transform.fromMatrix(M, rotationOrder);
+  }
   static identity() {
     return new Transform({});
   }

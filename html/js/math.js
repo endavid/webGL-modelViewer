@@ -6,7 +6,7 @@ const { math } = window;
 function isClose(a, b, epsilon) {
   const e = epsilon || 1e-6;
   return Math.abs(a - b) < e;
-};
+}
 
 /**
   * Matrices are stored column-major, because this is the way they

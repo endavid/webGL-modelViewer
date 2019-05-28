@@ -42,7 +42,14 @@ class Model {
   constructor(gl, json, imageUrls) {
     this.name = json.name;
     this.meterUnits = json.meterUnits || 1;
-    this.transform = new Transform({});
+    if (json.armature) {
+      this.transform = Transform.fromRowMajorArray(json.armature.matrix, json.armature.rotationOrder || 'xyz');
+      const s = json.meterUnits || 1;
+      this.transform.position = this.transform.position.map(a => s * a);
+    } else {
+      this.transform = new Transform({});
+    }
+    // override order because for the UI we want to
     // apply Y rotation (1) before X (0)
     this.transform.rotationOrder = 'xyz';
     // vertices

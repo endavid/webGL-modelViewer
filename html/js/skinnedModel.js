@@ -86,8 +86,7 @@ function standardizeAnimsToUseTransforms(skeleton, anims) {
     if (a.matrix) {
       a.matrix.forEach((matrix, i) => {
         if (Array.isArray(matrix)) {
-          const m = math.reshape(matrix, [4, 4]);
-          const t = Transform.fromMatrix(m, rotationOrder);
+          const t = Transform.fromRowMajorArray(matrix, rotationOrder);
           transforms[i] = t;
           const jm = skeleton[joint].matrix;
           const rigTranslation = [jm[3], jm[7], jm[11]];
