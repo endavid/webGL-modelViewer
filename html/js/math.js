@@ -66,7 +66,7 @@ const VMath = {
 
   getProjection(angle, a, zMin, zMax) {
     // ref https://github.com/endavid/VidEngine/blob/master/VidFramework/VidFramework/sdk/math/Matrix.swift
-    const tan = Math.tan(VMath.degToRad(0.5 * angle));
+    const tan = Math.tan(VMath.degToRad(angle / 2));
     const A = -(zMax + zMin) / (zMax - zMin);
     const B = (-2 * zMax * zMin) / (zMax - zMin);
     return [
@@ -79,7 +79,7 @@ const VMath = {
   getProjectionInverse(angle, a, zMin, zMax) {
     // ref https://github.com/endavid/VidEngine/blob/master/VidFramework/VidFramework/sdk/math/Matrix.swift
     // just work out the maths, substituting params in FrustumInverse
-    const tan = Math.tan(VMath.degToRad(0.5 * angle));
+    const tan = Math.tan(VMath.degToRad(angle / 2));
     const A = (zMin - zMax) / (2 * zMin * zMax);
     const B = (zMin + zMax) / (2 * zMin * zMax);
     return [

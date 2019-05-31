@@ -272,7 +272,7 @@ function saveCurrentPose() {
     const frame = Config.keyframe;
     const pose = model.skinnedModel.getPoseFile(frame);
     const fn = Gfx.getFileNameWithoutExtension(model.name);
-    Gfx.exportPose(pose, `${fn}_${frame}`);
+    Gfx.saveJson(pose, `${fn}_${frame}`);
   } else {
     setWarning('No skinned model');
   }
@@ -442,6 +442,18 @@ function populateControls() {
     }
   }
 
+  function saveIntrinsicViewMatrix() {
+    const w = viewer.canvas.width;
+    const h = viewer.canvas.height;
+    const KV = viewer.scene.camera.getIntrinsicViewMatrix(w, h);
+    const obj = {
+      image_width: w,
+      image_height: h,
+      projection_matrix: KV,
+    };
+    Gfx.saveJson(obj, 'camera');
+  }
+
   const modelPresets = [
     'pear.json',
     'banana.json',
@@ -583,6 +595,11 @@ function populateControls() {
         id: 'dumpView',
         text: 'Dump View M',
         callback: () => setInfo(matrixToString(viewer.scene.camera.viewMatrix)),
+      },
+      {
+        id: 'saveIntrinsicView',
+        text: 'Save K*V',
+        callback: saveIntrinsicViewMatrix,
       },
     ]),
   ]);

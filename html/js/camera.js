@@ -56,5 +56,26 @@ class Camera {
     const direction = VMath.normalize(VMath.diff(worldHalfway.slice(0, 3), start));
     return { start, direction };
   }
+  // like the Projection, but without near/far normalization, and pixel-scaled
+  getIntrinsicMatrix(width, height) {
+    const k = height / (2.0 * Math.tan(VMath.degToRad(this.fov / 2)));
+    return [
+      [k, 0, width / 2.0],
+      [0, k, height / 2.0],
+      [0, 0, 1],
+    ];
+  }
+  // Intrinsic * View, using OpenCV coordinate system, where Y is down
+  getIntrinsicViewMatrix(width, height) {
+    let K = this.getIntrinsicMatrix(width, height);
+    K = math.resize(K, [4, 4]);
+    K[3][3] = 1;
+    let V = math.reshape(this.viewMatrix, [4, 4]);
+    // transpose it, because it's stored in column-order
+    V = math.transpose(V);
+    const KV = math.multiply(K, V);
+    // we can get rid of last row, should be [0, 0, 0, 1]
+    return math.resize(KV, [3, 4]);
+  }
 }
 export { Camera as default };

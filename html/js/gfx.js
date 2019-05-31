@@ -246,8 +246,8 @@ class Gfx {
     });
   }
 
-  static exportPose(pose, filename) {
-    const text = JSON.stringify(pose, null, '  ');
+  static saveJson(object, filename) {
+    const text = JSON.stringify(object, null, '  ');
     const t = `text/plain;charset=${document.characterSet}`;
     saveAs(
       new Blob([text], { type: t }),
