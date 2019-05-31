@@ -51,6 +51,22 @@ function removePoseGroup() {
   $('tr[id^=gPose]').remove();
 }
 
+function preprocessLabels(labelFile) {
+  if (Array.isArray(labelFile)) {
+    // format: [ {"name": "label-name", "position": [0.1, 1.17. -1]}, ...]
+    const labels = {};
+    labelFile.forEach((item) => {
+      labels[item.name] = item.position;
+    });
+    return labels;
+  }
+  // format:
+  // { "label-name": {"x": 0.1, "y": 1.17, "z": -1}, ...
+  // or,
+  // { "label-name": [0.1, 1.17, -1]}, ...
+  return labelFile;
+}
+
 function addPoseGroup(skinnedModel) {
   const id = 'gPose';
   const frame = Config.keyframe;
@@ -364,9 +380,10 @@ function populateControls() {
       setError('Labels must be in Json format');
       return;
     }
-    $.getJSON(f.uri, (labels) => {
+    $.getJSON(f.uri, (labelFile) => {
       const model = viewer.scene.models[0];
       if (model) {
+        const labels = preprocessLabels(labelFile);
         model.labels = labels;
         populateLabelList(labels);
       }
