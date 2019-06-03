@@ -151,7 +151,7 @@ class Model {
           positions,
           vertices: this.vertices,
           stride: this.stride,
-          transformMatrix: this.getTransformMatrix(),
+          transformMatrix: this.transform.toRowMajorArray(),
           joints: this.skinnedModel.joints,
         };
         worker.onmessage = (e) => {
@@ -245,7 +245,7 @@ class Model {
         vertices: this.vertices,
         triangles: this.triangles,
         stride: this.stride,
-        transformMatrix: this.getTransformMatrix(),
+        transformMatrix: this.transform.toRowMajorArray(),
       };
       if (this.skinnedModel) {
         load.joints = this.skinnedModel.joints;

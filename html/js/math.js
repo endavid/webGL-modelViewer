@@ -66,6 +66,7 @@ const VMath = {
 
   getProjection(angle, a, zMin, zMax) {
     // ref https://github.com/endavid/VidEngine/blob/master/VidFramework/VidFramework/sdk/math/Matrix.swift
+    // stored in column order, so they can be sent to the GPU
     const tan = Math.tan(VMath.degToRad(angle / 2));
     const A = -(zMax + zMin) / (zMax - zMin);
     const B = (-2 * zMax * zMin) / (zMax - zMin);

@@ -51,7 +51,6 @@ class Camera {
     const viewHalfway = viewW.map(a => a / viewW[3]);
     const M = this.transform.toMatrix();
     const worldHalfway = math.multiply(M, viewHalfway);
-    console.log(worldHalfway);
     const start = this.transform.position;
     const direction = VMath.normalize(VMath.diff(worldHalfway.slice(0, 3), start));
     return { start, direction };

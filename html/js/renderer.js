@@ -393,20 +393,17 @@ class Renderer {
     this.scene.labels.scale = scale;
   }
   tryToAddLabelAt(screenCoords) {
-    const { camera, labels } = this.scene;
+    const { camera } = this.scene;
     const { clipx, clipy } = screenCoords;
     const ray = camera.rayFromScreenCoordinates(clipx, clipy);
-    /*
     const model = this.scene.models[0];
     if (model) {
       model.getSurfaceIntersection(ray, (si) => {
-        console.log(si);
-        labels.model.newLabel = si.point;
+        // inverse the transform because it will be applied to the model label
+        const p = model.transform.inversePoint(si.point);
+        model.labels.newLabel = p;
       });
     }
-    */
-    labels.world.newLabel = VMath.travelDistance(ray, 5);
-    console.log(ray.direction);
   }
   selectSubmesh(name) {
     this.scene.selectedMesh = name === 'all' ? false : name;

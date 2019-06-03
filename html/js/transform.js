@@ -4,6 +4,13 @@ import VMath from './math.js';
 // Unfortunately, I wasn't able to import math.js as a module
 const { math } = window;
 
+function multiply(M, point) {
+  const v = point.slice(0, 3);
+  v[3] = 1;
+  const p = math.multiply(M, v);
+  return p.slice(0, 3);
+}
+
 class Transform {
   constructor({ position, scale, eulerAngles, rotationOrder }) {
     this.position = position || [0, 0, 0];
@@ -46,9 +53,19 @@ class Transform {
     /* eslint-enable prefer-destructuring */
     return M;
   }
+  toRowMajorArray() {
+    const M = this.toMatrix();
+    return [].concat(...M);
+  }
   toColumnMajorArray() {
     const M = math.transpose(this.toMatrix());
     return [].concat(...M);
+  }
+  transformPoint(point) {
+    return multiply(this.toMatrix(), point);
+  }
+  inversePoint(point) {
+    return multiply(math.inv(this.toMatrix()), point);
   }
 }
 

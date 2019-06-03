@@ -43,7 +43,7 @@
     },
     mulColumnVector(m, v) {
       const out = [0, 0, 0, 0];
-      // for column-major matrices
+      // for row-major matrices
       out[0] = m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * v[3];
       out[1] = m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * v[3];
       out[2] = m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * v[3];
