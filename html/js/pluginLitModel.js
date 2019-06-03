@@ -7,7 +7,7 @@ class PluginLitModel {
   }
   static async createAsync(gl, whiteTexture, fragmentShader) {
     const attribs = ['uv', 'position', 'normal'];
-    const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'sampler'];
+    const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'lightIrradiance', 'sampler'];
     const attribsSkin = attribs.concat(['boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['joints', 'jointDebugPalette']);
     const shaders = {};
@@ -43,6 +43,8 @@ class PluginLitModel {
       gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.getTransformMatrix());
       gl.uniform3f(shader.uniforms.lightDirection,
         light0.direction[0], light0.direction[1], light0.direction[2]);
+      gl.uniform3f(shader.uniforms.lightIrradiance,
+        light0.irradiance[0], light0.irradiance[1], light0.irradiance[2]);
       gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexBuffer);
       gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
       gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4 * 3);

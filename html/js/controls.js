@@ -655,6 +655,10 @@ function populateControls() {
     UiUtils.createSlider('SunEastWest', 'sun east-west', sun.eastWest, -1, 1, 0.05, (value) => {
       sun.setEastWest(value);
     }),
+    UiUtils.createSlider('SunIntensity', 'sun intensity', sun.intensity, 0.1, 2, 0.1, (value) => {
+      sun.setIntensity(value);
+    }),
+
   ]);
   const { overlay } = viewer.scene;
   UiUtils.addGroup('gShader', 'Shader Settings', [
