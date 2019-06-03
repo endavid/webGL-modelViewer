@@ -527,7 +527,34 @@ function populateControls() {
   UiUtils.addGroup('gLabels', 'Labels', [
     UiUtils.createFileBrowser('labelBrowser', 'load model labels', false, onLoadLabels),
     UiUtils.createSlider('labelScaleExp10', 'scale (log10)', 0, -3, 3, 0.2, updateLabelScale),
-    UiUtils.createButton('bakeLabels', 'Bake model labels', onBakeModelLabels),
+    UiUtils.createButtons('labelButtons', [{
+      id: 'bakeLabels',
+      text: 'Bake',
+      callback: onBakeModelLabels,
+    },
+    {
+      id: 'clearLabels',
+      text: 'Clear',
+      callback: () => {
+        const model = viewer.scene.models[0];
+        if (model) {
+          model.labels = {};
+        }
+      },
+    },
+    {
+      id: 'saveLabels',
+      text: 'Save model labels',
+      callback: () => {
+        const model = viewer.scene.models[0];
+        if (model) {
+          Gfx.saveJson(model.labels, 'labels');
+        }
+      },
+    }]),
+    UiUtils.createTextInput('pickLabel', 'Pick label name', 'new', (e) => {
+      viewer.newLabelName = e.target.value;
+    }),
     UiUtils.createSlider('pointSize', 'Point size', Config.pointSize, 0, 16, 1, (value) => {
       viewer.setPointSize(value);
     }),

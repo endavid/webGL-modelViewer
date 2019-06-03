@@ -194,6 +194,18 @@ const UiUtils = {
     return $('<tr>').attr('id', `${id}_parent`).append(td);
   },
 
+  createTextInput(id, text, value, callback) {
+    const textInput = $('<input>')
+      .attr('id', id)
+      .attr('type', 'text')
+      .val(value)
+      .change(callback);
+    const td = $('<td>')
+      .append(`${text}: `)
+      .append(textInput);
+    return $('<tr>').attr('id', `${id}_parent`).append(td);
+  },
+
   createSubGroup(id, text, elements, parent) {
     return UiUtils.createGroup(id, text, elements, 'subgroup', parent);
   },
