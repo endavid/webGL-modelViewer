@@ -4,6 +4,7 @@ import Viewer from './viewer.js';
 import Config from './config.js';
 import VMath from './math.js';
 import Gfx from './gfx.js';
+import LabelUtils from './labelUtils.js';
 
 const ImageUrls = {
   'banana.png': 'resources/banana.png',
@@ -49,22 +50,6 @@ function vectorToString(v) {
 
 function removePoseGroup() {
   $('tr[id^=gPose]').remove();
-}
-
-function preprocessLabels(labelFile) {
-  if (Array.isArray(labelFile)) {
-    // format: [ {"name": "label-name", "position": [0.1, 1.17. -1]}, ...]
-    const labels = {};
-    labelFile.forEach((item) => {
-      labels[item.name] = item.position;
-    });
-    return labels;
-  }
-  // format:
-  // { "label-name": {"x": 0.1, "y": 1.17, "z": -1}, ...
-  // or,
-  // { "label-name": [0.1, 1.17, -1]}, ...
-  return labelFile;
 }
 
 function addPoseGroup(skinnedModel) {
@@ -383,7 +368,7 @@ function populateControls() {
     $.getJSON(f.uri, (labelFile) => {
       const model = viewer.scene.models[0];
       if (model) {
-        const labels = preprocessLabels(labelFile);
+        const labels = LabelUtils.importLabels(labelFile);
         model.labels = labels;
         populateLabelList(labels);
       }
@@ -539,6 +524,16 @@ function populateControls() {
         const model = viewer.scene.models[0];
         if (model) {
           model.labels = {};
+        }
+      },
+    },
+    {
+      id: 'averageLabels',
+      text: 'Average',
+      callback: () => {
+        const model = viewer.scene.models[0];
+        if (model) {
+          model.labels = LabelUtils.averageSimilarLabels(model.labels);
         }
       },
     },
