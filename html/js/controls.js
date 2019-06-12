@@ -11,7 +11,7 @@ const ImageUrls = {
   'orange.png': 'resources/orange.png',
   'pear.png': 'resources/pear.png',
   white: 'resources/white.png',
-  missing: 'resources/UVTextureChecker4096.png',
+  missing: 'resources/white.png',
 };
 
 const MaterialUrls = {};
@@ -465,8 +465,9 @@ function populateControls() {
     'monigote.dae'].map(e => ({ name: e, value: `resources/${e}` }));
 
   const missingTexturePresets = [
+    { name: 'white', value: 'resources/white.png' },
     { name: 'uvChecker', value: 'resources/UVTextureChecker4096.png' },
-    { name: 'white', value: 'resources/white.png' }];
+  ];
 
   const shaderPresets = [
     { name: 'default shading', value: 'shaders/lighting.fs' },
