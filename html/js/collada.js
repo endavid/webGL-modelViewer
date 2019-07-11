@@ -305,12 +305,12 @@ function findRootNode(node, parent) {
 
 function extractTransform(joint, invertAxis) {
   const data = {
-    matrix: [],
+    matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
     rotationOrder: '',
   };
   if (joint.matrix) {
     data.matrix = floatStringToArray(joint.matrix.__text || joint.matrix);
-  } else {
+  } else if (joint.translate) {
     const t = floatStringToArray(joint.translate.__text || joint.translate);
     const s = floatStringToArray(joint.scale.__text || joint.scale);
     let rx = [];
