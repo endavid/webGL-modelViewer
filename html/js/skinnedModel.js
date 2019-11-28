@@ -262,14 +262,38 @@ class SkinnedModel {
           anims[joint].transforms[frame].rotationOrder = ro;
         }
       }
-      for (let i = 0; i < 3; i += 1) {
-        anims[joint].transforms[frame].eulerAngles[i] = pose[joint][i];
-      }
-      for (let i = 3; i < Math.min(pose[joint].length, 6); i += 1) {
-        anims[joint].transforms[frame].scale[i - 3] = pose[joint][i];
-      }
-      for (let i = 6; i < Math.min(pose[joint].length, 9); i += 1) {
-        anims[joint].transforms[frame].position[i - 6] = pose[joint][i];
+      if (Array.isArray(pose[joint])) {
+        // [rx, ry, rz, sx, sy, sz, tx, ty, tz]
+        for (let i = 0; i < 3; i += 1) {
+          anims[joint].transforms[frame].eulerAngles[i] = pose[joint][i];
+        }
+        for (let i = 3; i < Math.min(pose[joint].length, 6); i += 1) {
+          anims[joint].transforms[frame].scale[i - 3] = pose[joint][i];
+        }
+        for (let i = 6; i < Math.min(pose[joint].length, 9); i += 1) {
+          anims[joint].transforms[frame].position[i - 6] = pose[joint][i];
+        }
+      } else {
+        const tkeys = ['rx', 'ry', 'rz', 'sx', 'sy', 'sz', 'tx', 'ty', 'tz'];
+        const t = {
+          rx: 0,
+          ry: 0,
+          rz: 0,
+          sx: 1,
+          sy: 1,
+          sz: 1,
+          tx: 0,
+          ty: 0,
+          tz: 0
+        };
+        tkeys.forEach((tk) => {
+          if (pose[joint][tk] != undefined) {
+            t[tk] = pose[joint][tk];
+          }
+        });
+        anims[joint].transforms[frame].eulerAngles = [t.rx, t.ry, t.rz];
+        anims[joint].transforms[frame].scale = [t.sx, t.sy, t.sz];
+        anims[joint].transforms[frame].position = [t.tx, t.ty, t.tz];
       }
     });
     this.keyframeCount += 1;

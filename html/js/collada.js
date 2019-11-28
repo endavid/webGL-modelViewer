@@ -511,6 +511,9 @@ class Collada {
     // https://github.com/abdmob/x2js
     const x2js = new X2JS();
     const json = x2js.xml_str2json(xmlText);
+    if (!json) {
+      throw new Error("Unable to parse XML file")
+    }
     const skin = readSkin(json);
     const model = readMeshes(json, skin);
     model.skin = skin;
