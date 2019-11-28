@@ -209,11 +209,13 @@ class Gfx {
 
   // returns the extension in Camel case. Eg. Json, Obj
   static getFileExtension(file) {
-    const iDot = file.lastIndexOf('.');
+    const iSlash = file.lastIndexOf('/') + 1;
+    const filename = file.substr(iSlash);
+    const iDot = filename.lastIndexOf('.');
     if (iDot < 0) {
       return '';
     }
-    const ext = file.substr(iDot + 1).toLowerCase();
+    const ext = filename.substr(iDot + 1).toLowerCase();
     return ext.substr(0, 1).toUpperCase() + ext.substr(1);
   }
 
