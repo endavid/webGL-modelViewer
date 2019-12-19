@@ -1,3 +1,5 @@
+import ParseUtils from './parseUtils.js';
+
 const LabelUtils = {
   // it copes with different Json formats
   importLabels(labelFile) {
@@ -18,20 +20,23 @@ const LabelUtils = {
 
   // AbdomenBack                        29.32800    818.24270   -126.33450
   importLabelsTxt(labelFile) {
-    function getVector(match) {
-      const v = [];
-      match.slice(2, 5).forEach((val) => {
-        v.push(parseFloat(val));
-      });
-      return v;
-    }
-    const crFreeText = labelFile.replace(/[\r]+/g, '');
-    const lines = crFreeText.split('\n');
     const labels = {};
-    lines.forEach((s) => {
-      const m = /(\w+)\s+(-?\d+\.?\d+)\s+(-?\d+\.?\d+)\s+(-?\d+\.?\d+)/.exec(s);
+    ParseUtils.forEachLine(labelFile, (s) => {
+      const m = /(\w+)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)/.exec(s);
       if (m) {
-        labels[m[1]] = getVector(m);
+        labels[m[1]] = ParseUtils.getVector(m, 2, 5);
+      }
+    });
+    return labels;
+  },
+
+  //   4   0      0      1  -14.5168   104.853  0.477324 AbdomenRight
+  importLabelsLnd(labelFile) {
+    const labels = {};
+    ParseUtils.forEachLine(labelFile, (s) => {
+      const m = /\s*(\d+)\s+(-?\d+)\s+(-?\d)\s+(-?\d+)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(\w+)/.exec(s);
+      if (m && m[4] === "1") {
+        labels[m[8]] = ParseUtils.getVector(m, 5, 8);
       }
     });
     return labels;

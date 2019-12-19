@@ -381,8 +381,15 @@ function populateControls() {
         datatype: 'text',
         success: importLabels(LabelUtils.importLabelsTxt)
       });
+    } else if (ext === 'Lnd') {
+      $.ajax({
+        async: true,
+        url: f.uri,
+        datatype: 'text',
+        success: importLabels(LabelUtils.importLabelsLnd)
+      });
     } else {
-      setError('Labels must be in Json or Txt format');
+      setError('Supported label formats: Json, Txt, Lnd');
     }
   }
 
