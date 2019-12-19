@@ -360,19 +360,30 @@ function populateControls() {
     if (!f) {
       return;
     }
-    const ext = Gfx.getFileExtension(f.name);
-    if (ext !== 'Json') {
-      setError('Labels must be in Json format');
-      return;
-    }
-    $.getJSON(f.uri, (labelFile) => {
-      const model = viewer.scene.models[0];
-      if (model) {
-        const labels = LabelUtils.importLabels(labelFile);
-        model.labels = labels;
-        populateLabelList(labels);
+    function importLabels(fn) {
+      const importer = (data) => {
+        const model = viewer.scene.models[0];
+        if (model) {
+          const labels = fn(data);
+          model.labels = labels;
+          populateLabelList(labels);
+        }
       }
-    });
+      return importer;
+    }
+    const ext = Gfx.getFileExtension(f.name);
+    if (ext === 'Json') {
+      $.getJSON(f.uri, importLabels(LabelUtils.importLabels));  
+    } else if (ext === 'Txt') {
+      $.ajax({
+        async: true,
+        url: f.uri,
+        datatype: 'text',
+        success: importLabels(LabelUtils.importLabelsTxt)
+      });
+    } else {
+      setError('Labels must be in Json or Txt format');
+    }
   }
 
   function updateLabelScale(logValue) {

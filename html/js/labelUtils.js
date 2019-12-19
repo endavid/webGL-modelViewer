@@ -16,6 +16,27 @@ const LabelUtils = {
     return labelFile;
   },
 
+  // AbdomenBack                        29.32800    818.24270   -126.33450
+  importLabelsTxt(labelFile) {
+    function getVector(match) {
+      const v = [];
+      match.slice(2, 5).forEach((val) => {
+        v.push(parseFloat(val));
+      });
+      return v;
+    }
+    const crFreeText = labelFile.replace(/[\r]+/g, '');
+    const lines = crFreeText.split('\n');
+    const labels = {};
+    lines.forEach((s) => {
+      const m = /(\w+)\s+(-?\d+\.?\d+)\s+(-?\d+\.?\d+)\s+(-?\d+\.?\d+)/.exec(s);
+      if (m) {
+        labels[m[1]] = getVector(m);
+      }
+    });
+    return labels;
+  },
+
   // labels ending in one digit are merged into a single label,
   // its position being the average of them all
   averageSimilarLabels(labels) {
