@@ -1,4 +1,6 @@
 import ParseUtils from './parseUtils.js';
+// failed to import as a module atm
+const { X2JS } = window;
 
 const LabelUtils = {
   // it copes with different Json formats
@@ -37,6 +39,24 @@ const LabelUtils = {
       const m = /\s*(\d+)\s+(-?\d+)\s+(-?\d)\s+(-?\d+)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(\w+)/.exec(s);
       if (m && m[4] === "1") {
         labels[m[8]] = ParseUtils.getVector(m, 5, 8);
+      }
+    });
+    return labels;
+  },
+
+  // picked_points.pp file from MeshLab
+  // <point active="1" x="73.6771" y="1609.75" z="107.05" name="sellion"/>
+  importLabelsXml(labelFile) {
+    const x2js = new X2JS();
+    const json = x2js.xml_str2json(labelFile);
+    if (!json) {
+      throw new Error("Unable to parse XML file")
+    }
+    const labels = {};
+    const { point } = json.PickedPoints;
+    point.forEach((p) => {
+      if (p._active === "1") {
+        labels[p._name] = [p._x, p._y, p._z];
       }
     });
     return labels;

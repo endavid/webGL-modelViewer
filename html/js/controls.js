@@ -388,8 +388,15 @@ function populateControls() {
         datatype: 'text',
         success: importLabels(LabelUtils.importLabelsLnd)
       });
+    } else if (ext === 'Pp') {
+      $.ajax({
+        async: true,
+        url: f.uri,
+        datatype: 'xml',
+        success: importLabels(LabelUtils.importLabelsXml)
+      });
     } else {
-      setError('Supported label formats: Json, Txt, Lnd');
+      setError('Supported label formats: Json, Txt, Lnd, Pp');
     }
   }
 
