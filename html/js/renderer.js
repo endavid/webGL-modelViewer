@@ -393,6 +393,9 @@ class Renderer {
   setLabelScale(scale) {
     this.scene.labels.scale = scale;
   }
+  setLabelFilter(filter) {
+    this.scene.labelFilter = filter;
+  }
   tryToAddLabelAt(screenCoords) {
     const { newLabelName } = this;
     const { camera } = this.scene;

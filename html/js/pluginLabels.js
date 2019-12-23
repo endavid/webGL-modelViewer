@@ -35,6 +35,10 @@ class PluginLabels {
     if (mainModel && mainModel.labels) {
       const modelMatrix = mainModel.getTransformMatrix();
       Object.keys(mainModel.labels).forEach((k) => {
+        const label = mainModel.labels[k];
+        if (scene.labelFilter && !scene.labelFilter(label)) {
+          return;
+        }
         const pos = mainModel.getPositionForLabel(k);
         const posScaled = VMath.mulScalar(pos, labels.scale).concat(1);
         const world = VMath.mulVector(modelMatrix, posScaled);

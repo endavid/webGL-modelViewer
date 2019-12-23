@@ -501,6 +501,18 @@ function populateControls() {
     { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },
   ];
 
+  const labelFilterPresets = [
+    { name: 'all', value: 'all' },
+    { name: 'enabled', value: 'enabled' },
+    { name: 'disabled', value: 'disabled' }
+  ];
+
+  const labelFilters = {
+    all: () => { return true; },
+    enabled: (label) => { return !label.disabled; },
+    disabled: (label) => { return label.disabled; }
+  };
+
   // Create the UI controls
   UiUtils.addGroup('gFile', 'File', [
     UiUtils.createFileBrowser('fileBrowser', 'load models & textures', true, onChangeFileBrowser),
@@ -578,6 +590,9 @@ function populateControls() {
     }),
     UiUtils.createSlider('pointSize', 'Point size', Config.pointSize, 0, 16, 1, (value) => {
       viewer.setPointSize(value);
+    }),
+    UiUtils.createDropdownList('labelFilter', labelFilterPresets, (obj) => {
+      viewer.setLabelFilter(labelFilters[obj.value]);
     }),
     UiUtils.createCheckboxes('labelOptions', {
       showLabels: { text: 'show labels', default: Config.showLabels },
