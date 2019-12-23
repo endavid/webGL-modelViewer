@@ -2,22 +2,26 @@ import ParseUtils from './parseUtils.js';
 // failed to import as a module atm
 const { X2JS } = window;
 
+// Once imported, the labels are converted to this JSON format:
+// { "label-name": {"x": 0.1, "y": 1.17, "z": -1}, ...
 const LabelUtils = {
   // it copes with different Json formats
   importLabels(labelFile) {
+    var labels = labelFile;
     if (Array.isArray(labelFile)) {
       // format: [ {"name": "label-name", "position": [0.1, 1.17. -1]}, ...]
-      const labels = {};
+      labels = {};
       labelFile.forEach((item) => {
         labels[item.name] = item.position;
       });
-      return labels;
     }
-    // format:
-    // { "label-name": {"x": 0.1, "y": 1.17, "z": -1}, ...
-    // or,
-    // { "label-name": [0.1, 1.17, -1]}, ...
-    return labelFile;
+    const keys = Object.keys(labels);
+    keys.forEach((k) => {
+      if (Array.isArray(labels[k])) {
+        labels[k] = ParseUtils.vectorToObject(labels[k]);
+      }
+    });
+    return labels;
   },
 
   // AbdomenBack                        29.32800    818.24270   -126.33450
@@ -26,7 +30,8 @@ const LabelUtils = {
     ParseUtils.forEachLine(labelFile, (s) => {
       const m = /(\w+)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)/.exec(s);
       if (m) {
-        labels[m[1]] = ParseUtils.getVector(m, 2, 5);
+        const v = ParseUtils.getVector(m, 2, 5);
+        labels[m[1]] = ParseUtils.vectorToObject(v);
       }
     });
     return labels;
@@ -36,9 +41,14 @@ const LabelUtils = {
   importLabelsLnd(labelFile) {
     const labels = {};
     ParseUtils.forEachLine(labelFile, (s) => {
-      const m = /\s*(\d+)\s+(-?\d+)\s+(-?\d)\s+(-?\d+)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(\w+)/.exec(s);
-      if (m && m[4] === "1") {
-        labels[m[8]] = ParseUtils.getVector(m, 5, 8);
+      const m = /\s*(\d+)\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(\w+)/.exec(s);
+      if (m) {
+        const key = m[8];
+        const v = ParseUtils.getVector(m, 5, 8);
+        labels[key] = ParseUtils.vectorToObject(v);
+        if (m[4] !== "1") {
+          labels[key].disabled = true;
+        }
       }
     });
     return labels;
@@ -54,9 +64,12 @@ const LabelUtils = {
     }
     const labels = {};
     const { point } = json.PickedPoints;
-    point.forEach((p) => {
-      if (p._active === "1") {
-        labels[p._name] = [p._x, p._y, p._z];
+    point.forEach((p) => {      
+      labels[p._name] = {
+        x: p._x, y: p._y, z: p._z
+      };
+      if (p._active !== "1") {
+        labels[p._name].disabled = true;
       }
     });
     return labels;
