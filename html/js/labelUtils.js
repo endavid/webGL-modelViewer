@@ -46,7 +46,7 @@ const LabelUtils = {
         const key = m[8];
         const v = ParseUtils.getVector(m, 5, 8);
         labels[key] = ParseUtils.vectorToObject(v);
-        if (m[4] !== "1") {
+        if (parseInt(m[4]) < 0) {
           labels[key].disabled = true;
         }
       }
