@@ -2,19 +2,22 @@ import VMath from './math.js';
 
 class PluginLabels {
   constructor() {
-    this.fillStyle = '#ffffff';
-    this.strokeStyke = '#ffffff';
+    this.colors = {
+      world: '#999999',
+      model: '#ffffff',
+      selected: '#00ff00'
+    }
   }
-  setStyle(context) {
+  setColor(context, color) {
     /* eslint-disable no-param-reassign */
-    context.fillStyle = this.fillStyle;
-    context.strokeStyle = this.strokeStyke;
+    context.fillStyle = color;
+    context.strokeStyle = color;
     /* eslint-enable no-param-reassign */
   }
   draw(context, scene) {
+    const self = this;
     const { canvas } = context;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    this.setStyle(context);
     const { labels } = scene;
     if (!labels.showLabels) {
       return;
@@ -26,6 +29,7 @@ class PluginLabels {
       // convert from clipspace to pixels
       return [(clip[0] * 0.5 + 0.5) * canvas.width, (clip[1] * -0.5 + 0.5) * canvas.height];
     }
+    self.setColor(context, self.colors.world);
     Object.keys(labels.world).forEach((k) => {
       const pos = VMath.readCoordinates(labels.world[k]);
       const pix = worldToPixels(pos);
@@ -34,6 +38,8 @@ class PluginLabels {
     const [mainModel] = scene.models;
     if (mainModel && mainModel.labels) {
       const modelMatrix = mainModel.getTransformMatrix();
+      self.setColor(context, self.colors.model);
+      const { selected } = scene.labels;
       Object.keys(mainModel.labels).forEach((k) => {
         const label = mainModel.labels[k];
         if (scene.labelFilter && !scene.labelFilter(label)) {
@@ -43,7 +49,13 @@ class PluginLabels {
         const posScaled = VMath.mulScalar(pos, labels.scale).concat(1);
         const world = VMath.mulVector(modelMatrix, posScaled);
         const pix = worldToPixels(world);
+        if (k === selected) {
+          self.setColor(context, self.colors.selected);
+        }
         PluginLabels.drawLabel(context, pix[0], pix[1], k);
+        if (k === selected) {
+          self.setColor(context, self.colors.model);
+        }
       });
     }
   }

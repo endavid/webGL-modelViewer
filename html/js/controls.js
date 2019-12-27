@@ -594,7 +594,7 @@ function populateControls() {
       },
     }]),
     UiUtils.createTextInput('pickLabel', 'Label name', 'new', (e) => {
-      viewer.newLabelName = e.target.value;
+      viewer.scene.labels.selected = e.target.value;
     }),
     UiUtils.createButtonWithOptions('deleteLabel', 'Delete', ' selected label: ',
       [],
@@ -606,7 +606,7 @@ function populateControls() {
       (e) => {
         const label = $(`#${e.target.id}`).val();
         $('#pickLabel').val(label);
-        viewer.newLabelName = label;
+        viewer.scene.labels.selected = label;
       }
     ),
     UiUtils.createSlider('pointSize', 'Point size', Config.pointSize, 0, 16, 1, (value) => {

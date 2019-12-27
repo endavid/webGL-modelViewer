@@ -120,12 +120,12 @@ class Renderer {
         world: {
           origin: [0, 0, 0],
         },
+        selected: 'new',
         scale: 1,
         showLabels: true,
         showPoints: true,
       },
     };
-    this.newLabelName = 'new';
     this.plugins = [];
     this.plugins2d = [];
     this.init()
@@ -403,7 +403,7 @@ class Renderer {
     }
   }
   tryToAddLabelAt(screenCoords) {
-    const { newLabelName } = this;
+    const { selected } = this.scene.labels;
     const { camera } = this.scene;
     const { clipx, clipy } = screenCoords;
     const ray = camera.rayFromScreenCoordinates(clipx, clipy);
@@ -412,7 +412,7 @@ class Renderer {
       model.getSurfaceIntersection(ray, (si) => {
         // inverse the transform because it will be applied to the model label
         const p = model.transform.inversePoint(si.point);
-        model.labels[newLabelName] = p;
+        model.labels[selected] = p;
       });
     }
   }
