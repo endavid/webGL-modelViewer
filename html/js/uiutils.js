@@ -137,13 +137,16 @@ const UiUtils = {
   createButton(id, text, callback) {
     return UiUtils.createButtons(`${id}_parent`, [{ id, text, callback }]);
   },
-  createButtonWithOptions(id, buttonText, midText, options, callback) {
+  createButtonWithOptions(id, buttonText, midText, options, callback, onChange) {
     let select = null;
     if (Array.isArray(options)) {
       select = $('<select>').attr('id', `${id}_select`);
       options.forEach((obj) => {
         select.append($('<option>').attr('value', obj.value).append(obj.name));
       });
+      if (onChange) {
+        select.change(onChange);
+      }
     } else {
       select = options;
     }

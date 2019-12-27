@@ -204,10 +204,18 @@ function populateSubmeshList(meshes) {
 }
 
 function populateLabelList(labels) {
-  const select = $('#centerModel_select');
-  const names = ['origin'].concat(Object.keys(labels || {}));
-  select.empty();
+  const keys = Object.keys(labels || {});
+  const names = ['origin'].concat(keys);
+  $('#centerModel_select').empty();
   UiUtils.addUrisToDropdownList('centerModel_select', names);
+  $('#deleteLabel_select').empty();
+  UiUtils.addUrisToDropdownList('deleteLabel_select', keys);
+}
+
+function updateLabelList() {
+  if (viewer && viewer.scene.models[0]) {
+    populateLabelList(viewer.scene.models[0].labels);
+  }
 }
 
 function reloadModel() {
@@ -585,9 +593,22 @@ function populateControls() {
         }
       },
     }]),
-    UiUtils.createTextInput('pickLabel', 'Pick label name', 'new', (e) => {
+    UiUtils.createTextInput('pickLabel', 'Label name', 'new', (e) => {
       viewer.newLabelName = e.target.value;
     }),
+    UiUtils.createButtonWithOptions('deleteLabel', 'Delete', ' selected label: ',
+      [],
+      (e) => {
+        const label = $(`#${e.target.id}_select`).val();
+        viewer.deleteLabel(label);
+        updateLabelList();
+      },
+      (e) => {
+        const label = $(`#${e.target.id}`).val();
+        $('#pickLabel').val(label);
+        viewer.newLabelName = label;
+      }
+    ),
     UiUtils.createSlider('pointSize', 'Point size', Config.pointSize, 0, 16, 1, (value) => {
       viewer.setPointSize(value);
     }),

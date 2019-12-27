@@ -396,6 +396,12 @@ class Renderer {
   setLabelFilter(filter) {
     this.scene.labelFilter = filter;
   }
+  deleteLabel(labelName) {
+    const model = this.scene.models[0];
+    if (model && model.labels[labelName]) {
+      delete model.labels[labelName];
+    }
+  }
   tryToAddLabelAt(screenCoords) {
     const { newLabelName } = this;
     const { camera } = this.scene;
