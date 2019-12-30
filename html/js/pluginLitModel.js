@@ -19,7 +19,7 @@ class PluginLitModel {
   static setOpaquePass(glState) {
     glState.setDepthTest(true);
     glState.setDepthMask(true);
-    glState.setCullFace(true);
+    glState.setCullFace(glState.Cull.back);
     glState.setBlend(false);
   }
   draw(glState, scene) {

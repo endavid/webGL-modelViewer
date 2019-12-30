@@ -16,6 +16,13 @@ class GlState {
     gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.depthFunc(gl.LEQUAL);
+    this.Cull = {
+      none: gl.NONE,
+      front: gl.FRONT,
+      back: gl.BACK,
+      both: gl.FRONT_AND_BACK
+    };
+    this.cullFace = this.Cull.none;
   }
   setClearColor(rgb) {
     if (rgb !== this.clearColor) {
@@ -42,11 +49,20 @@ class GlState {
       this.gl.depthMask(enable); // ZWRITE
     }
   }
-  setCullFace(enable) {
-    if (this.cullFace !== enable) {
-      this.cullFace = enable;
-      this.glToggle(enable, this.gl.CULL_FACE);
+  setCullFace(mode) {
+    if (this.cullFace === mode) {
+      return;
     }
+    if (mode === this.Cull.none) {
+      this.glToggle(false, this.gl.CULL_FACE);
+      this.cullFace = mode;
+      return;
+    }
+    if (this.cullFace === this.Cull.none) {
+      this.glToggle(true, this.gl.CULL_FACE);
+    }
+    this.gl.cullFace(mode);
+    this.cullFace = mode;
   }
   glToggle(enable, flag) {
     if (enable) {

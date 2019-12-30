@@ -20,7 +20,7 @@ class PluginDots {
   static setOpaquePass(glState) {
     glState.setDepthTest(true);
     glState.setDepthMask(true);
-    glState.setCullFace(false);
+    glState.setCullFace(glState.Cull.none);
     glState.setBlend(false);
   }
   draw(glState, scene) {
