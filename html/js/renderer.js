@@ -3,6 +3,7 @@ import GlState from './glState.js';
 import Gfx from './gfx.js';
 import VMath from './math.js';
 import PluginLitModel from './pluginLitModel.js';
+import PluginIntersection from './pluginIntersection.js';
 import PluginDots from './pluginDots.js';
 import PluginOverlay from './pluginOverlay.js';
 import PluginLabels from './pluginLabels.js';
@@ -178,7 +179,15 @@ class Renderer {
   }
   async replaceLitShader(fragmentShaderUri) {
     const { gl } = this.glState;
-    const plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri);
+    var plugin;
+    if (fragmentShaderUri.startsWith('intersect')) {
+      plugin = await PluginIntersection.createAsync(gl, this.whiteTexture);
+      if (fragmentShaderUri.endsWith('lit')) {
+        plugin.doLightPass = true;
+      }
+    } else {
+      plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri);
+    }    
     this.plugins[0] = plugin;
   }
   static readImageData() {
@@ -296,7 +305,7 @@ class Renderer {
     const self = this;
     return new Promise((resolve) => {
       // Get WebGL context
-      const gl = this.canvas.getContext('webgl', { antialias: true });
+      const gl = this.canvas.getContext('webgl', { antialias: true, stencil: true });
       self.initExtensions(gl, ['OES_element_index_uint', 'OES_texture_float']);
       self.glState = new GlState(gl);
       // Register mouse event listeners

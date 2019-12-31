@@ -17,6 +17,8 @@ class PluginOverlay {
     glState.setDepthMask(false);
     glState.setCullFace(glState.Cull.none);
     glState.setBlend(true);
+    glState.setDefaultStencil();
+    glState.setStencilTest(false);
   }
   setOverlayParameters(gl, overlay) {
     const { shader } = this;

@@ -22,6 +22,8 @@ class PluginDots {
     glState.setDepthMask(true);
     glState.setCullFace(glState.Cull.none);
     glState.setBlend(false);
+    glState.setDefaultStencil();
+    glState.setStencilTest(false);
   }
   draw(glState, scene) {
     if (!scene.labels.showPoints) {

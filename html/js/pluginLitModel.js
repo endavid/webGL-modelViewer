@@ -17,10 +17,12 @@ class PluginLitModel {
     return new PluginLitModel(shaders, whiteTexture);
   }
   static setOpaquePass(glState) {
+    glState.setBlend(false);
     glState.setDepthTest(true);
     glState.setDepthMask(true);
     glState.setCullFace(glState.Cull.back);
-    glState.setBlend(false);
+    glState.setDefaultStencil();
+    glState.setStencilTest(false);
   }
   static drawModel(args, model) {
     if (!model.vertexBuffer) {
