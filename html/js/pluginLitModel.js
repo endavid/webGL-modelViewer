@@ -17,66 +17,75 @@ class PluginLitModel {
     return new PluginLitModel(shaders, whiteTexture);
   }
   static setOpaquePass(glState) {
+    glState.setBlend(false);
     glState.setDepthTest(true);
     glState.setDepthMask(true);
-    glState.setCullFace(true);
-    glState.setBlend(false);
+    glState.setCullFace(glState.Cull.back);
+    glState.setDefaultStencil();
+    glState.setStencilTest(false);
+  }
+  static drawModel(args, model) {
+    if (!model.vertexBuffer) {
+      return;
+    }
+    const { whiteTexture, gl, scene, normalShader, skinShader } = args;
+    const { camera } = scene;
+    const [light] = scene.lights;
+    const skinned = model.skinnedModel;
+    const shader = skinned ? skinShader : normalShader;
+    const stride = 4 * model.stride; // in bytes
+    shader.use(gl);
+    gl.uniform1i(shader.uniforms.sampler, 0);
+    gl.uniformMatrix4fv(shader.uniforms.Pmatrix, false, camera.projectionMatrix);
+    gl.uniformMatrix4fv(shader.uniforms.Vmatrix, false, camera.viewMatrix);
+    gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.getTransformMatrix());
+    gl.uniform3f(shader.uniforms.lightDirection,
+      light.direction[0], light.direction[1], light.direction[2]);
+    gl.uniform3f(shader.uniforms.lightIrradiance,
+      light.irradiance[0], light.irradiance[1], light.irradiance[2]);
+    gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexBuffer);
+    gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
+    gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4 * 3);
+    gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, 4 * (3 + 3));
+    if (skinned) {
+      gl.vertexAttribPointer(shader.attribs.boneWeights,
+        4, gl.FLOAT, false, stride, 4 * (3 + 3 + 2));
+      gl.vertexAttribPointer(shader.attribs.boneIndices,
+        4, gl.FLOAT, false, stride, 4 * (3 + 3 + 2 + 4));
+      gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
+      gl.uniform4fv(shader.uniforms.jointDebugPalette, skinned.jointColorPalette);
+    }
+    // draw submeshes
+    model.meshes.forEach((mesh) => {
+      if (scene.selectedMesh) {
+        if (mesh.id !== scene.selectedMesh) {
+          return;
+        }
+      }
+      gl.activeTexture(gl.TEXTURE0);
+      const albedoMap = mesh.albedoMap || whiteTexture;
+      const glTexture = albedoMap.webglTexture || whiteTexture.webglTexture;
+      if (glTexture) {
+        gl.bindTexture(gl.TEXTURE_2D, glTexture);
+      } else {
+        console.error('Not even the white texture is ready!');
+      }
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+      gl.drawElements(gl.TRIANGLES, mesh.numPoints, gl.UNSIGNED_INT, 0);
+    });
+    shader.disable(gl);
   }
   draw(glState, scene) {
-    const self = this;
-    const { whiteTexture } = this;
-    const { gl } = glState;
-    const { camera, lights } = scene;
-    const [light0] = lights;
     PluginLitModel.setOpaquePass(glState);
-    scene.models.forEach((model) => {
-      if (!model.vertexBuffer) {
-        return;
-      }
-      const skinned = model.skinnedModel;
-      const shader = skinned ? self.shaders.litSkin : self.shaders.lit;
-      const stride = 4 * model.stride; // in bytes
-      shader.use(gl);
-      gl.uniform1i(shader.uniforms.sampler, 0);
-      gl.uniformMatrix4fv(shader.uniforms.Pmatrix, false, camera.projectionMatrix);
-      gl.uniformMatrix4fv(shader.uniforms.Vmatrix, false, camera.viewMatrix);
-      gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.getTransformMatrix());
-      gl.uniform3f(shader.uniforms.lightDirection,
-        light0.direction[0], light0.direction[1], light0.direction[2]);
-      gl.uniform3f(shader.uniforms.lightIrradiance,
-        light0.irradiance[0], light0.irradiance[1], light0.irradiance[2]);
-      gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexBuffer);
-      gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
-      gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4 * 3);
-      gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, 4 * (3 + 3));
-      if (skinned) {
-        gl.vertexAttribPointer(shader.attribs.boneWeights,
-          4, gl.FLOAT, false, stride, 4 * (3 + 3 + 2));
-        gl.vertexAttribPointer(shader.attribs.boneIndices,
-          4, gl.FLOAT, false, stride, 4 * (3 + 3 + 2 + 4));
-        gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
-        gl.uniform4fv(shader.uniforms.jointDebugPalette, skinned.jointColorPalette);
-      }
-      // draw submeshes
-      model.meshes.forEach((mesh) => {
-        if (scene.selectedMesh) {
-          if (mesh.id !== scene.selectedMesh) {
-            return;
-          }
-        }
-        gl.activeTexture(gl.TEXTURE0);
-        const albedoMap = mesh.albedoMap || whiteTexture;
-        const glTexture = albedoMap.webglTexture || whiteTexture.webglTexture;
-        if (glTexture) {
-          gl.bindTexture(gl.TEXTURE_2D, glTexture);
-        } else {
-          console.error('Not even the white texture is ready!');
-        }
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
-        gl.drawElements(gl.TRIANGLES, mesh.numPoints, gl.UNSIGNED_INT, 0);
-      });
-      shader.disable(gl);
-    });
+    const args = {
+      whiteTexture: this.whiteTexture,
+      gl: glState.gl,
+      scene: scene,
+      normalShader: this.shaders.lit,
+      skinShader: this.shaders.litSkin
+    }
+    const drawModel = PluginLitModel.drawModel.bind(this, args);
+    scene.models.forEach(drawModel);
   }
 }
 export { PluginLitModel as default };

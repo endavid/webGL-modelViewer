@@ -492,6 +492,7 @@ function populateControls() {
   const modelPresets = [
     'pear.json',
     'banana.json',
+    'cubes.obj',
     'orange.json',
     'banana.obj',
     'tree01.dae',
@@ -507,6 +508,8 @@ function populateControls() {
     { name: 'depth', value: 'shaders/debugDepth.fs' },
     { name: 'skin weights', value: 'shaders/debugSkinWeights.fs' },
     { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },
+    { name: 'intersect', value: 'intersect' },
+    { name: 'intersect lit', value: 'intersect-lit' }
   ];
 
   const labelFilterPresets = [

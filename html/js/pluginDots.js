@@ -20,8 +20,10 @@ class PluginDots {
   static setOpaquePass(glState) {
     glState.setDepthTest(true);
     glState.setDepthMask(true);
-    glState.setCullFace(false);
+    glState.setCullFace(glState.Cull.none);
     glState.setBlend(false);
+    glState.setDefaultStencil();
+    glState.setStencilTest(false);
   }
   draw(glState, scene) {
     if (!scene.labels.showPoints) {
