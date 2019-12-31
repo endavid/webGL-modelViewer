@@ -9,7 +9,7 @@ const ParseUtils = {
   },
   // [2, -0.1, 0.3] -> {"x": 2, "y": -0.1, "z": 0.3}
   vectorToObject(v) {
-    return {"x": v[0], "y": v[1], "z": v[2]};
+    return {x: v[0], y: v[1], z: v[2]};
   },
   forEachLine(text, fn) {
     const crFreeText = text.replace(/[\r]+/g, '');
