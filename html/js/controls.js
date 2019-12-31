@@ -10,6 +10,7 @@ const ImageUrls = {
   'banana.png': 'resources/banana.png',
   'orange.png': 'resources/orange.png',
   'pear.png': 'resources/pear.png',
+  'tree01.png': 'resources/tree01.png',
   white: 'resources/white.png',
   missing: 'resources/white.png',
 };

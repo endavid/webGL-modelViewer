@@ -89,7 +89,7 @@ function sourceIdToSemantics(id) {
   return null;
 }
 
-function readMeshes(json, skin) {
+function readMeshes(json, skin, defaultMaterial) {
   const d = {
     positions: [],
     normals: [],
@@ -129,7 +129,7 @@ function readMeshes(json, skin) {
     }
     const polygons = toVectorArray(intStringToArray(polylist.p), numInputs);
     const submesh = {
-      material: polylist._material || 'unknown',
+      material: polylist._material || defaultMaterial,
       indices: [],
     };
     // interleave vertex data as
@@ -461,7 +461,11 @@ function urlToName(url) {
 }
 
 function readMaterials(json, defaultTexture) {
+  // default
   const mat = {};
+  mat[defaultTexture] = {
+    albedoMap: defaultTexture
+  };
   const effects = {};
   let fxArray = (json.COLLADA.library_effects || {}).effect;
   if (fxArray) {
@@ -519,7 +523,7 @@ class Collada {
       throw new Error("Unable to parse XML file")
     }
     const skin = readSkin(json);
-    const model = readMeshes(json, skin);
+    const model = readMeshes(json, skin, defaultTexture);
     model.skin = skin;
     const sk = readSkeleton(json);
     if (sk) {
