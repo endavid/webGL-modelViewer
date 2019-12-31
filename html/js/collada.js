@@ -369,7 +369,11 @@ function extractBoneTree(joint, parent, invertAxis) {
 
 function readSkeleton(json) {
   const { node } = json.COLLADA.library_visual_scenes.visual_scene;
-  const { rootJoint, armatureNode } = findRootNode(node, null);
+  const root = findRootNode(node, null);
+  if (!root) {
+    return null;
+  }
+  const { rootJoint, armatureNode } = root;
   const invertAxis = isZUp(json);
   const skeleton = extractBoneTree(rootJoint, null, invertAxis);
   const armature = extractTransform(armatureNode, invertAxis);
@@ -517,9 +521,12 @@ class Collada {
     const skin = readSkin(json);
     const model = readMeshes(json, skin);
     model.skin = skin;
-    const { skeleton, armature } = readSkeleton(json);
-    model.skeleton = skeleton;
-    model.armature = armature;
+    const sk = readSkeleton(json);
+    if (sk) {
+      const { skeleton, armature } = sk;
+      model.skeleton = skeleton;
+      model.armature = armature;
+    }
     model.anims = readAnimations(json);
     model.materials = readMaterials(json, defaultTexture);
     model.meterUnits = getMeterUnits(json);
