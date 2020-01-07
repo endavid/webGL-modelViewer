@@ -425,6 +425,24 @@ class Renderer {
       });
     }
   }
+  getModelLabels(modelIndex) {
+    const model = this.scene.models[modelIndex];
+    if (!model || !model.labels) {
+      return null;
+    }
+    const transformedLabels = {};
+    const names = Object.keys(model.labels);
+    const { scale } = this.scene.labels;
+    names.forEach((k) => {
+      const pos = model.getPositionForLabel(k);
+      const [x, y, z] = VMath.mulScalar(pos, scale);
+      transformedLabels[k] = {x, y, z};
+      if (model.labels[k].disabled) {
+        transformedLabels[k].disabled = true;
+      }
+    });
+    return transformedLabels;
+  }
   selectSubmesh(name) {
     this.scene.selectedMesh = name === 'all' ? false : name;
   }

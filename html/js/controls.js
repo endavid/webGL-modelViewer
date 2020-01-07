@@ -591,9 +591,9 @@ function populateControls() {
       id: 'saveLabels',
       text: 'Save model labels',
       callback: () => {
-        const model = viewer.scene.models[0];
-        if (model) {
-          Gfx.saveJson(model.labels, 'labels');
+        const labels = viewer.getModelLabels(0);
+        if (labels) {
+          Gfx.saveJson(labels, 'labels');
         }
       },
     }]),
