@@ -158,12 +158,14 @@ class Model {
           onProgress(e.data.progress);
           if (e.data.done && e.data.indices) {
             const skinData = {};
+            const positionInBindPose = {};
             landmarkList.forEach((key) => {
               const index = e.data.indices[key];
               skinData[key] = self.getSkinningData(index);
+              positionInBindPose[key] = self.getPosition(index);
               self.labels[key] = { index };
             });
-            self.setDotsVertexData(gl, positions, colors, skinData);
+            self.setDotsVertexData(gl, positionInBindPose, colors, skinData);
             onDone(self);
           }
         };

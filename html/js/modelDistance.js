@@ -43,11 +43,19 @@
     },
     mulColumnVector(m, v) {
       const out = [0, 0, 0, 0];
-      // for row-major matrices
       out[0] = m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * v[3];
       out[1] = m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * v[3];
       out[2] = m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * v[3];
       out[3] = m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15] * v[3];
+      return out;
+    },
+    mulVector(m, v) {
+      const out = [0, 0, 0, 0];
+      // for row-major matrices
+      out[0] = m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3];
+      out[1] = m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * v[3];
+      out[2] = m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * v[3];
+      out[3] = m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3];
       return out;
     },
     // https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm
@@ -196,13 +204,14 @@
       const p = position.concat(1); // [x, y, z, 1]
       let v = p;
       if (skinningIndices) {
-        v = [0, 0, 0, 0];
+        v = [0, 0, 0, 1];
         skinningIndices.forEach((index, i) => {
           const jointMatrix = self.getJointMatrix(index);
-          const pj = VMath.mulColumnVector(jointMatrix, p);
+          const pj = VMath.mulVector(jointMatrix, p);
           const weight = skinningWeights[i];
           v = VMath.sum(VMath.mulScalar(pj, weight), v);
         });
+        v[3] = 1;
       }
       const worldPos = VMath.mulColumnVector(this.transformMatrix, v);
       return worldPos.slice(0, 3);
