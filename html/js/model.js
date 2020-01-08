@@ -163,7 +163,8 @@ class Model {
               const index = e.data.indices[key];
               skinData[key] = self.getSkinningData(index);
               positionInBindPose[key] = self.getPosition(index);
-              self.labels[key] = { index };
+              const disabled = landmarks[key].disabled || false;
+              self.labels[key] = { index, disabled };
             });
             self.setDotsVertexData(gl, positionInBindPose, colors, skinData);
             onDone(self);

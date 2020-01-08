@@ -42,7 +42,7 @@ class PluginLabels {
       const { selected } = scene.labels;
       Object.keys(mainModel.labels).forEach((k) => {
         const label = mainModel.labels[k];
-        if (scene.labelFilter && !scene.labelFilter(label)) {
+        if (scene.labelFilter && !scene.labelFilter(k, label)) {
           return;
         }
         const pos = mainModel.getPositionForLabel(k);

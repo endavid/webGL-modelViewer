@@ -516,13 +516,17 @@ function populateControls() {
   const labelFilterPresets = [
     { name: 'all', value: 'all' },
     { name: 'enabled', value: 'enabled' },
-    { name: 'disabled', value: 'disabled' }
+    { name: 'disabled', value: 'disabled' },
+    { name: 'enabled && front', value: 'enabledFront' },
+    { name: 'enabled && back', value: 'enabledBack' }
   ];
 
   const labelFilters = {
     all: () => { return true; },
-    enabled: (label) => { return !label.disabled; },
-    disabled: (label) => { return label.disabled; }
+    enabled: (_, label) => { return !label.disabled; },
+    disabled: (_, label) => { return label.disabled; },
+    enabledFront: (name, label) => { return !label.disabled && name.indexOf('Back') < 0; },
+    enabledBack: (name, label) => { return !label.disabled && name.indexOf('Front') < 0 && name.indexOf('Bust') < 0; },
   };
 
   // Create the UI controls
@@ -574,6 +578,7 @@ function populateControls() {
         const model = viewer.scene.models[0];
         if (model) {
           model.labels = {};
+          updateLabelList();
         }
       },
     },
