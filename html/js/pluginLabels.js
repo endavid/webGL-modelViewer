@@ -12,6 +12,7 @@ class PluginLabels {
     /* eslint-disable no-param-reassign */
     context.fillStyle = color;
     context.strokeStyle = color;
+    context.textAlign = 'center';
     /* eslint-enable no-param-reassign */
   }
   draw(context, scene) {
@@ -75,7 +76,7 @@ class PluginLabels {
     ctx.lineTo(15, 15);
     ctx.stroke();
     // draw the text.
-    ctx.fillText(label, 20, 20);
+    ctx.fillText(label, 20, 24);
     // restore the canvas to its old settings.
     ctx.restore();
   }

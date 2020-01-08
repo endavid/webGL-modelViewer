@@ -5,10 +5,11 @@ class PluginDots {
   constructor(shaders) {
     this.shaders = shaders;
     this.pointSize = 3.0;
+    this.tint = [1, 1, 1, 1];
   }
   static async createAsync(gl) {
     const attribs = ['position', 'color'];
-    const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'pointSize'];
+    const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'pointSize', 'tint'];
     const attribsSkin = attribs.concat(['boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['joints']);
     const shaders = {};
@@ -45,6 +46,7 @@ class PluginDots {
       gl.uniformMatrix4fv(shader.uniforms.Vmatrix, false, camera.viewMatrix);
       gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.getTransformMatrix());
       gl.uniform1f(shader.uniforms.pointSize, self.pointSize);
+      gl.uniform4f(shader.uniforms.tint, self.tint[0], self.tint[1], self.tint[2], self.tint[3]);
       gl.bindBuffer(gl.ARRAY_BUFFER, model.dotBuffer);
       gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
       gl.vertexAttribPointer(shader.attribs.color, 4, gl.FLOAT, false, stride, 4 * 3);

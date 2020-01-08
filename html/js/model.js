@@ -164,7 +164,14 @@ class Model {
               skinData[key] = self.getSkinningData(index);
               positionInBindPose[key] = self.getPosition(index);
               const disabled = landmarks[key].disabled || false;
-              self.labels[key] = { index, disabled };
+              self.labels[key] = { index };
+              if (disabled) {
+                self.labels[key].disabled = true;
+                // half-bright dots for disabled landmarks
+                colors[key][0] *= 0.5;
+                colors[key][1] *= 0.5;
+                colors[key][2] *= 0.5;
+              }
             });
             self.setDotsVertexData(gl, positionInBindPose, colors, skinData);
             onDone(self);

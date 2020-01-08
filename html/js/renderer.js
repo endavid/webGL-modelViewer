@@ -399,6 +399,9 @@ class Renderer {
   setPointSize(size) {
     this.plugins[1].pointSize = size;
   }
+  setPointColor(r, g, b, a) {
+    this.plugins[1].tint = [r, g, b, a];
+  }
   setLabelScale(scale) {
     this.scene.labels.scale = scale;
   }

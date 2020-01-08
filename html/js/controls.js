@@ -518,7 +518,11 @@ function populateControls() {
     { name: 'enabled', value: 'enabled' },
     { name: 'disabled', value: 'disabled' },
     { name: 'enabled && front', value: 'enabledFront' },
-    { name: 'enabled && back', value: 'enabledBack' }
+    { name: 'enabled && back', value: 'enabledBack' },
+    { name: 'enabled && front && right', value: 'enabledFrontRight' },
+    { name: 'enabled && front && left', value: 'enabledFrontLeft' },
+    { name: 'enabled && back && right', value: 'enabledBackRight' },
+    { name: 'enabled && back && left', value: 'enabledBackLeft' }
   ];
 
   const labelFilters = {
@@ -527,6 +531,10 @@ function populateControls() {
     disabled: (_, label) => { return label.disabled; },
     enabledFront: (name, label) => { return !label.disabled && name.indexOf('Back') < 0; },
     enabledBack: (name, label) => { return !label.disabled && name.indexOf('Front') < 0 && name.indexOf('Bust') < 0; },
+    enabledFrontRight: (name, label) => { return labelFilters.enabledFront(name, label) && name.endsWith('Right'); },
+    enabledFrontLeft: (name, label) => { return labelFilters.enabledFront(name, label) && name.endsWith('Left'); },
+    enabledBackRight: (name, label) => { return !label.disabled && name.indexOf('Back') >= 0 && name.indexOf('Right') >= 0; },
+    enabledBackLeft: (name, label) => { return !label.disabled && name.indexOf('Back') >= 0 && name.indexOf('Left') >= 0; }
   };
 
   // Create the UI controls
@@ -620,6 +628,10 @@ function populateControls() {
     ),
     UiUtils.createSlider('pointSize', 'Point size', Config.pointSize, 0, 16, 1, (value) => {
       viewer.setPointSize(value);
+    }),
+    UiUtils.createColorPicker('pointColor', 'Point color', '#ffffff', (e) => {
+      const c = VMath.hexColorToNormalizedVector(e.target.value);
+      viewer.setPointColor(c[0], c[1], c[2], 1);
     }),
     UiUtils.createDropdownList('labelFilter', labelFilterPresets, (obj) => {
       viewer.setLabelFilter(labelFilters[obj.value]);
