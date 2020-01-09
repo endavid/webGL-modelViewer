@@ -308,9 +308,9 @@ function extractTransform(joint, invertAxis) {
     matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
     rotationOrder: '',
   };
-  if (joint.matrix) {
+  if (joint && joint.matrix) {
     data.matrix = floatStringToArray(joint.matrix.__text || joint.matrix);
-  } else if (joint.translate) {
+  } else if (joint && joint.translate) {
     const t = floatStringToArray(joint.translate.__text || joint.translate);
     const s = floatStringToArray(joint.scale.__text || joint.scale);
     let rx = [];
@@ -377,7 +377,9 @@ function readSkeleton(json) {
   const invertAxis = isZUp(json);
   const skeleton = extractBoneTree(rootJoint, null, invertAxis);
   const armature = extractTransform(armatureNode, invertAxis);
-  armature.name = armatureNode._id;
+  if (armatureNode && armatureNode._id) {
+    armature.name = armatureNode._id;
+  }
   return { skeleton, armature };
 }
 
