@@ -143,6 +143,12 @@ class Model {
       const posScaled = VMath.mulScalar(pos, labelScale);
       positions[key] = posScaled;
       colors[key] = readColor(p);
+      if (p.disabled) {
+        // half-bright dots for disabled landmarks
+        colors[key][0] *= 0.5;
+        colors[key][1] *= 0.5;
+        colors[key][2] *= 0.5;
+      }
     });
     if (this.skinnedModel) {
       if (window.Worker) {
@@ -167,10 +173,6 @@ class Model {
               self.labels[key] = { index };
               if (disabled) {
                 self.labels[key].disabled = true;
-                // half-bright dots for disabled landmarks
-                colors[key][0] *= 0.5;
-                colors[key][1] *= 0.5;
-                colors[key][2] *= 0.5;
               }
             });
             self.setDotsVertexData(gl, positionInBindPose, colors, skinData);
