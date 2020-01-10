@@ -168,9 +168,14 @@ class Model {
             landmarkList.forEach((key) => {
               const index = e.data.indices[key];
               skinData[key] = self.getSkinningData(index);
-              positionInBindPose[key] = self.getPosition(index);
+              const [x, y, z] = self.skinnedModel.getInverseSkinnedVertex(
+                positions[key],
+                skinData[key].slice(0, 4), // weights
+                skinData[key].slice(4, 8), // indices
+              );
+              positionInBindPose[key] = [x, y, z];
               const disabled = landmarks[key].disabled || false;
-              self.labels[key] = { index };
+              self.labels[key] = { index, x, y, z };
               if (disabled) {
                 self.labels[key].disabled = true;
               }
@@ -223,8 +228,8 @@ class Model {
     const i = vertexIndex * this.stride;
     return this.vertices.slice(i + 8, i + 16);
   }
-  getSkinnedPosition(vertexIndex) {
-    const pos = this.getPosition(vertexIndex);
+  getSkinnedPosition(vertexIndex, position) {
+    const pos = position || this.getPosition(vertexIndex);
     if (!this.skinnedModel) {
       return pos;
     }
@@ -242,7 +247,12 @@ class Model {
     if (label) {
       if (label.index) {
         // after baking, we store a vertex index so we can skin the labels
-        pos = this.getSkinnedPosition(label.index);
+        if (label.x === undefined) {
+          pos = this.getSkinnedPosition(label.index);
+        } else {
+          pos = VMath.readCoordinates(label).slice(0, 3);  
+          pos = this.getSkinnedPosition(label.index, pos);
+        }
       } else {
         pos = VMath.readCoordinates(label).slice(0, 3);
       }

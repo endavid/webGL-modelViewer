@@ -372,5 +372,20 @@ class SkinnedModel {
     });
     return sum;
   }
+  getInverseSkinnedVertex(position, weights, indices) {
+    const self = this;
+    const p = position.slice(0, 3);
+    p[3] = 1;
+    let sum = [0, 0, 0, 1];
+    indices.forEach((index, i) => {
+      const w = weights[i];
+      const M = getJointMatrix(index, self.joints);
+      // multiply from left, because the matrix is transposed
+      // since it's stored in column order
+      const pi = math.multiply(p, math.inv(M));
+      sum = math.add(sum, math.multiply(pi, w));
+    });
+    return sum;
+  }
 }
 export { SkinnedModel as default };
