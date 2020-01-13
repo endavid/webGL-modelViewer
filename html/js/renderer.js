@@ -127,6 +127,7 @@ class Renderer {
         showPoints: true,
       },
     };
+    this.selectedModel = 0;
     this.plugins = [];
     this.plugins2d = [];
     this.init()
@@ -331,6 +332,9 @@ class Renderer {
       }
     });
   }
+  getSelectedModel() {
+    return this.scene.models[this.selectedModel];
+  }
   setRotationCallback(callback) {
     this.onRotation = callback;
   }
@@ -346,7 +350,7 @@ class Renderer {
   }
   // eslint-disable-next-line object-curly-newline
   setModelTransform({ index, position, rotation, scale }) {
-    const i = index || 0;
+    const i = index || this.selectedModel;
     const model = this.scene.models[i];
     if (model) {
       const p = position || model.transform.position;
@@ -409,7 +413,7 @@ class Renderer {
     this.scene.labelFilter = filter;
   }
   deleteLabel(labelName) {
-    const model = this.scene.models[0];
+    const model = this.scene.models[this.selectedModel];
     if (model && model.labels[labelName]) {
       delete model.labels[labelName];
     }
@@ -419,7 +423,7 @@ class Renderer {
     const { camera } = this.scene;
     const { clipx, clipy } = screenCoords;
     const ray = camera.rayFromScreenCoordinates(clipx, clipy);
-    const model = this.scene.models[0];
+    const model = this.scene.models[this.selectedModel];
     if (model) {
       model.getSurfaceIntersection(ray, (si) => {
         // inverse the transform because it will be applied to the model label
@@ -429,7 +433,8 @@ class Renderer {
     }
   }
   getModelLabels(modelIndex) {
-    const model = this.scene.models[modelIndex];
+    const i = modelIndex || this.selectedModel;
+    const model = this.scene.models[i];
     if (!model || !model.labels) {
       return null;
     }

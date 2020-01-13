@@ -35,7 +35,7 @@ class PluginDots {
     const { camera } = scene;
     PluginDots.setOpaquePass(glState);
     scene.models.forEach((model) => {
-      if (!model.dotBuffer) {
+      if (!model || !model.dotBuffer) {
         return;
       }
       const skinned = model.skinnedModel;

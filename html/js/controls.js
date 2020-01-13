@@ -214,8 +214,8 @@ function populateLabelList(labels) {
 }
 
 function updateLabelList() {
-  if (viewer && viewer.scene.models[0]) {
-    populateLabelList(viewer.scene.models[0].labels);
+  if (viewer && viewer.scene.models[viewer.selectedModel]) {
+    populateLabelList(viewer.scene.models[viewer.selectedModel].labels);
   }
 }
 
@@ -277,7 +277,7 @@ function onAddOverlay(values) {
 }
 
 function saveCurrentPose() {
-  const model = viewer.scene.models[0];
+  const model = viewer.getSelectedModel();
   if (model && model.skinnedModel) {
     const frame = Config.keyframe;
     const pose = model.skinnedModel.getPoseFile(frame);
@@ -290,7 +290,7 @@ function saveCurrentPose() {
 
 function onChangeKeyframe() {
   removePoseGroup();
-  const model = viewer.scene.models[0];
+  const model = viewer.getSelectedModel();
   if (model && model.skinnedModel) {
     addPoseGroup(model.skinnedModel);
     viewer.setKeyframe(0, Config.keyframe);
@@ -371,7 +371,7 @@ function populateControls() {
     }
     function importLabels(fn) {
       const importer = (data) => {
-        const model = viewer.scene.models[0];
+        const model = viewer.getSelectedModel();
         if (model) {
           const labels = fn(data);
           model.labels = labels;
@@ -435,7 +435,7 @@ function populateControls() {
   }
 
   function onAddPoseFiles(values) {
-    const model = viewer.scene.models[0];
+    const model = viewer.getSelectedModel();
     if (!model || !model.skinnedModel) {
       setWarning('Not a skinned model');
       return;
@@ -461,7 +461,7 @@ function populateControls() {
   }
 
   function onAddJroFile(values) {
-    const model = viewer.scene.models[0];
+    const model = viewer.getSelectedModel();
     if (!model || !model.skinnedModel) {
       setWarning('Not a skinned model');
       return;
@@ -537,8 +537,18 @@ function populateControls() {
     enabledBackLeft: (name, label) => { return !label.disabled && name.indexOf('Back') >= 0 && name.indexOf('Left') >= 0; }
   };
 
+  const modelSlots = [
+    { name: 'slot 0', value: 0 },
+    { name: 'slot 1', value: 1 },
+    { name: 'slot 2', value: 2 },
+    { name: 'slot 3', value: 3 }
+  ]
+
   // Create the UI controls
   UiUtils.addGroup('gFile', 'File', [
+    UiUtils.createDropdownList('ModelSlot', modelSlots, (e) => {
+      viewer.selectedModel = parseInt(e.value);
+    }),
     UiUtils.createFileBrowser('fileBrowser', 'load models & textures', true, onChangeFileBrowser),
     UiUtils.createDropdownList('Presets', modelPresets, reloadModel),
     UiUtils.createButtonWithOptions('saveFile', 'Save', ' as ',
@@ -583,7 +593,7 @@ function populateControls() {
       id: 'clearLabels',
       text: 'Clear',
       callback: () => {
-        const model = viewer.scene.models[0];
+        const model = viewer.getSelectedModel();
         if (model) {
           model.labels = {};
           updateLabelList();
@@ -594,7 +604,7 @@ function populateControls() {
       id: 'averageLabels',
       text: 'Average',
       callback: () => {
-        const model = viewer.scene.models[0];
+        const model = viewer.getSelectedModel();
         if (model) {
           model.labels = LabelUtils.averageSimilarLabels(model.labels);
         }
@@ -604,7 +614,7 @@ function populateControls() {
       id: 'saveLabels',
       text: 'Save',
       callback: () => {
-        const labels = viewer.getModelLabels(0);
+        const labels = viewer.getModelLabels();
         if (labels) {
           Gfx.saveJson(labels, 'labels');
         }
@@ -614,7 +624,7 @@ function populateControls() {
       id: 'saveLabelsFiltered',
       text: 'Save Filtered',
       callback: () => {
-        const labels = viewer.getModelLabels(0);
+        const labels = viewer.getModelLabels();
         if (labels) {
           const filterId = $('#labelFilter').val();
           const filterFn = labelFilters[filterId];

@@ -84,6 +84,7 @@ class Model {
         id,
         indexBuffer: gl.createBuffer(),
         numPoints: m.indices.length,
+        albedoUrl: albedoMapUrl,
         albedoMap: albedoMapUrl !== undefined ? Gfx.loadTexture(gl, albedoMapUrl) : false,
       };
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);

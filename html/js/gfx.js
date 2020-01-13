@@ -66,12 +66,14 @@ class Gfx {
   static destroyBuffers(gl, modelData) {
     const gfx = new Gfx(); // singleton
     const modelRef = modelData;
+    const images = [];
     if (modelData.meshes) {
       modelData.meshes.forEach((m) => {
         const mesh = m;
         // remove img reference
         mesh.albedoMap = null;
         gl.deleteBuffer(m.indexBuffer);
+        images.push(m.albedoUrl);
       });
       modelRef.meshes = false;
     }
@@ -84,23 +86,15 @@ class Gfx {
       modelRef.dotBuffer = false;
     }
     // empty texture cache
-    const toKeep = [];
-    Object.keys(gfx.textureCache).forEach((url) => {
-      const img = gfx.textureCache[url];
-      if (img.keepInCache) {
-        toKeep.push(url);
-      } else {
-        if (img.webglTexture) {
-          gl.deleteTexture(img.webglTexture);
+    images.forEach((img) => {
+      const cacheRef = gfx.textureCache[img];
+      if (cacheRef && !cacheRef.keepInCache) {
+        if (cacheRef.webglTexture) {
+          gl.deleteTexture(cacheRef.webglTexture);
         }
-        gfx.textureCache[url] = null;
+        gfx.textureCache[img] = null;
       }
     });
-    const newCache = {};
-    toKeep.forEach((url) => {
-      newCache[url] = gfx.textureCache[url];
-    });
-    gfx.textureCache = newCache;
   }
 
   static flipAxisZ(model) {

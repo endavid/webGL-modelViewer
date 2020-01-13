@@ -25,7 +25,7 @@ class PluginLitModel {
     glState.setStencilTest(false);
   }
   static drawModel(args, model) {
-    if (!model.vertexBuffer) {
+    if (!model || !model.vertexBuffer) {
       return;
     }
     const { whiteTexture, gl, scene, normalShader, skinShader } = args;
