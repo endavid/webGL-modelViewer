@@ -254,7 +254,7 @@ input[type=number] {
   padding: 4px;
 }
 input[type=text] {
-  width: 8ex;
+  width: 24ex;
   padding: 4px;
 }
 input[type=checkbox] {

@@ -602,14 +602,33 @@ function populateControls() {
     },
     {
       id: 'saveLabels',
-      text: 'Save model labels',
+      text: 'Save',
       callback: () => {
         const labels = viewer.getModelLabels(0);
         if (labels) {
           Gfx.saveJson(labels, 'labels');
         }
       },
-    }]),
+    },
+    {
+      id: 'saveLabelsFiltered',
+      text: 'Save Filtered',
+      callback: () => {
+        const labels = viewer.getModelLabels(0);
+        if (labels) {
+          const filterId = $('#labelFilter').val();
+          const filterFn = labelFilters[filterId];
+          const labelsFiltered = {};
+          Object.keys(labels).forEach((k) => {
+            if (filterFn(k, labels[k])) {
+              labelsFiltered[k] = labels[k];
+            }
+          });
+          Gfx.saveJson(labelsFiltered, 'labels');
+        }
+      },
+    }
+    ]),
     UiUtils.createTextInput('pickLabel', 'Label name', 'new', (e) => {
       viewer.scene.labels.selected = e.target.value;
     }),
