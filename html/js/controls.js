@@ -873,6 +873,13 @@ function populateControls() {
   ], '#controlsRight');
 }
 
+function toggleUninterestingGroups() {
+  $('#gLabels').click();
+  $('#gModel').click();
+  $('#gCamera').click();
+  $('#gLight').click();
+}
+
 function makeCanvasFollowScroll() {
   // https://stackoverflow.com/a/14194805
   const el = $('.container');
@@ -894,6 +901,7 @@ $(document).ready(() => {
   viewer.setBackgroundColor(Config.backgroundColor);
   Update.camera();
   populateControls();
+  toggleUninterestingGroups();
   reloadModel();
   makeCanvasFollowScroll();
 });
