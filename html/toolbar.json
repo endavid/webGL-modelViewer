@@ -59,6 +59,26 @@
       }
     },
     {
+      "id": "sunBright",
+      "text": "Bright",
+      "icon": "/icons/sun-bright.png",
+      "preset": {
+        "sun": {
+          "intensity": 0.8
+        }
+      }
+    },
+    {
+      "id": "sunDark",
+      "text": "Dark",
+      "icon": "/icons/sun.png",
+      "preset": {
+        "sun": {
+          "intensity": 0.5
+        }
+      }
+    },
+    {
       "id": "bakeLabels",
       "text": "Bake",
       "icon": "/icons/bake.png",

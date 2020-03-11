@@ -253,7 +253,8 @@ const Update = {
   camera: () => {
     Update.cameraLocation();
     Update.cameraFov();
-  }
+  },
+  sun: () => {}
 }
 
 const UISetter = {
@@ -282,6 +283,20 @@ const UISetter = {
       $('#cameraFOV').val(a);
       $('#cameraFOV_number').val(a);
       Config.camera.fov = a;
+    }
+  },
+  sun: {
+    altitude: (h) => {
+      const sun = viewer.scene.lights[0];
+      sun.setAltitude(h);
+    },
+    eastWest: (ew) => {
+      const sun = viewer.scene.lights[0];
+      sun.setEastWest(ew);
+    },
+    intensity: (i) => {
+      const sun = viewer.scene.lights[0];
+      sun.setIntensity(i);
     }
   }
 }
@@ -826,16 +841,9 @@ function populateControls() {
   // * Light Settings
   const sun = viewer.scene.lights[0];
   UiUtils.addGroup('gLight', 'Light Settings', [
-    UiUtils.createSlider('SunAltitude', 'sun altitude', sun.altitude, -1, 1, 0.05, (value) => {
-      sun.setAltitude(value);
-    }),
-    UiUtils.createSlider('SunEastWest', 'sun east-west', sun.eastWest, -1, 1, 0.05, (value) => {
-      sun.setEastWest(value);
-    }),
-    UiUtils.createSlider('SunIntensity', 'sun intensity', sun.intensity, 0.1, 2, 0.1, (value) => {
-      sun.setIntensity(value);
-    }),
-
+    UiUtils.createSlider('SunAltitude', 'sun altitude', sun.altitude, -1, 1, 0.05, UISetter.sun.altitude),
+    UiUtils.createSlider('SunEastWest', 'sun east-west', sun.eastWest, -1, 1, 0.05, UISetter.sun.eastWest),
+    UiUtils.createSlider('SunIntensity', 'sun intensity', sun.intensity, 0.1, 2, 0.1, UISetter.sun.intensity),
   ]);
   // * Shader Settings
   const { overlay } = viewer.scene;
