@@ -255,10 +255,14 @@ td.subgroup {
 	color: white;
 	font-size: 8pt;
 	background-color: #00c4c4;
-	padding: 4px 4px 4px 4px;
+	padding: 4px;
 	text-decoration: none;
 	text-align: center;
 	margin: 0 1pt;
+}
+
+.button[type=icon] {
+  padding: 2px;
 }
 
 .button:hover {
@@ -323,6 +327,6 @@ input.three[type=range] {
 }
 
 .icon {
-  height: 12pt;
+  height: 14pt;
   width: auto;
 }

@@ -37,7 +37,34 @@
           "rotationY": 180
         }
       }
+    },
+    {
+      "id": "cameraLeft",
+      "text": "Left",
+      "icon": "/icons/camera-left.png",
+      "preset": {
+        "camera": {
+          "rotationY": 90
+        }
+      }
+    },
+    {
+      "id": "cameraRight",
+      "text": "Right",
+      "icon": "/icons/camera-right.png",
+      "preset": {
+        "camera": {
+          "rotationY": -90
+        }
+      }
+    },
+    {
+      "id": "bakeLabels",
+      "text": "Bake",
+      "icon": "/icons/bake.png",
+      "actions": {
+        "labels": ["bake"]
+      }
     }
-
   ]
 }

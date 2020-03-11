@@ -286,6 +286,29 @@ const UISetter = {
   }
 }
 
+const Actions = {
+  labels: {
+    setOption: (key, value) => {
+      Config[key] = value;
+      viewer.scene.labels[key] = value;
+      $(`#${key}`).prop('checked', value);
+    },
+    bake: () => {
+      const model = viewer.scene.models[0];
+      if (model) {
+        progressBarUpdate(0);
+        $('#progressBarDiv').show();
+        model.bakeLabels(viewer.glState.gl,
+          Config.labelScale,
+          progressBarUpdate, () => {
+            Actions.labels.setOption('showLabels', false);
+            $('#progressBarDiv').hide();
+          }, setError);
+      }
+    }
+  }
+}
+
 function onAddOverlay(values) {
   const f = values[0];
   viewer.setOverlayImage(f.uri, (img) => {
@@ -438,26 +461,6 @@ function populateControls() {
     viewer.setLabelScale(Config.labelScale);
   }
 
-  function setLabelOptions(key, value) {
-    Config[key] = value;
-    viewer.scene.labels[key] = value;
-    $(`#${key}`).prop('checked', value);
-  }
-
-  function onBakeModelLabels() {
-    const model = viewer.scene.models[0];
-    if (model) {
-      progressBarUpdate(0);
-      $('#progressBarDiv').show();
-      model.bakeLabels(viewer.glState.gl,
-        Config.labelScale,
-        progressBarUpdate, () => {
-          setLabelOptions('showLabels', false);
-          $('#progressBarDiv').hide();
-        }, setError);
-    }
-  }
-
   function onAddPoseFiles(values) {
     const model = viewer.getSelectedModel();
     if (!model || !model.skinnedModel) {
@@ -575,18 +578,26 @@ function populateControls() {
     Object.keys(cfg).forEach((g) => {
       let row = [];
       cfg[g].forEach((b) => {
-        let fn = () => { console.log(b.id); };
-        if (b.preset) {
-          fn = () => {
-            const cfgKeys = Object.keys(b.preset);
-            cfgKeys.forEach((key) => {
+        let fn = () => {
+          if (b.preset) {
+            Object.keys(b.preset).forEach((key) => {
               Object.keys(b.preset[key]).forEach((field) => {
                 UISetter[key][field](b.preset[key][field]);
               });
               Update[key]();
-            })
+            });
           }
-        }
+          if (b.actions) {
+            Object.keys(b.actions).forEach((key) => {
+              b.actions[key].forEach((field) => {
+                Actions[key][field]();
+              });
+            });
+          }
+          if (!b.actions && !b.preset) {
+            console.log(b);
+          }
+        };
         let btn = {
           id: b.id,
           text: b.text,
@@ -643,7 +654,7 @@ function populateControls() {
     UiUtils.createButtons('labelButtons', [{
       id: 'bakeLabels',
       text: 'Bake',
-      callback: onBakeModelLabels,
+      callback: Actions.labels.bake,
     },
     {
       id: 'clearLabels',
@@ -724,7 +735,7 @@ function populateControls() {
     UiUtils.createCheckboxes('labelOptions', {
       showLabels: { text: 'show labels', default: Config.showLabels },
       showPoints: { text: 'show points', default: Config.showPoints },
-    }, setLabelOptions),
+    }, Actions.labels.setOption),
   ]);
   // * Model Settings
   UiUtils.addGroup('gModel', 'Model Settings', [
