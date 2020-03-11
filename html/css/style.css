@@ -316,7 +316,13 @@ input.three[type=range] {
   z-index: 10;
   pointer-events: none;
 }
-img {
+
+.snapshot {
   margin-left: 2px;
   margin-right: 2px;
+}
+
+.icon {
+  height: 12pt;
+  width: auto;
 }

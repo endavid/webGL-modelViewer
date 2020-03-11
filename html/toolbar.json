@@ -3,7 +3,7 @@
     {
       "id": "cameraFrontA",
       "text": "Front A",
-      "icon": "",
+      "icon": "/icons/camera-A.png",
       "preset": {
         "camera": {
           "distance": 3,
@@ -17,7 +17,7 @@
     {
       "id": "cameraFrontB",
       "text": "Front B",
-      "icon": "",
+      "icon": "/icons/camera-front.png",
       "preset": {
         "camera": {
           "distance": 3.01,
@@ -31,7 +31,7 @@
     {
       "id": "cameraBack",
       "text": "Back",
-      "icon": "",
+      "icon": "/icons/camera-back.png",
       "preset": {
         "camera": {
           "rotationY": 180

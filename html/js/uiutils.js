@@ -126,11 +126,17 @@ const UiUtils = {
   createButtons(id, list) {
     const td = $('<td>');
     list.forEach((b) => {
+      let content = b.text;
+      if (b.icon) {
+        content = $('<img>')
+          .attr('class', 'icon')
+          .attr('src', b.icon);
+      }
       td.append($('<div>')
         .attr('id', b.id)
         .attr('class', 'button')
         .click(b.callback)
-        .append(b.text));
+        .append(content));
     });
     return $('<tr>').attr('id', id).append(td);
   },
