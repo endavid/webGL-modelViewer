@@ -293,7 +293,7 @@ function onChangeKeyframe() {
   const model = viewer.getSelectedModel();
   if (model && model.skinnedModel) {
     addPoseGroup(model.skinnedModel);
-    viewer.setKeyframe(0, Config.keyframe);
+    viewer.setKeyframe(Config.keyframe);
   }
 }
 

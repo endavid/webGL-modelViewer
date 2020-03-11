@@ -373,8 +373,9 @@ class Renderer {
     }
     return null;
   }
-  setKeyframe(index, keyframe) {
-    const model = this.scene.models[index];
+  setKeyframe(keyframe) {
+    const i = this.selectedModel;
+    const model = this.scene.models[i];
     if (model && model.skinnedModel) {
       if (keyframe === -1) {
         model.skinnedModel.applyDefaultPose();
