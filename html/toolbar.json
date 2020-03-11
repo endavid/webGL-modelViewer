@@ -1,0 +1,43 @@
+{
+  "cameraGroup": [
+    {
+      "id": "cameraFrontA",
+      "text": "Front A",
+      "icon": "",
+      "preset": {
+        "camera": {
+          "distance": 3,
+          "height": 1.35,
+          "pitch": -7,
+          "rotationY": 0,
+          "fov": 26.9
+        }
+      }
+    },
+    {
+      "id": "cameraFrontB",
+      "text": "Front B",
+      "icon": "",
+      "preset": {
+        "camera": {
+          "distance": 3.01,
+          "height": 0.95,
+          "pitch": 0,
+          "rotationY": 0,
+          "fov": 26.9
+        }
+      }
+    },
+    {
+      "id": "cameraBack",
+      "text": "Back",
+      "icon": "",
+      "preset": {
+        "camera": {
+          "rotationY": 180
+        }
+      }
+    }
+
+  ]
+}

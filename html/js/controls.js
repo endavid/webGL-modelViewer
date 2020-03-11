@@ -175,18 +175,6 @@ function setTranslation(translation) {
   updateModelTransform();
 }
 
-function setCameraHeight(y) {
-  $('#cameraHeight').val(y);
-  $('#cameraHeight_number').val(y);
-  Config.cameraHeight = y;
-}
-
-function setCameraDistance(z) {
-  $('#cameraDistance').val(z);
-  $('#cameraDistance_number').val(z);
-  Config.cameraDistance = z;
-}
-
 function setMeterUnits(unitMeters) {
   let logScale = Math.log10(unitMeters);
   logScale = Math.round(1e4 * logScale) * 1e-4;
@@ -248,19 +236,54 @@ function updateRotationLock() {
   viewer.setRotationLock(Config.isLockRotationX, Config.isLockRotationY);
 }
 
-function updateCamera() {
-  const { camera } = viewer.scene;
-  camera.setLocation(
-    Config.cameraHeight,
-    Config.cameraDistance,
-    Config.cameraPitch,
-    Config.cameraRotationY,
-  );
+const Update = {
+  cameraLocation: () => {
+    const { camera } = viewer.scene;
+    camera.setLocation(
+      Config.camera.height,
+      Config.camera.distance,
+      Config.camera.pitch,
+      Config.camera.rotationY,
+    );
+  },
+  cameraFov: () => {
+    const { camera } = viewer.scene;
+    camera.setFOV(Config.camera.fov);  
+  },
+  camera: () => {
+    Update.cameraLocation();
+    Update.cameraFov();
+  }
 }
 
-function updateCameraFOV() {
-  const { camera } = viewer.scene;
-  camera.setFOV(Config.cameraFOV);
+const UISetter = {
+  camera: {
+    distance: (z) => {
+      $('#cameraDistance').val(z);
+      $('#cameraDistance_number').val(z);
+      Config.camera.distance = z;
+    },
+    height: (y) => {
+      $('#cameraHeight').val(y);
+      $('#cameraHeight_number').val(y);
+      Config.camera.height = y;
+    },
+    pitch: (a) => {
+      $('#cameraPitch').val(a);
+      $('#cameraPitch_number').val(a);
+      Config.camera.pitch = a;
+    },
+    rotationY: (a) => {
+      $('#cameraRotationY').val(a);
+      $('#cameraRotationY_number').val(a);
+      Config.camera.rotationY = a;
+    },
+    fov: (a) => {
+      $('#cameraFOV').val(a);
+      $('#cameraFOV_number').val(a);
+      Config.camera.fov = a;
+    }
+  }
 }
 
 function onAddOverlay(values) {
@@ -545,6 +568,36 @@ function populateControls() {
   ]
 
   // Create the UI controls
+  // * Toolbar (it won't execute if toolbar.json doesn't exist)
+  $.getJSON('../toolbar.json', (cfg) => {
+    let elements = [];
+    Object.keys(cfg).forEach((g) => {
+      let row = [];
+      cfg[g].forEach((b) => {
+        let fn = () => { console.log(b.id); };
+        if (b.preset) {
+          fn = () => {
+            const cfgKeys = Object.keys(b.preset);
+            cfgKeys.forEach((key) => {
+              Object.keys(b.preset[key]).forEach((field) => {
+                UISetter[key][field](b.preset[key][field]);
+              });
+              Update[key]();
+            })
+          }
+        }
+        let btn = {
+          id: b.id,
+          text: b.text,
+          callback: fn
+        };
+        row.push(btn);
+      });
+      elements.push(UiUtils.createButtons(`toolbar_${g}`, row));
+    });
+    UiUtils.addGroup('gToolbar', 'Toolbar', elements, '#controls', true);
+  });
+  // * File
   UiUtils.addGroup('gFile', 'File', [
     UiUtils.createDropdownList('ModelSlot', modelSlots, (e) => {
       viewer.selectedModel = parseInt(e.value);
@@ -581,6 +634,7 @@ function populateControls() {
     }]),
     UiUtils.createEmptyRow('imageBasket'),
   ]);
+  // * Labels
   UiUtils.addGroup('gLabels', 'Labels', [
     UiUtils.createFileBrowser('labelBrowser', 'load model labels', false, onLoadLabels),
     UiUtils.createSlider('labelScaleExp10', 'scale (log10)', 0, -3, 3, 0.2, updateLabelScale),
@@ -670,6 +724,7 @@ function populateControls() {
       showPoints: { text: 'show points', default: Config.showPoints },
     }, setLabelOptions),
   ]);
+  // * Model Settings
   UiUtils.addGroup('gModel', 'Model Settings', [
     UiUtils.createCheckboxes('onLoadOptions', {
       isZAxisUp: { text: 'Z is up', default: Config.isZAxisUp },
@@ -710,31 +765,32 @@ function populateControls() {
       viewer.selectSubmesh(obj.value);
     }),
   ]);
+  // * Camera Settings
   UiUtils.addGroup('gCamera', 'Camera Settings', [
     UiUtils.createSlider('cameraDistance', 'distance',
-      Config.cameraDistance, 0.2, 10, 0.01, (value) => {
-        Config.cameraDistance = parseFloat(value);
-        updateCamera();
+      Config.camera.distance, 0.2, 10, 0.01, (value) => {
+        Config.camera.distance = parseFloat(value);
+        Update.cameraLocation();
       }),
     UiUtils.createSlider('cameraHeight', 'height',
-      Config.cameraHeight, -2, 2, 0.01, (value) => {
-        Config.cameraHeight = parseFloat(value);
-        updateCamera();
+      Config.camera.height, -2, 2, 0.01, (value) => {
+        Config.camera.height = parseFloat(value);
+        Update.cameraLocation();
       }),
     UiUtils.createSlider('cameraPitch', 'pitch',
-      Config.cameraPitch, -90, 90, 1, (value) => {
-        Config.cameraPitch = parseFloat(value);
-        updateCamera();
+      Config.camera.pitch, -90, 90, 1, (value) => {
+        Config.camera.pitch = parseFloat(value);
+        Update.cameraLocation();
       }),
     UiUtils.createSlider('cameraRotationY', 'rotation Y',
-      Config.cameraRotationY, -180, 180, 1, (value) => {
-        Config.cameraRotationY = parseFloat(value);
-        updateCamera();
+      Config.camera.rotationY, -180, 180, 1, (value) => {
+        Config.camera.rotationY = parseFloat(value);
+        Update.cameraLocation();
       }),
     UiUtils.createSlider('cameraFOV', 'Field of View',
-      Config.cameraFOV, 1, 90, 1, (value) => {
-        Config.cameraFOV = parseFloat(value);
-        updateCameraFOV();
+      Config.camera.fov, 1, 90, 1, (value) => {
+        Config.camera.fov = parseFloat(value);
+        Update.cameraFov()
       }),
     UiUtils.createButtons('cameraDumps', [
       {
@@ -754,6 +810,7 @@ function populateControls() {
       },
     ]),
   ]);
+  // * Light Settings
   const sun = viewer.scene.lights[0];
   UiUtils.addGroup('gLight', 'Light Settings', [
     UiUtils.createSlider('SunAltitude', 'sun altitude', sun.altitude, -1, 1, 0.05, (value) => {
@@ -767,6 +824,7 @@ function populateControls() {
     }),
 
   ]);
+  // * Shader Settings
   const { overlay } = viewer.scene;
   UiUtils.addGroup('gShader', 'Shader Settings', [
     UiUtils.createDropdownList('missingTexture', missingTexturePresets, (obj) => {
@@ -781,6 +839,7 @@ function populateControls() {
       overlay.alpha = parseFloat(value);
     }),
   ]);
+  // * Animation Controls
   UiUtils.addGroup('gAnim', 'Animation Controls', [
     UiUtils.createSlider('keyframe', 'keyframe',
       Config.keyframe, -1, -1, 0, (value) => {
@@ -809,11 +868,10 @@ function makeCanvasFollowScroll() {
 $(document).ready(() => {
   viewer = new Viewer('glCanvas', 'canvas2D', ImageUrls.white);
   viewer.setRotationCallback(setRotation);
-  viewer.setCameraHeightCallback(setCameraHeight);
-  viewer.setCameraDistanceCallback(setCameraDistance);
+  viewer.setCameraHeightCallback(UISetter.camera.height);
+  viewer.setCameraDistanceCallback(UISetter.camera.distance);
   viewer.setBackgroundColor(Config.backgroundColor);
-  updateCamera();
-  updateCameraFOV();
+  Update.camera();
   populateControls();
   reloadModel();
   makeCanvasFollowScroll();

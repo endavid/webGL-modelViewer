@@ -249,6 +249,27 @@ td.subgroup {
   -moz-border-radius: 8px;
 }
 
+.button {
+	cursor: pointer;
+	display: inline-block;
+	color: white;
+	font-size: 8pt;
+	background-color: #00c4c4;
+	padding: 4px 4px 4px 4px;
+	text-decoration: none;
+	text-align: center;
+	margin: 0 1pt;
+}
+
+.button:hover {
+	background-color: #8bdddd;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
 input[type=number] {
   width: 8ex;
   padding: 4px;

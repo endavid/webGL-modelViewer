@@ -126,9 +126,9 @@ const UiUtils = {
   createButtons(id, list) {
     const td = $('<td>');
     list.forEach((b) => {
-      td.append($('<button>')
+      td.append($('<div>')
         .attr('id', b.id)
-        .attr('type', 'button')
+        .attr('class', 'button')
         .click(b.callback)
         .append(b.text));
     });
@@ -151,9 +151,9 @@ const UiUtils = {
       select = options;
     }
     return $('<tr>').attr('id', `${id}_parent`).append($('<td>')
-      .append($('<button>')
+      .append($('<div>')
         .attr('id', id)
-        .attr('type', 'button')
+        .attr('class', 'button')
         .click(callback)
         .append(buttonText))
       .append(midText)
@@ -243,16 +243,28 @@ const UiUtils = {
     return [title].concat(elements);
   },
 
-  addGroup(id, text, elements, parent) {
+  addGroup(id, text, elements, parent, prepend) {
     const group = UiUtils.createGroup(id, text, elements);
-    UiUtils.addToTable(group, parent);
+    if (prepend) {
+      UiUtils.prependToTable(group, parent);
+    } else {
+      UiUtils.appendToTable(group, parent);
+    }
   },
 
-  addToTable(group, parent) {
+  appendToTable(group, parent) {
     const tbody = $(parent || '#controls').find('tbody');
     group.forEach((element) => {
       tbody.append(element);
     });
   },
+
+  prependToTable(group, parent) {
+    const tbody = $(parent || '#controls').find('tbody');
+    group.reverse().forEach((element) => {
+      tbody.prepend(element);
+    });
+  },
+
 };
 export { UiUtils as default };
