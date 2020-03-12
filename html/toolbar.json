@@ -112,5 +112,35 @@
         }
       }
     }
+  ],
+  "poselets": [
+    {
+      "id": "handRelaxedR",
+      "text": "Hand Relaxed R",
+      "icon": "/icons/pose-hand-relaxed-R.png",
+      "iconType": "medium",
+      "actions": {
+        "anim": [
+          {
+            "cmd": "setPose",
+            "args": ["/resources/poses/hand-relaxed-R.json"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "handRelaxedL",
+      "text": "Hand Relaxed L",
+      "icon": "/icons/pose-hand-relaxed-L.png",
+      "iconType": "medium",
+      "actions": {
+        "anim": [
+          {
+            "cmd": "setPose",
+            "args": ["/resources/poses/hand-relaxed-L.json"]
+          }
+        ]
+      }
+    }
   ]
 }

@@ -352,6 +352,9 @@ const Actions = {
       $.getJSON(url, (pose) => {
         model.skinnedModel.setPose(pose.pose, frame);
         UISetter.anim.keyframe(frame);
+      })
+      .fail((e) => {
+        console.error(e);
       });
     }
   }
@@ -643,6 +646,7 @@ function populateControls() {
           id: b.id,
           text: b.text,
           icon: b.icon,
+          iconType: b.iconType || '',
           callback: fn
         };
         row.push(btn);

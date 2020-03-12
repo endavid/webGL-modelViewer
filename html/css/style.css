@@ -329,4 +329,9 @@ input.three[type=range] {
 .icon {
   height: 14pt;
   width: auto;
+  vertical-align: middle;
+}
+
+.icon[type=medium] {
+  height: 24pt;
 }

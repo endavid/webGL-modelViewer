@@ -132,6 +132,7 @@ const UiUtils = {
         type = 'icon';
         content = $('<img>')
           .attr('class', 'icon')
+          .attr('type', b.iconType)
           .attr('alt', b.text)
           .attr('src', b.icon);
       }
