@@ -83,7 +83,33 @@
       "text": "Bake",
       "icon": "/icons/bake.png",
       "actions": {
-        "labels": ["bake"]
+        "labels": [
+          { "cmd": "bake" }
+        ]
+      }
+    },
+    {
+      "id": "placeCheckerboard",
+      "text": "Place Checkerboard",
+      "icon": "/resources/gray-checkerboard.png",
+      "actions": {
+        "model": [
+          {
+            "cmd": "load",
+            "args": [1, "plane", "/resources/plane.obj"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "resetModelPosition",
+      "text": "Reset Model Position",
+      "icon": "/icons/center.png",
+      "preset": {
+        "model": {
+          "rotation": [0, 0, 0],
+          "translation": [0, 0, 0]
+        }
       }
     }
   ]

@@ -11,6 +11,7 @@ const ImageUrls = {
   'orange.png': 'resources/orange.png',
   'pear.png': 'resources/pear.png',
   'tree01.png': 'resources/tree01.png',
+  'gray-checkerboard.png': 'resources/gray-checkerboard.png',
   white: 'resources/white.png',
   missing: 'resources/white.png',
 };
@@ -138,51 +139,6 @@ function progressBarUpdate(ratio) {
   $('#progressBar').css('width', `${percentage}%`);
 }
 
-function updateModelTransform() {
-  const p = Config.modelPosition;
-  const r = Config.modelRotation;
-  const s = Config.modelScale;
-  viewer.setModelTransform({
-    position: [p.x, p.y, p.z],
-    rotation: [r.x, r.y, r.z],
-    scale: [s, s, s],
-  });
-}
-
-function updateModelScale(logValue) {
-  Config.modelScale = 10 ** parseFloat(logValue);
-  updateModelTransform();
-}
-
-function setRotation(rotation) {
-  ['x', 'y', 'z'].forEach((axis, i) => {
-    const angle = rotation[i] !== undefined
-      ? VMath.round(rotation[i], 2) : Config.modelRotation[axis];
-    Config.modelRotation[axis] = angle;
-    $(`#armature_angle${axis}`).val(angle);
-    $(`#armature_angle${axis}_number`).val(angle);
-  });
-  updateModelTransform();
-}
-
-function setTranslation(translation) {
-  const p = VMath.round(translation, 4);
-  ['x', 'y', 'z'].forEach((axis, i) => {
-    Config.modelPosition[axis] = p[i];
-    $(`#armature_translation${axis}`).val(p[i]);
-    $(`#armature_translation${axis}_number`).val(p[i]);
-  });
-  updateModelTransform();
-}
-
-function setMeterUnits(unitMeters) {
-  let logScale = Math.log10(unitMeters);
-  logScale = Math.round(1e4 * logScale) * 1e-4;
-  $('#modelScaleExp10').val(logScale);
-  $('#modelScaleExp10_number').val(logScale);
-  updateModelScale(logScale);
-}
-
 function populateSubmeshList(meshes) {
   const ctrl = $('#submesh');
   ctrl.empty();
@@ -207,31 +163,6 @@ function updateLabelList() {
   }
 }
 
-function reloadModel() {
-  const url = $('#Presets').val();
-  const name = $('#Presets option:selected').text();
-  progressBarUpdate(0);
-  $('#progressBarDiv').show();
-  viewer.loadModel(name, url, Config, ImageUrls, MaterialUrls, progressBarUpdate, (model) => {
-    removePoseGroup();
-    $('#progressBarDiv').hide();
-    if (model.stats) {
-      dumpObject(model.stats);
-    }
-    if (model.skinnedModel) {
-      $('#keyframe').attr('max', model.skinnedModel.keyframeCount - 1);
-      $('#keyframe_number').val(-1);
-      Config.keyframe = -1;
-      addPoseGroup(model.skinnedModel);
-    }
-    setTranslation(model.transform.position);
-    setRotation([0, 0, 0]);
-    setMeterUnits(model.meterUnits);
-    populateSubmeshList(model.meshes);
-    populateLabelList(model.labels);
-  }, setError);
-}
-
 function updateRotationLock() {
   viewer.setRotationLock(Config.isLockRotationX, Config.isLockRotationY);
 }
@@ -253,6 +184,23 @@ const Update = {
   camera: () => {
     Update.cameraLocation();
     Update.cameraFov();
+  },
+  modelTransform: () => {
+    const p = Config.model.position;
+    const r = Config.model.rotation;
+    const s = Config.model.scale;
+    viewer.setModelTransform({
+      position: [p.x, p.y, p.z],
+      rotation: [r.x, r.y, r.z],
+      scale: [s, s, s],
+    });
+  },
+  modelScale: (logValue) => {
+    Config.model.scale = 10 ** parseFloat(logValue);
+    Update.modelTransform();
+  },
+  model: () => {
+    Update.modelTransform();
   },
   sun: () => {}
 }
@@ -283,6 +231,32 @@ const UISetter = {
       $('#cameraFOV').val(a);
       $('#cameraFOV_number').val(a);
       Config.camera.fov = a;
+    }
+  },
+  model: {
+    rotation: (rotation) => {
+      ['x', 'y', 'z'].forEach((axis, i) => {
+        const angle = rotation[i] !== undefined
+          ? VMath.round(rotation[i], 2) : Config.model.rotation[axis];
+        Config.model.rotation[axis] = angle;
+        $(`#armature_angle${axis}`).val(angle);
+        $(`#armature_angle${axis}_number`).val(angle);
+      });
+    },
+    translation: (translation) => {
+      const p = VMath.round(translation, 4);
+      ['x', 'y', 'z'].forEach((axis, i) => {
+        Config.model.position[axis] = p[i];
+        $(`#armature_translation${axis}`).val(p[i]);
+        $(`#armature_translation${axis}_number`).val(p[i]);
+      });
+    },
+    meterUnits: (unitMeters) => {
+      let logScale = Math.log10(unitMeters);
+      logScale = Math.round(1e4 * logScale) * 1e-4;
+      $('#modelScaleExp10').val(logScale);
+      $('#modelScaleExp10_number').val(logScale);
+      Config.model.scale = 10 ** parseFloat(logScale);
     }
   },
   sun: {
@@ -320,6 +294,40 @@ const Actions = {
             $('#progressBarDiv').hide();
           }, setError);
       }
+    },
+  },
+  model: {
+    load: (slot, name, url) => {
+      const currentSlot = viewer.selectedModel;
+      viewer.selectedModel = slot;
+      progressBarUpdate(0);
+      $('#progressBarDiv').show();
+      viewer.loadModel(name, url, Config, ImageUrls, MaterialUrls, progressBarUpdate, (model) => {
+        removePoseGroup();
+        $('#progressBarDiv').hide();
+        if (model.stats) {
+          dumpObject(model.stats);
+        }
+        if (model.skinnedModel) {
+          $('#keyframe').attr('max', model.skinnedModel.keyframeCount - 1);
+          $('#keyframe_number').val(-1);
+          Config.keyframe = -1;
+          addPoseGroup(model.skinnedModel);
+        }
+        UISetter.model.translation(model.transform.position);
+        UISetter.model.rotation([0, 0, 0]);
+        UISetter.model.meterUnits(model.meterUnits);
+        Update.modelTransform();
+        populateSubmeshList(model.meshes);
+        populateLabelList(model.labels);
+        viewer.selectedModel = currentSlot;
+      }, setError);
+    },
+    reload: () => {
+      const url = $('#Presets').val();
+      const name = $('#Presets option:selected').text();
+      const slot = viewer.selectedModel;
+      Actions.model.load(slot, name, url);
     }
   }
 }
@@ -422,7 +430,7 @@ function populateControls() {
     // add models to preset list
     if (models.length > 0) {
       UiUtils.addUrisToDropdownList('Presets', models);
-      reloadModel();
+      Actions.model.reload();
     }
   }
 
@@ -539,6 +547,7 @@ function populateControls() {
     'orange.json',
     'banana.obj',
     'tree01.dae',
+    'plane.obj',
     'monigote.dae'].map(e => ({ name: e, value: `resources/${e}` }));
 
   const missingTexturePresets = [
@@ -604,8 +613,9 @@ function populateControls() {
           }
           if (b.actions) {
             Object.keys(b.actions).forEach((key) => {
-              b.actions[key].forEach((field) => {
-                Actions[key][field]();
+              b.actions[key].forEach((action) => {
+                const cmd = action.cmd;
+                Actions[key][cmd].apply(null, action.args);
               });
             });
           }
@@ -631,7 +641,7 @@ function populateControls() {
       viewer.selectedModel = parseInt(e.value);
     }),
     UiUtils.createFileBrowser('fileBrowser', 'load models & textures', true, onChangeFileBrowser),
-    UiUtils.createDropdownList('Presets', modelPresets, reloadModel),
+    UiUtils.createDropdownList('Presets', modelPresets, Actions.model.reload),
     UiUtils.createButtonWithOptions('saveFile', 'Save', ' as ',
       [{ name: 'OBJ Wavefront', value: '.obj' }, { name: 'Json', value: '.json' }],
       (e) => {
@@ -759,9 +769,9 @@ function populateControls() {
       recomputeNormals: { text: 'recompute normals', default: Config.recomputeNormals },
     }, (key, value) => {
       Config[key] = value;
-      reloadModel();
+      Actions.model.reload();
     }),
-    UiUtils.createSlider('modelScaleExp10', 'scale (log10)', 0, -3, 3, 0.2, updateModelScale),
+    UiUtils.createSlider('modelScaleExp10', 'scale (log10)', 0, -3, 3, 0.2, Update.model.modelScale),
     UiUtils.createCheckboxes('axisLock', {
       isLockRotationX: { text: 'lock X', default: Config.isLockRotationX },
       isLockRotationY: { text: 'lock Y', default: Config.isLockRotationY },
@@ -770,12 +780,12 @@ function populateControls() {
       updateRotationLock();
     }),
     UiUtils.createAngleSliders('armature', null, [0, 0, 0], (value, axis) => {
-      Config.modelRotation[axis] = parseFloat(value);
-      updateModelTransform();
+      Config.model.rotation[axis] = parseFloat(value);
+      Update.modelTransform();
     }),
     UiUtils.createTranslationSliders('armature', null, [0, 0, 0], (value, axis) => {
-      Config.modelPosition[axis] = parseFloat(value);
-      updateModelTransform();
+      Config.model.position[axis] = parseFloat(value);
+      Update.modelTransform();
     }),
     UiUtils.createButtonWithOptions('centerModel', 'Center', ' around ',
       [{ name: 'origin', value: 'origin' }],
@@ -786,8 +796,9 @@ function populateControls() {
         scaled[1] = 0;
         const str = vectorToString(position);
         setInfo(`${label} at: [${str}]`);
-        setRotation([0, 0, 0]);
-        setTranslation(scaled);
+        UISetter.model.rotation([0, 0, 0]);
+        UISetter.model.translation(scaled);
+        Update.model.modelTransform();
       }),
     UiUtils.createDropdownList('submesh', [], (obj) => {
       viewer.selectSubmesh(obj.value);
@@ -850,7 +861,7 @@ function populateControls() {
   UiUtils.addGroup('gShader', 'Shader Settings', [
     UiUtils.createDropdownList('missingTexture', missingTexturePresets, (obj) => {
       ImageUrls.missing = obj.value;
-      reloadModel();
+      Actions.model.reload();
     }),
     UiUtils.createDropdownList('shader', shaderPresets, (obj) => {
       viewer.replaceLitShader(obj.value);
@@ -895,13 +906,16 @@ function makeCanvasFollowScroll() {
 
 $(document).ready(() => {
   viewer = new Viewer('glCanvas', 'canvas2D', ImageUrls.white);
-  viewer.setRotationCallback(setRotation);
+  viewer.setRotationCallback((r) => {
+    UISetter.model.rotation(r);
+    Update.modelTransform();
+  });
   viewer.setCameraHeightCallback(UISetter.camera.height);
   viewer.setCameraDistanceCallback(UISetter.camera.distance);
   viewer.setBackgroundColor(Config.backgroundColor);
   Update.camera();
   populateControls();
   toggleUninterestingGroups();
-  reloadModel();
+  Actions.model.reload();
   makeCanvasFollowScroll();
 });
