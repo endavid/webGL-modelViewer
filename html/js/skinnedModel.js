@@ -247,10 +247,9 @@ class SkinnedModel {
     // m = armatureTransform * m;
     return m;
   }
-  addPose(pose) {
+  setPose(pose, frame) {
     const { anims, skeleton } = this;
     const keys = Object.keys(pose);
-    const frame = this.keyframeCount;
     keys.forEach((joint) => {
       if (!anims[joint]) {
         anims[joint] = { transforms: [] };
@@ -296,6 +295,9 @@ class SkinnedModel {
         anims[joint].transforms[frame].position = [t.tx, t.ty, t.tz];
       }
     });
+  }
+  addPose(pose) {
+    this.setPose(pose, this.keyframeCount);
     this.keyframeCount += 1;
   }
   updateJointRotationOrder(jro) {

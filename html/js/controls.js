@@ -272,6 +272,17 @@ const UISetter = {
       const sun = viewer.scene.lights[0];
       sun.setIntensity(i);
     }
+  },
+  anim: {
+    keyframe: (k) => {
+      Config.keyframe = parseInt(k, 10);
+      removePoseGroup();
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        addPoseGroup(model.skinnedModel);
+        viewer.setKeyframe(Config.keyframe);
+      }
+    }
   }
 }
 
@@ -329,6 +340,20 @@ const Actions = {
       const slot = viewer.selectedModel;
       Actions.model.load(slot, name, url);
     }
+  },
+  anim: {
+    setPose: (url) => {
+      const frame = Config.keyframe;
+      const model = viewer.getSelectedModel();
+      if (!model || !model.skinnedModel) {
+        setWarning('Not a skinned model');
+        return;
+      }
+      $.getJSON(url, (pose) => {
+        model.skinnedModel.setPose(pose.pose, frame);
+        UISetter.anim.keyframe(frame);
+      });
+    }
   }
 }
 
@@ -354,15 +379,6 @@ function saveCurrentPose() {
     Gfx.saveJson(pose, `${fn}_${frame}`);
   } else {
     setWarning('No skinned model');
-  }
-}
-
-function onChangeKeyframe() {
-  removePoseGroup();
-  const model = viewer.getSelectedModel();
-  if (model && model.skinnedModel) {
-    addPoseGroup(model.skinnedModel);
-    viewer.setKeyframe(Config.keyframe);
   }
 }
 
@@ -874,11 +890,11 @@ function populateControls() {
   // * Animation Controls
   UiUtils.addGroup('gAnim', 'Animation Controls', [
     UiUtils.createSlider('keyframe', 'keyframe',
-      Config.keyframe, -1, -1, 0, (value) => {
-        Config.keyframe = parseInt(value, 10);
-        onChangeKeyframe();
-      }),
-    UiUtils.createFileBrowser('posefileBrowser', 'load keyframe/pose', true, onAddPoseFiles),
+      Config.keyframe, -1, -1, 0, UISetter.anim.keyframe),
+    UiUtils.createFileBrowser('posesfileBrowser', 'load poses', true, onAddPoseFiles),
+    UiUtils.createFileBrowser('posefileBrowser', 'set pose', false, (values) => {
+      Actions.anim.setPose(values[0].uri);
+    }),
     UiUtils.createFileBrowser('jrofileBrowser', 'load joint rotation order', false, onAddJroFile),
     UiUtils.createButtonWithOptions('savePose', 'Save Pose', ' as ', 'Json', saveCurrentPose),
   ], '#controlsRight');
