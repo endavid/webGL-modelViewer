@@ -141,6 +141,34 @@
           }
         ]
       }
+    },
+    {
+      "id": "handClosedR",
+      "text": "Hand Closed R",
+      "icon": "/icons/pose-hand-closed-R.png",
+      "iconType": "medium",
+      "actions": {
+        "anim": [
+          {
+            "cmd": "setPose",
+            "args": ["/resources/poses/hand-closed-R.json"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "handClosedL",
+      "text": "Hand Closed L",
+      "icon": "/icons/pose-hand-closed-L.png",
+      "iconType": "medium",
+      "actions": {
+        "anim": [
+          {
+            "cmd": "setPose",
+            "args": ["/resources/poses/hand-closed-L.json"]
+          }
+        ]
+      }
     }
   ]
 }
