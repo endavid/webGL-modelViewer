@@ -15,6 +15,12 @@ const Config = {
     rotationY: 0,
     fov: 26.9
   },
+  sun: {
+    altitude: 1,
+    eastWest: 0.2,
+    intensity: 0.8,
+    alpha: 1
+  },
   needsReload: false,
   keyframe: -1,
   backgroundColor: 0x3d4d4d,

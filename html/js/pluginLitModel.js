@@ -16,8 +16,8 @@ class PluginLitModel {
     shaders.litSkin = await Shader.createAsync(gl, 'shaders/skinning.vs', fs, attribsSkin, uniformsSkin);
     return new PluginLitModel(shaders, whiteTexture);
   }
-  static setOpaquePass(glState) {
-    glState.setBlend(false);
+  static setDepthPass(glState, isBlend) {
+    glState.setBlend(isBlend);
     glState.setDepthTest(true);
     glState.setDepthMask(true);
     glState.setCullFace(glState.Cull.back);
@@ -41,8 +41,8 @@ class PluginLitModel {
     gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.getTransformMatrix());
     gl.uniform3f(shader.uniforms.lightDirection,
       light.direction[0], light.direction[1], light.direction[2]);
-    gl.uniform3f(shader.uniforms.lightIrradiance,
-      light.irradiance[0], light.irradiance[1], light.irradiance[2]);
+    gl.uniform4f(shader.uniforms.lightIrradiance,
+      light.irradiance[0], light.irradiance[1], light.irradiance[2], light.irradiance[3]);
     gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexBuffer);
     gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
     gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4 * 3);
@@ -76,7 +76,8 @@ class PluginLitModel {
     shader.disable(gl);
   }
   draw(glState, scene) {
-    PluginLitModel.setOpaquePass(glState);
+    const irradiance = scene.lights[0].irradiance;
+    PluginLitModel.setDepthPass(glState, irradiance[3] < 0.99);
     const args = {
       whiteTexture: this.whiteTexture,
       gl: glState.gl,

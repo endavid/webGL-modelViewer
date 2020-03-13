@@ -207,7 +207,25 @@ const Update = {
   model: () => {
     Update.modelTransform();
   },
-  sun: () => {}
+  sunAltitude: (h) => {
+    viewer.scene.lights[0].setAltitude(h);
+  },
+  sunEastWest: (ew) => {
+    viewer.scene.lights[0].setEastWest(ew);
+  },
+  sunIntensity: (i) => {
+    viewer.scene.lights[0].setIntensity(i);
+  },
+  sunAlpha: (a) => {
+    viewer.scene.lights[0].setAlpha(a);
+  },
+  sun: () => {
+    let sun = viewer.scene.lights[0];
+    sun.setAltitude(Config.sun.altitude);
+    sun.setEastWest(Config.sun.eastWest);
+    sun.setIntensity(Config.sun.intensity);
+    sun.setAlpha(Config.sun.alpha);
+  }
 }
 
 const UISetter = {
@@ -266,16 +284,24 @@ const UISetter = {
   },
   sun: {
     altitude: (h) => {
-      const sun = viewer.scene.lights[0];
-      sun.setAltitude(h);
+      $('#SunAltitude').val(h);
+      $('#SunAltitude_number').val(h);
+      Config.sun.altitude = h;
     },
     eastWest: (ew) => {
-      const sun = viewer.scene.lights[0];
-      sun.setEastWest(ew);
+      $('#SunEastWest').val(ew);
+      $('#SunEastWest_number').val(ew);
+      Config.sun.eastWest = ew;
     },
     intensity: (i) => {
-      const sun = viewer.scene.lights[0];
-      sun.setIntensity(i);
+      $('#SunIntensity').val(i);
+      $('#SunIntensity_number').val(i);
+      Config.sun.intensity = i;
+    },
+    alpha: (a) => {
+      $('#SunAlpha').val(a);
+      $('#SunAlpha_number').val(a);
+      Config.sun.alpha = a; 
     }
   },
   anim: {
@@ -889,9 +915,9 @@ function populateControls() {
   // * Light Settings
   const sun = viewer.scene.lights[0];
   UiUtils.addGroup('gLight', 'Light Settings', [
-    UiUtils.createSlider('SunAltitude', 'sun altitude', sun.altitude, -1, 1, 0.05, UISetter.sun.altitude),
-    UiUtils.createSlider('SunEastWest', 'sun east-west', sun.eastWest, -1, 1, 0.05, UISetter.sun.eastWest),
-    UiUtils.createSlider('SunIntensity', 'sun intensity', sun.intensity, 0.1, 2, 0.1, UISetter.sun.intensity),
+    UiUtils.createSlider('SunAltitude', 'sun altitude', Config.sun.altitude, -1, 1, 0.05, Update.sunAltitude),
+    UiUtils.createSlider('SunEastWest', 'sun east-west', Config.sun.eastWest, -1, 1, 0.05, Update.sunEastWest),
+    UiUtils.createSlider('SunIntensity', 'sun intensity', Config.sun.intensity, 0.1, 2, 0.1, Update.sunIntensity),
   ]);
   // * Shader Settings
   const { overlay } = viewer.scene;
@@ -919,6 +945,7 @@ function populateControls() {
     UiUtils.createSlider('overlayAlpha', 'overlay opacity', overlay.alpha, 0, 1, 1 / 255, (value) => {
       overlay.alpha = parseFloat(value);
     }),
+    UiUtils.createSlider('SunAlpha', 'model alpha', Config.sun.alpha, 0, 1, 1 / 255, Update.sunAlpha),
   ]);
   // * Animation Controls
   UiUtils.addGroup('gAnim', 'Animation Controls', [

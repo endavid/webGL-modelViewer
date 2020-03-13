@@ -5,6 +5,8 @@ class SunLight {
     this.altitude = altitude;
     this.eastWest = eastWest;
     this.intensity = 0.8;
+    // woohoo! light that can make your objects transparent!
+    this.alpha = 1.0;
     this.color = [1.2, 1.1, 1.0];
     this.updateDirection();
     this.updateIrradiance();
@@ -13,8 +15,8 @@ class SunLight {
     this.direction = VMath.normalize([this.eastWest, this.altitude, 1.0]);
   }
   updateIrradiance() {
-    const { intensity, color } = this;
-    this.irradiance = color.map(a => a * intensity);
+    const { intensity, color, alpha } = this;
+    this.irradiance = color.map(a => a * intensity).concat(alpha);
   }
   setAltitude(v) {
     this.altitude = v;
@@ -26,6 +28,10 @@ class SunLight {
   }
   setIntensity(v) {
     this.intensity = v;
+    this.updateIrradiance();
+  }
+  setAlpha(v) {
+    this.alpha = v;
     this.updateIrradiance();
   }
 }

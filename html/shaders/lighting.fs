@@ -1,7 +1,7 @@
 precision mediump float;
 uniform sampler2D sampler;
 uniform vec3 lightDirection;
-uniform vec3 lightIrradiance;
+uniform vec4 lightIrradiance;
 varying vec2 vUV;
 varying vec3 vNormal;
 varying vec3 worldPosition;
@@ -21,7 +21,7 @@ void main(void) {
   vec3 specular = brdf * specularColor * incidentCos + fresnel;
   vec3 ambientColor = vec3(0.1,0.1,0.1);
   vec3 direct = albedo.rgb * incidentCos * incidentCos + specular;
-  vec4 color = vec4(direct * lightIrradiance + ambientColor, albedo.a);
+  vec4 color = vec4(direct * lightIrradiance.rgb + ambientColor, albedo.a * lightIrradiance.a);
   gl_FragColor = color;
   //gl_FragColor = albedo;
   //gl_FragColor = vec4(vNormal, 1.0);
