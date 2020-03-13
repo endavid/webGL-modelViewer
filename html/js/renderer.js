@@ -2,6 +2,7 @@
 import GlState from './glState.js';
 import Gfx from './gfx.js';
 import VMath from './math.js';
+import PluginBackground from './pluginBackground.js';
 import PluginLitModel from './pluginLitModel.js';
 import PluginIntersection from './pluginIntersection.js';
 import PluginDots from './pluginDots.js';
@@ -116,6 +117,7 @@ class Renderer {
       camera: new Camera(33.4, aspect, 0.1, 500),
       models: [],
       lights: [new SunLight(1, 0.2)],
+      background: {},
       overlay: { alpha: 0.5 },
       labels: {
         world: {
@@ -156,6 +158,7 @@ class Renderer {
     const { gl } = this.glState;
     const self = this;
     Promise.all([
+      PluginBackground.createAsync(gl),
       PluginLitModel.createAsync(gl, this.whiteTexture),
       PluginDots.createAsync(gl),
       PluginOverlay.createAsync(gl),
@@ -384,16 +387,30 @@ class Renderer {
       }
     }
   }
+  setImage(obj, url, callback) {
+    const { gl } = this.glState;
+    if (obj.img && obj.img.webglTexture) {
+      let tex = obj.img.webglTexture;
+      obj.img = null;
+      gl.deleteTexture(tex);
+    }
+    if (!url) {
+      if (callback) callback(img);
+      return;
+    }
+    Gfx.loadTexture(gl, url, false, (img) => {
+      obj.url = url;
+      obj.img = img;
+      if (callback) callback(img);
+    });
+  }
+  setBackgroundImage(url, callback) {
+    const { background } = this.scene;
+    this.setImage(background, url, callback);
+  }
   setOverlayImage(url, callback) {
     const { overlay } = this.scene;
-    const { gl } = this.glState;
-    Gfx.loadTexture(gl, url, true, (img) => {
-      overlay.url = url;
-      overlay.img = img;
-      if (callback) {
-        callback(img);
-      }
-    });
+    this.setImage(overlay, url, callback);
   }
   setBackgroundColor(rgb) {
     this.glState.setClearColor(rgb);

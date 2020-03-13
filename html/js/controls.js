@@ -357,20 +357,29 @@ const Actions = {
         console.error(e);
       });
     }
-  }
-}
-
-function onAddOverlay(values) {
-  const f = values[0];
-  viewer.setOverlayImage(f.uri, (img) => {
-    const aspect = img.height / img.width;
-    const sizeinfo = `${img.width}×${img.height}`;
-    if (Math.abs(aspect - 1.5) > 0.01) {
-      setWarning(`Overlay aspect should be 2:3 but loaded image is ${sizeinfo}`);
-    } else {
-      setInfo(`Overlay size: ${sizeinfo}`);
+  },
+  shader: {
+    checkAspect: (img) => {
+      const aspect = img.height / img.width;
+      const sizeinfo = `${img.width}×${img.height}`;
+      if (Math.abs(aspect - 1.5) > 0.01) {
+        setWarning(`Image aspect should be 2:3 but loaded image is ${sizeinfo}`);
+      } else {
+        setInfo(`Image size: ${sizeinfo}`);
+      }
+    },
+    background: (url) => {
+      viewer.setBackgroundImage(url, Actions.shader.checkAspect);
+    },
+    overlay: (url) => {
+      viewer.setOverlayImage(url, Actions.shader.checkAspect);
+    },
+    clearBackground: () => {
+      viewer.setBackgroundImage(null);
+      // https://stackoverflow.com/a/832730
+      $("#backgroundFileBrowser").replaceWith($("#backgroundFileBrowser").val('').clone(true));
     }
-  });
+  }
 }
 
 function saveCurrentPose() {
@@ -886,7 +895,13 @@ function populateControls() {
     UiUtils.createDropdownList('shader', shaderPresets, (obj) => {
       viewer.replaceLitShader(obj.value);
     }),
-    UiUtils.createFileBrowser('overlayFileBrowser', 'load overlay', false, onAddOverlay),
+    UiUtils.createFileBrowser('backgroundFileBrowser', 'load background', false, (values) => { Actions.shader.background(values[0].uri); }),
+    UiUtils.createButtons('shaderButtons', [{
+      id: 'removeBackground',
+      text: 'Clear Bg',
+      callback: Actions.shader.clearBackground,
+    }]),
+    UiUtils.createFileBrowser('overlayFileBrowser', 'load overlay', false, (values) => { Actions.shader.overlay(values[0].uri); }),
     UiUtils.createSlider('overlayAlpha', 'overlay opacity', overlay.alpha, 0, 1, 1 / 255, (value) => {
       overlay.alpha = parseFloat(value);
     }),
