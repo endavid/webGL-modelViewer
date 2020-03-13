@@ -34,6 +34,11 @@ function setError(e) {
   setInfo(`[ERROR] ${e}`);
 }
 
+function clearFileBrowser(id) {
+  // https://stackoverflow.com/a/832730
+  $(`#${id}`).replaceWith($(`#${id}`).val('').clone(true));
+}
+
 function dumpObject(obj) {
   const keys = Object.keys(obj);
   const lines = keys.map(k => `${k}: ${obj[k]}`);
@@ -376,8 +381,11 @@ const Actions = {
     },
     clearBackground: () => {
       viewer.setBackgroundImage(null);
-      // https://stackoverflow.com/a/832730
-      $("#backgroundFileBrowser").replaceWith($("#backgroundFileBrowser").val('').clone(true));
+      clearFileBrowser('backgroundFileBrowser');
+    },
+    clearOverlay: () => {
+      viewer.setOverlayImage(null);
+      clearFileBrowser('overlayFileBrowser');
     }
   }
 }
@@ -896,12 +904,18 @@ function populateControls() {
       viewer.replaceLitShader(obj.value);
     }),
     UiUtils.createFileBrowser('backgroundFileBrowser', 'load background', false, (values) => { Actions.shader.background(values[0].uri); }),
+    UiUtils.createFileBrowser('overlayFileBrowser', 'load overlay', false, (values) => { Actions.shader.overlay(values[0].uri); }),
     UiUtils.createButtons('shaderButtons', [{
       id: 'removeBackground',
       text: 'Clear Bg',
       callback: Actions.shader.clearBackground,
-    }]),
-    UiUtils.createFileBrowser('overlayFileBrowser', 'load overlay', false, (values) => { Actions.shader.overlay(values[0].uri); }),
+    },
+    {
+      id: 'removeOverlay',
+      text: 'Clear Overlay',
+      callback: Actions.shader.clearOverlay,
+    },
+    ]),
     UiUtils.createSlider('overlayAlpha', 'overlay opacity', overlay.alpha, 0, 1, 1 / 255, (value) => {
       overlay.alpha = parseFloat(value);
     }),
