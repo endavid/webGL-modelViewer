@@ -137,6 +137,34 @@
   ],
   "poselets": [
     {
+      "id": "handStraightR",
+      "text": "Hand Straight R",
+      "icon": "/icons/pose-hand-straight-R.png",
+      "iconType": "medium",
+      "actions": {
+        "anim": [
+          {
+            "cmd": "setPose",
+            "args": ["/resources/poses/hand-straight-R.json"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "handStraightL",
+      "text": "Hand Straight L",
+      "icon": "/icons/pose-hand-straight-L.png",
+      "iconType": "medium",
+      "actions": {
+        "anim": [
+          {
+            "cmd": "setPose",
+            "args": ["/resources/poses/hand-straight-L.json"]
+          }
+        ]
+      }
+    },
+    {
       "id": "handRelaxedR",
       "text": "Hand Relaxed R",
       "icon": "/icons/pose-hand-relaxed-R.png",
