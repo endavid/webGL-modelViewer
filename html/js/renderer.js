@@ -164,6 +164,12 @@ class Renderer {
       PluginOverlay.createAsync(gl),
     ]).then((list) => {
       self.plugins = list;
+      self.pluginIndeces = {
+        background: 0,
+        litModel: 1,
+        dots: 2,
+        overlay: 3
+      };
     });
   }
   initPlugins2d() {
@@ -181,6 +187,12 @@ class Renderer {
     this.glState.popFramebuffer();
     this.glState.popRenderbuffer();
   }
+  getPlugin(id) {
+    if (this.pluginIndeces) {
+      return this.plugins[this.pluginIndeces[id]];
+    }
+    return null;
+  }
   async replaceLitShader(fragmentShaderUri) {
     const { gl } = this.glState;
     var plugin;
@@ -192,7 +204,7 @@ class Renderer {
     } else {
       plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri);
     }    
-    this.plugins[1] = plugin;
+    this.plugins[this.pluginIndeces.litModel] = plugin;
   }
   static readImageData() {
     const p = new Promise((resolve, reject) => {
@@ -419,10 +431,10 @@ class Renderer {
     this.outputSurface = id;
   }
   setPointSize(size) {
-    this.plugins[1].pointSize = size;
+    this.getPlugin('dots').pointSize = size;
   }
   setPointColor(r, g, b, a) {
-    this.plugins[1].tint = [r, g, b, a];
+    this.getPlugin('dots').tint = [r, g, b, a];
   }
   setLabelScale(scale) {
     this.scene.labels.scale = scale;
