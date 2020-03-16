@@ -192,7 +192,7 @@ class Renderer {
     } else {
       plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri);
     }    
-    this.plugins[0] = plugin;
+    this.plugins[1] = plugin;
   }
   static readImageData() {
     const p = new Promise((resolve, reject) => {

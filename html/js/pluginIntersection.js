@@ -87,10 +87,10 @@ class PluginIntersection {
     PluginIntersection.setBackPass(glState);
     scene.models.forEach(drawModel);
     PluginIntersection.setFrontPass(glState);
-    args.scene.lights[0].irradiance = [0, 1, 1];
+    args.scene.lights[0].irradiance = [0, 1, 1, 1];
     scene.models.forEach(drawModel);
     PluginIntersection.setIntersectionPass(glState);
-    args.scene.lights[0].irradiance = [1, 0, 0];
+    args.scene.lights[0].irradiance = [1, 0, 0, 1];
     scene.models.forEach(drawModel);
     if (this.doLightPass) { // optional
       PluginIntersection.setLightPass(glState);

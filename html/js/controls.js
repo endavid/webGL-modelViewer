@@ -834,7 +834,7 @@ function populateControls() {
       Config[key] = value;
       Actions.model.reload();
     }),
-    UiUtils.createSlider('modelScaleExp10', 'scale (log10)', 0, -3, 3, 0.2, Update.model.modelScale),
+    UiUtils.createSlider('modelScaleExp10', 'scale (log10)', 0, -3, 3, 0.2, Update.modelScale),
     UiUtils.createCheckboxes('axisLock', {
       isLockRotationX: { text: 'lock X', default: Config.isLockRotationX },
       isLockRotationY: { text: 'lock Y', default: Config.isLockRotationY },
