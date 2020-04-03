@@ -13,7 +13,12 @@ class WavefrontObj {
       meshes: [],
     };
     let lastGroup = -1;
+    var currentMaterial = '';
     lines.forEach((s) => {
+      if (s.startsWith('#')) {
+        // comments
+        return;
+      }
       let m;
       m = /mtllib\s(.*)/.exec(s);
       if (m) {
@@ -41,34 +46,26 @@ class WavefrontObj {
       }
       m = /g\s(.*)/.exec(s);
       if (m) {
-        meshes.push({ name: m[1], indices: [] });
+        meshes.push({ name: m[1], indices: [], material: currentMaterial });
         lastGroup += 1;
       }
       m = /usemap\s(.*)/.exec(s);
       if (m) {
         const material = { albedoMap: m[1] };
         model.materials[m[1]] = material;
-        if (lastGroup >= 0) {
-          [, meshes[lastGroup].material] = m;
-        } else {
-          meshes.push({ material: m[1], indices: [] });
-        }
+        [, currentMaterial] = m;
         return;
       }
       m = /usemtl\s(.*)/.exec(s);
       if (m) {
-        if (lastGroup >= 0) {
-          [, meshes[lastGroup].material] = m;
-        } else {
-          meshes.push({ material: m[1], indices: [] });
-        }
+        [, currentMaterial] = m;
         return;
       }
       m = /f\s(\d+(?:\/\d*){0,2})\s(\d+(?:\/\d*){0,2})\s(\d+(?:\/\d*){0,2})/.exec(s);
       if (m) {
         if (meshes.length === 0) {
           // file with no 'g', so create a default mesh
-          meshes.push({ name: 'unknown', indices: [] });
+          meshes.push({ name: 'unknown', indices: [], material: currentMaterial });
         }
         m.slice(1, 4).forEach((val) => {
           uniqueIndexTriplets[val] = (uniqueIndexTriplets[val] || 0) + 1;
@@ -119,39 +116,43 @@ class WavefrontObj {
       return v;
     }
     lines.forEach((s) => {
+      if (s.startsWith('#')) {
+        // comments
+        return;
+      }
       let m;
-      m = /newmtl\s(.*)/.exec(s);
+      m = /^newmtl\s(.*)/.exec(s);
       if (m) {
         [, lastMaterial] = m;
         materials[lastMaterial] = {};
         return;
       }
-      m = /Kd\s(.+)\s(.+)\s(.+)/.exec(s);
+      m = /^Kd\s(.+)\s(.+)\s(.+)/.exec(s);
       if (m) {
         materials[lastMaterial].diffuseColor = getVector(m);
         return;
       }
-      m = /Ka\s(.+)\s(.+)\s(.+)/.exec(s);
+      m = /^Ka\s(.+)\s(.+)\s(.+)/.exec(s);
       if (m) {
         materials[lastMaterial].ambientColor = getVector(m);
         return;
       }
-      m = /Ks\s(.+)\s(.+)\s(.+)/.exec(s);
+      m = /^Ks\s(.+)\s(.+)\s(.+)/.exec(s);
       if (m) {
         materials[lastMaterial].specularColor = getVector(m);
         return;
       }
-      m = /Ns\s(.+)/.exec(s);
+      m = /^Ns\s(.+)/.exec(s);
       if (m) {
         materials[lastMaterial].specularExponent = parseFloat(m[1]);
         return;
       }
-      m = /map_Kd\s(.*)/.exec(s);
+      m = /^map_Kd\s(.*)/.exec(s);
       if (m) {
         [, materials[lastMaterial].albedoMap] = m;
         return;
       }
-      m = /d\s(.+)/.exec(s);
+      m = /^d\s(.+)/.exec(s);
       if (m) {
         materials[lastMaterial].opaqueness = parseFloat(m[1]);
       }
