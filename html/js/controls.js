@@ -861,7 +861,7 @@ function populateControls() {
         setInfo(`${label} at: [${str}]`);
         UISetter.model.rotation([0, 0, 0]);
         UISetter.model.translation(scaled);
-        Update.model.modelTransform();
+        Update.modelTransform();
       }),
     UiUtils.createDropdownList('submesh', [], (obj) => {
       viewer.selectSubmesh(obj.value);
@@ -897,13 +897,18 @@ function populateControls() {
     UiUtils.createButtons('cameraDumps', [
       {
         id: 'dumpProjection',
-        text: 'Dump Projection M',
+        text: 'Dump Proj',
         callback: () => setInfo(matrixToString(viewer.scene.camera.projectionMatrix)),
       },
       {
         id: 'dumpView',
-        text: 'Dump View M',
+        text: 'Dump View',
         callback: () => setInfo(matrixToString(viewer.scene.camera.viewMatrix)),
+      },
+      {
+        id: 'dumpRotation',
+        text: 'Dump R',
+        callback: () => setInfo(matrixToString(viewer.scene.camera.getFlippedRotation())),
       },
       {
         id: 'saveIntrinsicView',

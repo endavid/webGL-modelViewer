@@ -76,5 +76,14 @@ class Camera {
     // we can get rid of last row, should be [0, 0, 0, 1]
     return math.resize(KV, [3, 4]);
   }
+  getFlippedRotation() {
+    const M = this.viewMatrix;
+    let R = [
+      M[0], M[1], M[2],
+      M[4], M[5], -M[6],
+      M[8], -M[9], M[10]
+    ];
+    return R;
+  }
 }
 export { Camera as default };
