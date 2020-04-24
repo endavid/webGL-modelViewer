@@ -48,29 +48,30 @@ class PluginSkeleton {
         const w1 = getJointPosition(i);
         const p0 = camera.worldToPixels(w0, width, height);
         const p1 = camera.worldToPixels(w1, width, height);
-        PluginSkeleton.drawArrow(context, p0, p1);
+        PluginSkeleton.drawLine(context, p0, p1);
+        PluginSkeleton.drawCircle(context, p1);
       }
     }
   }
-  static drawArrow(ctx, from, to) {
+  static drawLine(ctx, from, to) {
+    const tx = to[0] - from[0];
+    const ty = to[1] - from[1];
     // save all the canvas settings
     ctx.save();
     ctx.translate(from[0], from[1]);
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(to[0] - from[0], to[1] - from[1]);
+    ctx.lineTo(tx, ty);
     ctx.stroke();
-    // draw an arrow
-    /*
-    ctx.beginPath();
-    ctx.moveTo(10, 5);
-    ctx.lineTo(0, 0);
-    ctx.lineTo(5, 10);
-    ctx.moveTo(0, 0);
-    ctx.lineTo(15, 15);
-    ctx.stroke();
-    */
     // restore the canvas to its old settings.
+    ctx.restore();
+  }
+  static drawCircle(ctx, point) {
+    ctx.save();
+    ctx.translate(point[0], point[1]);
+    ctx.beginPath();
+    ctx.arc(0, 0, 5, 0, 2 * Math.PI, false);
+    ctx.stroke();
     ctx.restore();
   }
 }
