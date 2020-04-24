@@ -132,7 +132,7 @@ function addPoseGroup(skinnedModel) {
     });
     return controls;
   }
-  const controls = createControls(skinnedModel.getSkeletonTopology());
+  const controls = createControls(skinnedModel.topology);
   UiUtils.addGroup(id, 'Pose Controls', controls, '#controlsRight');
   // hide the sliders by clicking twice to toggle controls
   $('#gPose').click();
@@ -312,6 +312,12 @@ const UISetter = {
       if (model && model.skinnedModel) {
         addPoseGroup(model.skinnedModel);
         viewer.setKeyframe(Config.keyframe);
+      }
+    },
+    setOption: (key, value) => {
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        model.skinnedModel[key] = value;
       }
     }
   }
@@ -961,6 +967,9 @@ function populateControls() {
       Actions.anim.setPose(values[0].uri);
     }),
     UiUtils.createFileBrowser('jrofileBrowser', 'load joint rotation order', false, onAddJroFile),
+    UiUtils.createCheckboxes('animOptions', {
+      showSkeleton: { text: 'showSkeleton', default: false }
+    }, UISetter.anim.setOption),
     UiUtils.createButtonWithOptions('savePose', 'Save Pose', ' as ', 'Json', saveCurrentPose),
   ], '#controlsRight');
 }

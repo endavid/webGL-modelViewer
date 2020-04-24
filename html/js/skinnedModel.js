@@ -152,6 +152,22 @@ function getJointMatrix(index, matrices) {
   return math.reshape(m, [4, 4]);
 }
 
+function getSkeletonTopology(skeleton) {
+  const joints = Object.keys(skeleton);
+  function traverse(parentJoint) {
+    const parent = parentJoint || null;
+    const topology = {};
+    joints.forEach((joint) => {
+      const j = skeleton[joint];
+      if (j && j.parent === parent) {
+        topology[joint] = traverse(joint);
+      }
+    });
+    return topology;
+  }
+  return traverse();
+}
+
 
 class SkinnedModel {
   constructor(skin, skeleton, anims) {
@@ -171,6 +187,9 @@ class SkinnedModel {
     this.keyframeCount = animKeys.length > 0 ? anims[animKeys[0]].keyframes.length : 0;
     this.anims = standardizeAnimsToUseTransforms(skeleton, anims);
     this.jointColorPalette = createJointColorPalette(skin.joints);
+    this.topology = getSkeletonTopology(skeleton);
+    this.showSkeleton = false;
+    this.currentKeyframe = 0;
     // this.applyPose(0);
   }
   // JointMatrix * InvBindMatrix
@@ -187,6 +206,7 @@ class SkinnedModel {
       // convert row-major to column-major, GL-ready
       VMath.transpose(m, this.joints, i * 16);
     }
+    this.currentKeyframe = keyframe;
   }
   getDefaultPoseMatrix(i) {
     const name = this.jointNames[i];

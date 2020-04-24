@@ -19,21 +19,14 @@ class PluginLabels {
     const self = this;
     const { canvas } = context;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    const { labels } = scene;
+    const { labels, camera } = scene;
     if (!labels.showLabels) {
       return;
-    }
-    function worldToPixels(world) {
-      const view = VMath.mulVector(scene.camera.viewMatrix, world);
-      const clip = VMath.mulVector(scene.camera.projectionMatrix, view);
-      clip[0] /= clip[3]; clip[1] /= clip[3];
-      // convert from clipspace to pixels
-      return [(clip[0] * 0.5 + 0.5) * canvas.width, (clip[1] * -0.5 + 0.5) * canvas.height];
     }
     self.setColor(context, self.colors.world);
     Object.keys(labels.world).forEach((k) => {
       const pos = VMath.readCoordinates(labels.world[k]);
-      const pix = worldToPixels(pos);
+      const pix = camera.worldToPixels(pos, canvas.width, canvas.height);
       PluginLabels.drawLabel(context, pix[0], pix[1], k);
     });
     const [mainModel] = scene.models;
@@ -49,7 +42,7 @@ class PluginLabels {
         const pos = mainModel.getPositionForLabel(k);
         const posScaled = VMath.mulScalar(pos, labels.scale).concat(1);
         const world = VMath.mulVector(modelMatrix, posScaled);
-        const pix = worldToPixels(world);
+        const pix = camera.worldToPixels(world, canvas.width, canvas.height);
         if (k === selected) {
           self.setColor(context, self.colors.selected);
         }

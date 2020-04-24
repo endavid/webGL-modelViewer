@@ -85,5 +85,12 @@ class Camera {
     ];
     return R;
   }
+  worldToPixels(world, width, height) {
+    const view = VMath.mulVector(this.viewMatrix, world);
+    const clip = VMath.mulVector(this.projectionMatrix, view);
+    clip[0] /= clip[3]; clip[1] /= clip[3];
+    // convert from clipspace to pixels
+    return [(clip[0] * 0.5 + 0.5) * width, (clip[1] * -0.5 + 0.5) * height];
+  }
 }
 export { Camera as default };

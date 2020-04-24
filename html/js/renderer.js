@@ -8,6 +8,7 @@ import PluginIntersection from './pluginIntersection.js';
 import PluginDots from './pluginDots.js';
 import PluginOverlay from './pluginOverlay.js';
 import PluginLabels from './pluginLabels.js';
+import PluginSkeleton from './pluginSkeleton.js';
 import { SunLight } from './lights.js';
 import Camera from './camera.js';
 
@@ -175,6 +176,7 @@ class Renderer {
   initPlugins2d() {
     this.plugins2d = [
       new PluginLabels(),
+      new PluginSkeleton()
     ];
   }
   initFramebuffers() {
