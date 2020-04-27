@@ -3,8 +3,9 @@ import VMath from './math.js';
 class PluginSkeleton {
   constructor() {
     this.colors = {
-      multiple: '#999999',
-      single: '#00ff00'
+      root: '#999999',
+      bone: '#00ff00',
+      unparented: '#ff0000'
     }
   }
   setColor(context, color) {
@@ -25,29 +26,32 @@ class PluginSkeleton {
     }
     const { skinnedModel } = mainModel;
     if (skinnedModel && skinnedModel.showSkeleton) {
-      self.setColor(context, self.colors.single);
       const modelMatrix = mainModel.getTransformMatrix();
       const { jointNames, jointIndices, skeleton, currentKeyframe } = skinnedModel;
       function getJointPosition(index) {
-        const m = skinnedModel.getAnimMatrix(index, currentKeyframe);
-        const p = [m[3], m[7], m[11], 1];
+        const p = skinnedModel.getJointPosition(index, currentKeyframe);
         return VMath.mulVector(modelMatrix, p);
       }
       for (let i = 0; i < jointNames.length; i += 1) {
         const name = jointNames[i];
         const node = skeleton[name];
         const { parent } = node;
+        const w1 = getJointPosition(i);
+        const p1 = camera.worldToPixels(w1, width, height);
         if (!parent) {
+          self.setColor(context, self.colors.root);
+          PluginSkeleton.drawCircle(context, p1);
           continue;
         }
         const j = jointIndices[parent];
         if (j === undefined) {
+          self.setColor(context, self.colors.unparented);
+          PluginSkeleton.drawCircle(context, p1);
           continue;
         }
+        self.setColor(context, self.colors.bone);
         const w0 = getJointPosition(jointIndices[parent]);
-        const w1 = getJointPosition(i);
         const p0 = camera.worldToPixels(w0, width, height);
-        const p1 = camera.worldToPixels(w1, width, height);
         PluginSkeleton.drawLine(context, p0, p1);
         PluginSkeleton.drawCircle(context, p1);
       }

@@ -28,5 +28,6 @@ const Config = {
   labelScale: 1,
   showLabels: true,
   showPoints: true,
+  showSkeleton: false
 };
 export default Config;

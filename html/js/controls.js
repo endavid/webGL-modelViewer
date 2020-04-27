@@ -315,10 +315,8 @@ const UISetter = {
       }
     },
     setOption: (key, value) => {
-      const model = viewer.getSelectedModel();
-      if (model && model.skinnedModel) {
-        model.skinnedModel[key] = value;
-      }
+      Config[key] = value;
+      $(`#${key}`).prop('checked', value);
     }
   }
 }
@@ -360,6 +358,7 @@ const Actions = {
           $('#keyframe').attr('max', model.skinnedModel.keyframeCount - 1);
           $('#keyframe_number').val(-1);
           Config.keyframe = -1;
+          Actions.anim.setOption('showSkeleton', Config.showSkeleton);
           addPoseGroup(model.skinnedModel);
         }
         UISetter.model.translation(model.transform.position);
@@ -393,6 +392,13 @@ const Actions = {
       .fail((e) => {
         console.error(e);
       });
+    },
+    setOption: (key, value) => {
+      UISetter.anim.setOption(key, value);
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        model.skinnedModel[key] = value;
+      }
     }
   },
   shader: {
@@ -968,8 +974,8 @@ function populateControls() {
     }),
     UiUtils.createFileBrowser('jrofileBrowser', 'load joint rotation order', false, onAddJroFile),
     UiUtils.createCheckboxes('animOptions', {
-      showSkeleton: { text: 'showSkeleton', default: false }
-    }, UISetter.anim.setOption),
+      showSkeleton: { text: 'showSkeleton', default: Config.showSkeleton }
+    }, Actions.anim.setOption),
     UiUtils.createButtonWithOptions('savePose', 'Save Pose', ' as ', 'Json', saveCurrentPose),
   ], '#controlsRight');
 }

@@ -409,5 +409,17 @@ class SkinnedModel {
     });
     return sum;
   }
+
+  // MARK: skeleton alignment functions
+  getJointPosition(index, keyframe) {
+    const m = this.getAnimMatrix(index, keyframe);
+    return [m[3], m[7], m[11], 1];
+  }
+  pointBoneToTarget(jointName, targetPosition, keyframe) {
+
+  }
+  twistParentToPointBoneToTarget(jointName, targetPosition, keyframe) {
+
+  }
 }
 export { SkinnedModel as default };
