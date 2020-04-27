@@ -460,6 +460,7 @@ class SkinnedModel {
       console.warning("pointBoneToTarget: not a bone.");
       return;
     }
+    let nodeParent = this.skeleton[parent];
     const j = this.jointIndices[parent];
     const p0 = this.getJointPosition(j, keyframe);
     const p1 = this.getJointPosition(i, keyframe);
@@ -467,7 +468,7 @@ class SkinnedModel {
     const v1 = VMath.normalize(VMath.diff(targetPosition, p0));
     const axis = VMath.normalize(math.cross(v0, v1));
     const angle = Math.acos(math.dot(v0, v1));
-    const angleAxis = new AngleAxis(angle, axis, node.rotationOrder);
+    const angleAxis = new AngleAxis(angle, axis, nodeParent.rotationOrder);
     let eulerNew = angleAxis.eulerAngles.map(VMath.radToDeg);
     let eulerNow = [0, 0 ,0];
     const jointAnim = this.anims[parent];
