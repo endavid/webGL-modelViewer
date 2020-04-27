@@ -344,6 +344,9 @@ const UISetter = {
       if (model && model.skinnedModel) {
         model.skinnedModel.selectedJoint = $('#selectedJoint').val();
       }
+    },
+    selectJoint: (name) => {
+      $('#selectedJoint').val(name);
     }
   }
 }
@@ -1052,6 +1055,7 @@ $(document).ready(() => {
   });
   viewer.setCameraHeightCallback(UISetter.camera.height);
   viewer.setCameraDistanceCallback(UISetter.camera.distance);
+  viewer.setJointSelectionCallback(UISetter.anim.selectJoint);
   viewer.setBackgroundColor(Config.backgroundColor);
   Update.camera();
   populateControls();

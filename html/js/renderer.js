@@ -105,6 +105,7 @@ class Renderer {
     this.onRotation = () => {};
     this.onCameraHeight = () => {};
     this.onCameraDistance = () => {};
+    this.onJointSelection = () => {};
     // Overwrite this function with your custom stuff
     this.drawModel = () => {};
     this.resources = {
@@ -130,6 +131,7 @@ class Renderer {
         showPoints: true,
       },
     };
+    this.selectionRadiusInPixels = 10;
     this.selectedModel = 0;
     this.plugins = [];
     this.plugins2d = [];
@@ -256,10 +258,11 @@ class Renderer {
   mouseDown(e) {
     const midButton = 4;
     const bothLeftAndRight = 3; // for mice without mid button
+    const screenCoords = getMousePos(this.canvas, e);
     if (e.buttons === midButton || e.buttons === bothLeftAndRight) {
-      const screenCoords = getMousePos(this.canvas, e);
       this.tryToAddLabelAt(screenCoords);
     } else {
+      this.trySelectJoint(screenCoords);
       this.mouseState.drag = true;
       this.mouseState.old_x = e.pageX;
       this.mouseState.old_y = e.pageY;
@@ -360,6 +363,9 @@ class Renderer {
   }
   setCameraDistanceCallback(callback) {
     this.onCameraDistance = callback;
+  }
+  setJointSelectionCallback(callback) {
+    this.onJointSelection = callback;
   }
   setRotationLock(x, y) {
     this.mouseState.lock.x = x;
@@ -462,6 +468,19 @@ class Renderer {
         const p = model.transform.inversePoint(si.point);
         model.labels[selected] = p;
       });
+    }
+  }
+  trySelectJoint(screenCoords) {
+    const model = this.scene.models[this.selectedModel];
+    if (model && model.skinnedModel && model.skinnedModel.showSkeleton) {
+      const { camera } = this.scene;
+      const { width, height } = this.canvas;
+      const m = model.getTransformMatrix();
+      const {joint, distance} = model.skinnedModel.getClosestJoint(screenCoords, m, camera, width, height);
+      if (distance < this.selectionRadiusInPixels) {
+        model.skinnedModel.selectedJoint = joint;
+        this.onJointSelection(joint);
+      }
     }
   }
   getModelLabels(modelIndex) {

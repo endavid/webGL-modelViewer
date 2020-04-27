@@ -421,6 +421,31 @@ class SkinnedModel {
     });
     return sum;
   }
+  // MARK: UI-related
+  getClosestJoint(screenCoords, modelMatrix, camera, width, height) {
+    const self = this;
+    const keyframe = this.currentKeyframe;
+    function getJointPosition(index) {
+      const p = self.getJointPosition(index, keyframe);
+      return VMath.mulVector(modelMatrix, p.concat(1));
+    }
+    const {x, y} = screenCoords;
+    let closest = 0;
+    let distance = 1e100;
+    for (let i = 0; i < this.jointNames.length; i += 1) {
+      const w0 = getJointPosition(i);
+      const p0 = camera.worldToPixels(w0, width, height);
+      const v = [x - p0[0], y - p0[1]];
+      const d = v[0] * v[0] + v[1] * v[1];
+      if (d < distance) {
+        distance = d;
+        closest = i;
+      }
+    }
+    distance = Math.sqrt(distance);
+    const joint = this.jointNames[closest];
+    return {joint, distance};
+  }
 
   // MARK: skeleton alignment functions
   getJointPosition(index, keyframe) {
