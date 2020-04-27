@@ -94,7 +94,7 @@ const UiUtils = {
     });
     return $('<tr>').attr('id', `${id}_parent`).append(td);
   },
-  createDropdownList(id, list, callback) {
+  createDropdownList(id, text, list, callback) {
     const updateFunction = (event) => {
       const i = event.target.selectedIndex;
       const obj = { name: event.target.options[i].innerHTML, value: event.target.value };
@@ -105,7 +105,7 @@ const UiUtils = {
       select.append($('<option>').attr('value', obj.value).append(obj.name));
     });
     return $('<tr>').attr('id', `${id}_parent`).append($('<td>')
-      .append(`${id}: `).append(select));
+      .append(`${text}: `).append(select));
   },
   addUrisToDropdownList(id, list) {
     const select = $(`#${id}`);

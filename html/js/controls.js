@@ -225,6 +225,13 @@ const Update = {
     sun.setEastWest(Config.sun.eastWest);
     sun.setIntensity(Config.sun.intensity);
     sun.setAlpha(Config.sun.alpha);
+  },
+  jointSelection: (obj) => {
+    console.log(obj);
+    const model = viewer.getSelectedModel();
+    if (model && model.skinnedModel) {
+      model.skinnedModel.selectedJoint = obj.value;
+    }
   }
 }
 
@@ -317,6 +324,26 @@ const UISetter = {
     setOption: (key, value) => {
       Config[key] = value;
       $(`#${key}`).prop('checked', value);
+    },
+    setJointRotation: (joint, axis, value) => {
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        $(`#gPose_${joint}_angle${axis}`).val(value);
+        $(`#gPose_${joint}_angle${axis}_number`).val(value);
+        const frame = Config.keyframe;
+        const key = 'eulerAngles';
+        const index = {x: 0, y: 1, z: 2}[axis];
+        model.skinnedModel.setAnimValue({ joint, frame, key, value, index });
+        model.skinnedModel.applyPose(frame);
+      }
+    },
+    setJointNames: (names) => {
+      $('#selectedJoint').empty();
+      UiUtils.addUrisToDropdownList('selectedJoint', names);
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        model.skinnedModel.selectedJoint = $('#selectedJoint').val();
+      }
     }
   }
 }
@@ -359,6 +386,7 @@ const Actions = {
           $('#keyframe_number').val(-1);
           Config.keyframe = -1;
           Actions.anim.setOption('showSkeleton', Config.showSkeleton);
+          UISetter.anim.setJointNames(model.skinnedModel.jointNames);
           addPoseGroup(model.skinnedModel);
         }
         UISetter.model.translation(model.transform.position);
@@ -371,8 +399,8 @@ const Actions = {
       }, setError);
     },
     reload: () => {
-      const url = $('#Presets').val();
-      const name = $('#Presets option:selected').text();
+      const url = $('#selectedModel').val();
+      const name = $('#selectedModel option:selected').text();
       const slot = viewer.selectedModel;
       Actions.model.load(slot, name, url);
     }
@@ -398,6 +426,20 @@ const Actions = {
       const model = viewer.getSelectedModel();
       if (model && model.skinnedModel) {
         model.skinnedModel[key] = value;
+      }
+    },
+    alignBone: () => {
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        const label = $('#deleteLabel_select').val();
+        const joint = model.skinnedModel.selectedJoint;
+        console.log(model.labels);
+        let labelPos = model.labels[label];
+        const aa = model.skinnedModel.pointBoneToTarget(joint, labelPos, Config.keyframe);
+        ['x', 'y', 'z'].forEach((axis, i) => {
+          UISetter.anim.setJointRotation(aa.joint, axis, aa.eulerNew[i]);
+        });
+        console.log(aa);
       }
     }
   },
@@ -503,7 +545,7 @@ function populateControls() {
     }
     // add models to preset list
     if (models.length > 0) {
-      UiUtils.addUrisToDropdownList('Presets', models);
+      UiUtils.addUrisToDropdownList('selectedModel', models);
       Actions.model.reload();
     }
   }
@@ -712,17 +754,17 @@ function populateControls() {
   });
   // * File
   UiUtils.addGroup('gFile', 'File', [
-    UiUtils.createDropdownList('ModelSlot', modelSlots, (e) => {
+    UiUtils.createDropdownList('modelSlot', 'Slot', modelSlots, (e) => {
       viewer.selectedModel = parseInt(e.value);
     }),
     UiUtils.createFileBrowser('fileBrowser', 'load models & textures', true, onChangeFileBrowser),
-    UiUtils.createDropdownList('Presets', modelPresets, Actions.model.reload),
+    UiUtils.createDropdownList('selectedModel', 'Presets', modelPresets, Actions.model.reload),
     UiUtils.createButtonWithOptions('saveFile', 'Save', ' as ',
       [{ name: 'OBJ Wavefront', value: '.obj' }, { name: 'Json', value: '.json' }],
       (e) => {
         const modelType = $(`#${e.target.id}_select`).val();
-        const url = $('#Presets').val();
-        const name = $('#Presets option:selected').text();
+        const url = $('#selectedModel').val();
+        const name = $('#selectedModel option:selected').text();
         Gfx.exportModel(name, url, modelType, MaterialUrls)
           .catch((ee) => {
             setError(ee);
@@ -829,7 +871,7 @@ function populateControls() {
       const c = VMath.hexColorToNormalizedVector(e.target.value);
       viewer.setPointColor(c[0], c[1], c[2], 1);
     }),
-    UiUtils.createDropdownList('labelFilter', labelFilterPresets, (obj) => {
+    UiUtils.createDropdownList('labelFilter', 'Filter', labelFilterPresets, (obj) => {
       viewer.setLabelFilter(labelFilters[obj.value]);
     }),
     UiUtils.createCheckboxes('labelOptions', {
@@ -875,7 +917,7 @@ function populateControls() {
         UISetter.model.translation(scaled);
         Update.modelTransform();
       }),
-    UiUtils.createDropdownList('submesh', [], (obj) => {
+    UiUtils.createDropdownList('submesh', 'Submesh', [], (obj) => {
       viewer.selectSubmesh(obj.value);
     }),
   ]);
@@ -939,11 +981,11 @@ function populateControls() {
   // * Shader Settings
   const { overlay } = viewer.scene;
   UiUtils.addGroup('gShader', 'Shader Settings', [
-    UiUtils.createDropdownList('missingTexture', missingTexturePresets, (obj) => {
+    UiUtils.createDropdownList('missingTexture', 'If missing texture', missingTexturePresets, (obj) => {
       ImageUrls.missing = obj.value;
       Actions.model.reload();
     }),
-    UiUtils.createDropdownList('shader', shaderPresets, (obj) => {
+    UiUtils.createDropdownList('shader', 'Shader', shaderPresets, (obj) => {
       viewer.replaceLitShader(obj.value);
     }),
     UiUtils.createFileBrowser('backgroundFileBrowser', 'load background', false, (values) => { Actions.shader.background(values[0].uri); }),
@@ -976,6 +1018,8 @@ function populateControls() {
     UiUtils.createCheckboxes('animOptions', {
       showSkeleton: { text: 'showSkeleton', default: Config.showSkeleton }
     }, Actions.anim.setOption),
+    UiUtils.createDropdownList('selectedJoint', 'Joint', [], Update.jointSelection),
+    UiUtils.createButton('alignBone', 'Align Bone', Actions.anim.alignBone),
     UiUtils.createButtonWithOptions('savePose', 'Save Pose', ' as ', 'Json', saveCurrentPose),
   ], '#controlsRight');
 }

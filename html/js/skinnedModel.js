@@ -1,5 +1,6 @@
 import VMath from './math.js';
 import Transform from './transform.js';
+import AngleAxis from './angleAxis.js';
 
 const { math } = window;
 
@@ -66,6 +67,15 @@ function guessRotationOrder(jointName) {
   return 'zxy';
 }
 
+function setRotationOrders(skeleton) {
+  const joints = Object.keys(skeleton);
+  joints.forEach((j) => {
+    if (!skeleton[j].rotationOrder) {
+      skeleton[j].rotationOrder = guessRotationOrder(j);
+    }
+  });
+}
+
 function standardizeAnimsToUseTransforms(skeleton, anims) {
   const animKeys = Object.keys(anims);
   const standardized = anims;
@@ -75,7 +85,7 @@ function standardizeAnimsToUseTransforms(skeleton, anims) {
       return;
     }
     const a = anims[joint];
-    const rotationOrder = skeleton[joint].rotationOrder || guessRotationOrder(joint);
+    const rotationOrder = skeleton[joint].rotationOrder;
     const keyframes = a.keyframes.slice(0);
     const transforms = a.keyframes.map(() => new Transform({
       position: [0, 0, 0],
@@ -181,6 +191,7 @@ class SkinnedModel {
       this.jointIndices[skin.joints[i]] = i;
     }
     this.inverseBindMatrices = skin.bindPoses;
+    setRotationOrders(skeleton);
     this.skeleton = skeleton;
     this.applyDefaultPose();
     const animKeys = Object.keys(anims);
@@ -190,6 +201,7 @@ class SkinnedModel {
     this.topology = getSkeletonTopology(skeleton);
     this.showSkeleton = false;
     this.currentKeyframe = 0;
+    this.selectedJoint = '';
     // this.applyPose(0);
   }
   // JointMatrix * InvBindMatrix
@@ -243,7 +255,7 @@ class SkinnedModel {
     mt[0][3] = matrix[3] + t[0];
     mt[1][3] = matrix[7] + t[1];
     mt[2][3] = matrix[11] + t[2];
-    const order = this.skeleton[name].rotationOrder || guessRotationOrder(name);
+    const order = this.skeleton[name].rotationOrder;
     let m = VMath.rotationMatrixFromEuler(angles, order);
     m = math.resize(m, [4, 4]);
     m[3][3] = 1;
@@ -277,7 +289,7 @@ class SkinnedModel {
       if (!anims[joint].transforms[frame]) {
         anims[joint].transforms[frame] = new Transform({});
         if (skeleton[joint]) {
-          const ro = skeleton[joint].rotationOrder || guessRotationOrder(joint);
+          const ro = skeleton[joint].rotationOrder;
           anims[joint].transforms[frame].rotationOrder = ro;
         }
       }
@@ -413,12 +425,36 @@ class SkinnedModel {
   // MARK: skeleton alignment functions
   getJointPosition(index, keyframe) {
     const m = this.getAnimMatrix(index, keyframe);
-    return [m[3], m[7], m[11], 1];
+    return [m[3], m[7], m[11]];
   }
-  pointBoneToTarget(jointName, targetPosition, keyframe) {
-
+  pointBoneToTarget(name, targetPosition, keyframe) {
+    let i = this.jointIndices[name];
+    let node = this.skeleton[name];
+    const { parent } = node;
+    if (!parent) {
+      console.warning("pointBoneToTarget: not a bone.");
+      return;
+    }
+    const j = this.jointIndices[parent];
+    const p0 = this.getJointPosition(j, keyframe);
+    const p1 = this.getJointPosition(i, keyframe);
+    const v0 = VMath.normalize(VMath.diff(p1, p0));
+    const v1 = VMath.normalize(VMath.diff(targetPosition, p0));
+    const axis = VMath.normalize(math.cross(v0, v1));
+    const angle = Math.acos(math.dot(v0, v1));
+    const angleAxis = new AngleAxis(angle, axis, node.rotationOrder);
+    const jointAnim = this.anims[parent];
+    const transform = jointAnim.transforms[keyframe];
+    let eulerNew = angleAxis.eulerAngles.map(VMath.radToDeg);
+    let eulerNow = [0, 0 ,0];
+    if (transform) {
+      eulerNow = transform.eulerAngles;
+      eulerNew = VMath.sum(eulerNow, eulerNew);
+    }
+    console.log(`bone dir: ${v0}; target dir: ${v1}; axis: ${axis}; angle: ${VMath.radToDeg(angle)}`);
+    return {joint: parent, eulerNow, eulerNew, angleAxis}
   }
-  twistParentToPointBoneToTarget(jointName, targetPosition, keyframe) {
+  twistParentToPointBoneToTarget(name, targetPosition, keyframe) {
 
   }
 }

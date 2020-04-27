@@ -5,6 +5,7 @@ class PluginSkeleton {
     this.colors = {
       root: '#999999',
       bone: '#00ff00',
+      selected: '#ff00ff',
       unparented: '#ff0000'
     }
   }
@@ -30,7 +31,7 @@ class PluginSkeleton {
       const { jointNames, jointIndices, skeleton, currentKeyframe } = skinnedModel;
       function getJointPosition(index) {
         const p = skinnedModel.getJointPosition(index, currentKeyframe);
-        return VMath.mulVector(modelMatrix, p);
+        return VMath.mulVector(modelMatrix, p.concat(1));
       }
       for (let i = 0; i < jointNames.length; i += 1) {
         const name = jointNames[i];
@@ -49,7 +50,8 @@ class PluginSkeleton {
           PluginSkeleton.drawCircle(context, p1);
           continue;
         }
-        self.setColor(context, self.colors.bone);
+        const color = name === skinnedModel.selectedJoint ? self.colors.selected : self.colors.bone;
+        self.setColor(context, color);
         const w0 = getJointPosition(jointIndices[parent]);
         const p0 = camera.worldToPixels(w0, width, height);
         PluginSkeleton.drawLine(context, p0, p1);
