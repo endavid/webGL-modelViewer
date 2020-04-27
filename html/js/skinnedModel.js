@@ -468,13 +468,15 @@ class SkinnedModel {
     const axis = VMath.normalize(math.cross(v0, v1));
     const angle = Math.acos(math.dot(v0, v1));
     const angleAxis = new AngleAxis(angle, axis, node.rotationOrder);
-    const jointAnim = this.anims[parent];
-    const transform = jointAnim.transforms[keyframe];
     let eulerNew = angleAxis.eulerAngles.map(VMath.radToDeg);
     let eulerNow = [0, 0 ,0];
-    if (transform) {
-      eulerNow = transform.eulerAngles;
-      eulerNew = VMath.sum(eulerNow, eulerNew);
+    const jointAnim = this.anims[parent];
+    if (jointAnim) {
+      const transform = jointAnim.transforms[keyframe];
+      if (transform) {
+        eulerNow = transform.eulerAngles;
+        eulerNew = VMath.sum(eulerNow, eulerNew);
+      }
     }
     console.log(`bone dir: ${v0}; target dir: ${v1}; axis: ${axis}; angle: ${VMath.radToDeg(angle)}`);
     return {joint: parent, eulerNow, eulerNew, angleAxis}
