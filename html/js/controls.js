@@ -231,6 +231,7 @@ const Update = {
     const model = viewer.getSelectedModel();
     if (model && model.skinnedModel) {
       model.skinnedModel.selectedJoint = obj.value;
+      UISetter.anim.updateJointControls();
     }
   }
 }
@@ -325,9 +326,10 @@ const UISetter = {
       Config[key] = value;
       $(`#${key}`).prop('checked', value);
     },
-    setJointValue: (id, key, joint, axis, value) => {
+    setJointValue: (id, key, joint, axis, valueStr) => {
       const model = viewer.getSelectedModel();
       if (model && model.skinnedModel) {
+        const value = parseFloat(valueStr);
         $(`#gPose_${joint}_${id}${axis}`).val(value);
         $(`#gPose_${joint}_${id}${axis}_number`).val(value);
         const frame = Config.keyframe;
@@ -344,8 +346,34 @@ const UISetter = {
         model.skinnedModel.selectedJoint = $('#selectedJoint').val();
       }
     },
+    updateJointControls: () => {
+      let angles = {x: 0, y: 0, z: 0};
+      let pos = {x: 0, y: 0, z: 0};
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        const joint = model.skinnedModel.selectedJoint;
+        angles = {
+          x: $(`#gPose_${joint}_anglex`).val(),
+          y: $(`#gPose_${joint}_angley`).val(),
+          z: $(`#gPose_${joint}_anglez`).val()
+        };
+        pos = {
+          x: $(`#gPose_${joint}_translationx`).val(),
+          y: $(`#gPose_${joint}_translationy`).val(),
+          z: $(`#gPose_${joint}_translationz`).val(),
+        };
+      }
+      // copy values from main controller to shortcut for selected joint
+      ['x', 'y', 'z'].forEach((axis) => {
+        $(`#joint_angle${axis}`).val(angles[axis]);
+        $(`#joint_angle${axis}_number`).val(angles[axis]);
+        $(`#joint_translation${axis}`).val(pos[axis]);
+        $(`#joint_translation${axis}_number`).val(pos[axis]);
+      });
+    },
     selectJoint: (name) => {
       $('#selectedJoint').val(name);
+      UISetter.anim.updateJointControls();
     }
   }
 }
@@ -450,6 +478,7 @@ const Actions = {
         ['x', 'y', 'z'].forEach((axis, i) => {
           UISetter.anim.setJointRotation(aa.joint, axis, aa.eulerNew[i]);
         });
+        UISetter.anim.updateJointControls();
         console.log(aa);
       }
     },
@@ -461,6 +490,21 @@ const Actions = {
           UISetter.anim.setJointRotation(joint, axis, 0);
           UISetter.anim.setJointTranslation(joint, axis, 0);
         });
+        UISetter.anim.updateJointControls();
+      }
+    },
+    jointAngle: (value, axis) => {
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        const joint = model.skinnedModel.selectedJoint;
+        UISetter.anim.setJointRotation(joint, axis, value);
+      }
+    },
+    jointTranslation: (value, axis) => {
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        const joint = model.skinnedModel.selectedJoint;
+        UISetter.anim.setJointTranslation(joint, axis, value);
       }
     }
   },
@@ -1045,6 +1089,8 @@ function populateControls() {
       showSkeleton: { text: 'showSkeleton', default: Config.showSkeleton }
     }, Actions.anim.setOption),
     UiUtils.createDropdownList('selectedJoint', 'Joint', [], Update.jointSelection),
+    UiUtils.createAngleSliders('joint', null, [0, 0, 0], Actions.anim.jointAngle),
+    UiUtils.createTranslationSliders('joint', null, [0, 0, 0], Actions.anim.jointTranslation),
     UiUtils.createButtons('jointButtons', [
       {
         id: 'alignBone',
