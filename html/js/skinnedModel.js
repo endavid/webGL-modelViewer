@@ -452,6 +452,21 @@ class SkinnedModel {
     const m = this.getAnimMatrix(index, keyframe);
     return [m[3], m[7], m[11]];
   }
+  getEulerAndAngleAxis(angle, axis, joint) {
+    let node = this.skeleton[joint];
+    const angleAxis = new AngleAxis(angle, axis, node.rotationOrder);
+    let eulerNew = angleAxis.eulerAngles.map(VMath.radToDeg);
+    let eulerNow = [0, 0 ,0];
+    const jointAnim = this.anims[joint];
+    if (jointAnim) {
+      const transform = jointAnim.transforms[keyframe];
+      if (transform) {
+        eulerNow = transform.eulerAngles;
+        eulerNew = VMath.sum(eulerNow, eulerNew);
+      }
+    }
+    return {joint, eulerNow, eulerNew, angleAxis};
+  }
   pointBoneToTarget(name, targetPosition, keyframe) {
     let i = this.jointIndices[name];
     let node = this.skeleton[name];
@@ -460,7 +475,6 @@ class SkinnedModel {
       console.warning("pointBoneToTarget: not a bone.");
       return;
     }
-    let nodeParent = this.skeleton[parent];
     const j = this.jointIndices[parent];
     const p0 = this.getJointPosition(j, keyframe);
     const p1 = this.getJointPosition(i, keyframe);
@@ -468,22 +482,40 @@ class SkinnedModel {
     const v1 = VMath.normalize(VMath.diff(targetPosition, p0));
     const axis = VMath.normalize(math.cross(v0, v1));
     const angle = Math.acos(math.dot(v0, v1));
-    const angleAxis = new AngleAxis(angle, axis, nodeParent.rotationOrder);
-    let eulerNew = angleAxis.eulerAngles.map(VMath.radToDeg);
-    let eulerNow = [0, 0 ,0];
-    const jointAnim = this.anims[parent];
-    if (jointAnim) {
-      const transform = jointAnim.transforms[keyframe];
-      if (transform) {
-        eulerNow = transform.eulerAngles;
-        eulerNew = VMath.sum(eulerNow, eulerNew);
-      }
-    }
+    const res = this.getEulerAndAngleAxis(angle, axis, parent);
     console.log(`bone dir: ${v0}; target dir: ${v1}; axis: ${axis}; angle: ${VMath.radToDeg(angle)}`);
-    return {joint: parent, eulerNow, eulerNew, angleAxis}
+    return res;
   }
   twistParentToPointBoneToTarget(name, targetPosition, keyframe) {
-
+    let i = this.jointIndices[name];
+    let node = this.skeleton[name];
+    const { parent } = node;
+    if (!parent) {
+      console.warning("twistParentToPointBoneToTarget: not a bone.");
+      return;
+    }
+    let nodeParent = this.skeleton[parent];
+    const j = this.jointIndices[parent];
+    const grandparent = nodeParent.parent;
+    if (!grandparent) {
+      console.warning("twistParentToPointBoneToTarget: no parent bone.");
+      return;
+    }
+    const k = this.jointIndices[grandparent];
+    const p0 = this.getJointPosition(k, keyframe);
+    const p1 = this.getJointPosition(j, keyframe);
+    const p2 = this.getJointPosition(i, keyframe);
+    const v0 = VMath.normalize(VMath.diff(p1, p0));
+    const v1 = VMath.normalize(VMath.diff(p2, p1));
+    const vt = VMath.normalize(VMath.diff(targetPosition, p1));
+    const right = VMath.normalize(math.cross(v0, v1));
+    const up = VMath.normalize(math.cross(right, vt));
+    const vt_projected = VMath.normalize(math.cross(right, up));
+    const v1_projected = VMath.normalize(math.cross(right, v0));
+    const angle = Math.acos(math.dot(v1_projected, vt_projected))
+    const res = this.getEulerAndAngleAxis(angle, v0, grandparent);
+    console.log(`bones: ${v0}, ${v1}; target dir: ${vt}; v1_proj: ${v1_projected}; angle: ${VMath.radToDeg(angle)}`);
+    return res;
   }
 }
 export { SkinnedModel as default };

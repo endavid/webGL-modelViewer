@@ -325,13 +325,12 @@ const UISetter = {
       Config[key] = value;
       $(`#${key}`).prop('checked', value);
     },
-    setJointRotation: (joint, axis, value) => {
+    setJointValue: (id, key, joint, axis, value) => {
       const model = viewer.getSelectedModel();
       if (model && model.skinnedModel) {
-        $(`#gPose_${joint}_angle${axis}`).val(value);
-        $(`#gPose_${joint}_angle${axis}_number`).val(value);
+        $(`#gPose_${joint}_${id}${axis}`).val(value);
+        $(`#gPose_${joint}_${id}${axis}_number`).val(value);
         const frame = Config.keyframe;
-        const key = 'eulerAngles';
         const index = {x: 0, y: 1, z: 2}[axis];
         model.skinnedModel.setAnimValue({ joint, frame, key, value, index });
         model.skinnedModel.applyPose(frame);
@@ -350,6 +349,11 @@ const UISetter = {
     }
   }
 }
+
+// aliases
+UISetter.anim.setJointRotation = UISetter.anim.setJointValue.bind(null, 'angle', 'eulerAngles');
+UISetter.anim.setJointTranslation = UISetter.anim.setJointValue.bind(null, 'translation', 'position');
+
 
 const Actions = {
   labels: {
@@ -431,18 +435,32 @@ const Actions = {
         model.skinnedModel[key] = value;
       }
     },
-    alignBone: () => {
+    alignBoneWith: (alignment) => {
       const model = viewer.getSelectedModel();
       if (model && model.skinnedModel) {
         const label = $('#deleteLabel_select').val();
         const joint = model.skinnedModel.selectedJoint;
-        console.log(model.labels);
         let labelPos = model.labels[label];
-        const aa = model.skinnedModel.pointBoneToTarget(joint, labelPos, Config.keyframe);
+        let aa;
+        if (alignment === 'twist') {
+          aa = model.skinnedModel.twistParentToPointBoneToTarget(joint, labelPos, Config.keyframe);
+        } else {
+          aa = model.skinnedModel.pointBoneToTarget(joint, labelPos, Config.keyframe);
+        }
         ['x', 'y', 'z'].forEach((axis, i) => {
           UISetter.anim.setJointRotation(aa.joint, axis, aa.eulerNew[i]);
         });
         console.log(aa);
+      }
+    },
+    zeroJoint: () => {
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        const joint = model.skinnedModel.selectedJoint;
+        ['x', 'y', 'z'].forEach((axis, i) => {
+          UISetter.anim.setJointRotation(joint, axis, 0);
+          UISetter.anim.setJointTranslation(joint, axis, 0);
+        });
       }
     }
   },
@@ -472,6 +490,11 @@ const Actions = {
     }
   }
 }
+
+// aliases
+Actions.anim.alignBone = Actions.anim.alignBoneWith.bind(null, 'cross');
+Actions.anim.twistAlign = Actions.anim.alignBoneWith.bind(null, 'twist');
+
 
 function saveCurrentPose() {
   const model = viewer.getSelectedModel();
@@ -1022,7 +1045,23 @@ function populateControls() {
       showSkeleton: { text: 'showSkeleton', default: Config.showSkeleton }
     }, Actions.anim.setOption),
     UiUtils.createDropdownList('selectedJoint', 'Joint', [], Update.jointSelection),
-    UiUtils.createButton('alignBone', 'Align Bone', Actions.anim.alignBone),
+    UiUtils.createButtons('jointButtons', [
+      {
+        id: 'alignBone',
+        text: 'Align Bone',
+        callback: Actions.anim.alignBone
+      },
+      {
+        id: 'twistAlign',
+        text: 'Twist Align',
+        callback: Actions.anim.twistAlign
+      },
+      {
+        id: 'zeroJoint',
+        text: 'Zero',
+        callback: Actions.anim.zeroJoint
+      }
+    ]),
     UiUtils.createButtonWithOptions('savePose', 'Save Pose', ' as ', 'Json', saveCurrentPose),
   ], '#controlsRight');
 }
