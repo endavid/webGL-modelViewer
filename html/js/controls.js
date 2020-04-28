@@ -88,23 +88,6 @@ function addPoseGroup(skinnedModel) {
     const parentId = `${id}_${joint}`;
     return UiUtils.createTranslationSliders(s, parentId, values, updateJointPos.bind(null, joint));
   }
-  function colorPicker(s, joint) {
-    const jointIndex = skinnedModel.jointIndices[joint];
-    if (jointIndex === undefined) {
-      return null;
-    }
-    const palette = skinnedModel.jointColorPalette;
-    const color = palette.slice(4 * jointIndex, 4 * jointIndex + 3);
-    const hexColor = VMath.vectorToHexColor(color);
-    const picker = UiUtils.createColorPicker(`${s}_color`, 'debug color', hexColor, (e) => {
-      const c = VMath.hexColorToNormalizedVector(e.target.value);
-      c.forEach((value, i) => {
-        palette[4 * jointIndex + i] = value;
-      });
-    });
-    picker.attr('parent', `${id}_${joint}`);
-    return picker;
-  }
   function createControls(skeleton, parent) {
     const joints = Object.keys(skeleton);
     let controls = [];
@@ -121,10 +104,6 @@ function addPoseGroup(skinnedModel) {
         angleSlider(subId, joint, [rx, ry, rz]),
         translationSlider(subId, joint, [tx, ty, tz]),
       ];
-      const picker = colorPicker(subId, joint);
-      if (picker) {
-        subcontrols.push(picker);
-      }
       const jointControls = createControls(skeleton[joint], subId);
       subcontrols = subcontrols.concat(jointControls);
       const jointGroup = UiUtils.createSubGroup(subId, joint, subcontrols, parent);
@@ -232,6 +211,7 @@ const Update = {
     if (model && model.skinnedModel) {
       model.skinnedModel.selectedJoint = obj.value;
       UISetter.anim.updateJointControls();
+      UISetter.anim.updateJointColor();
     }
   }
 }
@@ -346,6 +326,20 @@ const UISetter = {
         model.skinnedModel.selectedJoint = $('#selectedJoint').val();
       }
     },
+    updateJointColor: () => {
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        const joint = model.skinnedModel.selectedJoint;
+        const jointIndex = model.skinnedModel.jointIndices[joint];
+        if (jointIndex === undefined) {
+          return null;
+        }
+        const palette = model.skinnedModel.jointColorPalette;
+        const color = palette.slice(4 * jointIndex, 4 * jointIndex + 3);
+        const hexColor = VMath.vectorToHexColor(color);
+        $('#jointColor').val(hexColor);
+      }
+    },
     updateJointControls: () => {
       let angles = {x: 0, y: 0, z: 0};
       let pos = {x: 0, y: 0, z: 0};
@@ -374,6 +368,7 @@ const UISetter = {
     selectJoint: (name) => {
       $('#selectedJoint').val(name);
       UISetter.anim.updateJointControls();
+      UISetter.anim.updateJointColor();
     }
   }
 }
@@ -505,6 +500,21 @@ const Actions = {
       if (model && model.skinnedModel) {
         const joint = model.skinnedModel.selectedJoint;
         UISetter.anim.setJointTranslation(joint, axis, value);
+      }
+    },
+    jointColor: (e) => {
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        const joint = model.skinnedModel.selectedJoint;
+        const jointIndex = model.skinnedModel.jointIndices[joint];
+        if (jointIndex === undefined) {
+          return;
+        }
+        const palette = model.skinnedModel.jointColorPalette;
+        const c = VMath.hexColorToNormalizedVector(e.target.value);      
+        c.forEach((value, i) => {
+          palette[4 * jointIndex + i] = value;
+        });
       }
     }
   },
@@ -1091,6 +1101,7 @@ function populateControls() {
     UiUtils.createDropdownList('selectedJoint', 'Joint', [], Update.jointSelection),
     UiUtils.createAngleSliders('joint', null, [0, 0, 0], Actions.anim.jointAngle),
     UiUtils.createTranslationSliders('joint', null, [0, 0, 0], Actions.anim.jointTranslation),
+    UiUtils.createColorPicker('jointColor', 'Skin weight', '#000000', Actions.anim.jointColor),
     UiUtils.createButtons('jointButtons', [
       {
         id: 'alignBone',
