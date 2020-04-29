@@ -10,7 +10,6 @@ import PluginOverlay from './pluginOverlay.js';
 import PluginLabels from './pluginLabels.js';
 import PluginSkeleton from './pluginSkeleton.js';
 import { SunLight } from './lights.js';
-import Camera from './camera.js';
 import CanvasView from './canvasView.js';
 
 // private things
@@ -129,8 +128,6 @@ class Renderer {
     this.scene = {
       models: [],
       lights: [new SunLight(1, 0.2)],
-      background: {},
-      overlay: { alpha: 0.5 },
       labels: {
         world: {
           origin: [0, 0, 0],
@@ -243,11 +240,10 @@ class Renderer {
     }
     glState.clear();
     this.views.forEach((view) => {
-      const { camera } = view;
       const {x, y, width, height} = view.rect;
       glState.viewport(x, y, width, height);
       this.plugins.forEach((plugin) => {
-        plugin.draw(glState, scene, camera, deltaTime);
+        plugin.draw(glState, scene, view, deltaTime);
       });  
     })
     if (captureNextFrameCallback) {
@@ -443,12 +439,12 @@ class Renderer {
       if (callback) callback(img);
     });
   }
-  setBackgroundImage(url, callback) {
-    const { background } = this.scene;
+  setBackgroundImage(i, url, callback) {
+    const { background } = this.views[i];
     this.setImage(background, url, callback);
   }
-  setOverlayImage(url, callback) {
-    const { overlay } = this.scene;
+  setOverlayImage(i, url, callback) {
+    const { overlay } = this.views[i];
     this.setImage(overlay, url, callback);
   }
   setBackgroundColor(rgb) {

@@ -28,8 +28,8 @@ class PluginBackground {
     const t = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
     gl.uniformMatrix4fv(shader.uniforms.colourTransform, false, t);
   }
-  draw(glState, scene) {
-    const { background } = scene;
+  draw(glState, scene, view) {
+    const { background } = view;
     if (!background || !background.img) {
       return;
     }

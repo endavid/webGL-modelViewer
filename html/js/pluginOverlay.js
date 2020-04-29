@@ -29,8 +29,8 @@ class PluginOverlay {
     const t = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, a];
     gl.uniformMatrix4fv(shader.uniforms.colourTransform, false, t);
   }
-  draw(glState, scene) {
-    const { overlay } = scene;
+  draw(glState, scene, view) {
+    const { overlay } = view;
     if (!overlay || !overlay.img) {
       return;
     }
@@ -39,7 +39,7 @@ class PluginOverlay {
     this.shader.use(gl);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, overlay.img.webglTexture);
-    this.setOverlayParameters(gl, scene.overlay);
+    this.setOverlayParameters(gl, overlay);
     this.drawFullScreenQuad(gl);
     this.shader.disable(gl);
   }

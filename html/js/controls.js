@@ -528,18 +528,31 @@ const Actions = {
         setInfo(`Image size: ${sizeinfo}`);
       }
     },
-    background: (url) => {
-      viewer.setBackgroundImage(url, Actions.shader.checkAspect);
+    background: (values) => {
+      values.forEach((v, i) => {
+        viewer.setBackgroundImage(i, v.uri, Actions.shader.checkAspect);
+      });
     },
-    overlay: (url) => {
-      viewer.setOverlayImage(url, Actions.shader.checkAspect);
+    overlay: (values) => {
+      values.forEach((v, i) => {
+        viewer.setOverlayImage(i, v.uri, Actions.shader.checkAspect);
+      });
+    },
+    overlayAlpha: (alpha) => {
+      viewer.views.forEach((v) => {
+        v.overlay.alpha = alpha;
+      });
     },
     clearBackground: () => {
-      viewer.setBackgroundImage(null);
+      for (let i = 0; i < viewer.views.length; i++) {
+        viewer.setBackgroundImage(i, null);
+      }
       clearFileBrowser('backgroundFileBrowser');
     },
     clearOverlay: () => {
-      viewer.setOverlayImage(null);
+      for (let i = 0; i < viewer.views.length; i++) {
+        viewer.setOverlayImage(i, null);
+      }
       clearFileBrowser('overlayFileBrowser');
     }
   }
@@ -1066,7 +1079,6 @@ function populateControls() {
     UiUtils.createSlider('SunIntensity', 'sun intensity', Config.sun.intensity, 0.1, 2, 0.1, Update.sunIntensity),
   ]);
   // * Shader Settings
-  const { overlay } = viewer.scene;
   UiUtils.addGroup('gShader', 'Shader Settings', [
     UiUtils.createDropdownList('missingTexture', 'If missing texture', missingTexturePresets, (obj) => {
       ImageUrls.missing = obj.value;
@@ -1075,8 +1087,8 @@ function populateControls() {
     UiUtils.createDropdownList('shader', 'Shader', shaderPresets, (obj) => {
       viewer.replaceLitShader(obj.value);
     }),
-    UiUtils.createFileBrowser('backgroundFileBrowser', 'load background', false, (values) => { Actions.shader.background(values[0].uri); }),
-    UiUtils.createFileBrowser('overlayFileBrowser', 'load overlay', false, (values) => { Actions.shader.overlay(values[0].uri); }),
+    UiUtils.createFileBrowser('backgroundFileBrowser', 'load background', true, (values) => { Actions.shader.background(values); }),
+    UiUtils.createFileBrowser('overlayFileBrowser', 'load overlay', true, (values) => { Actions.shader.overlay(values); }),
     UiUtils.createButtons('shaderButtons', [{
       id: 'removeBackground',
       text: 'Clear Bg',
@@ -1088,9 +1100,7 @@ function populateControls() {
       callback: Actions.shader.clearOverlay,
     },
     ]),
-    UiUtils.createSlider('overlayAlpha', 'overlay opacity', overlay.alpha, 0, 1, 1 / 255, (value) => {
-      overlay.alpha = parseFloat(value);
-    }),
+    UiUtils.createSlider('overlayAlpha', 'overlay opacity', 0.5, 0, 1, 1 / 255, Actions.shader.overlayAlpha),
     UiUtils.createSlider('SunAlpha', 'model alpha', Config.sun.alpha, 0, 1, 1 / 255, Update.sunAlpha),
   ]);
   // * Animation Controls

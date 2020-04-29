@@ -74,7 +74,8 @@ class PluginLitModel {
     });
     shader.disable(gl);
   }
-  draw(glState, scene, camera) {
+  draw(glState, scene, view) {
+    const { camera } = view;
     const irradiance = scene.lights[0].irradiance;
     PluginLitModel.setDepthPass(glState, irradiance[3] < 0.99);
     const args = {
