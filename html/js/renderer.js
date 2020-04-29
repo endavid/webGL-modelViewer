@@ -309,7 +309,7 @@ class Renderer {
     const direction = e.deltaY === 0 ? 0 : e.deltaY > 0 ? 1 : -1;
     const { camera } = this.views[0];
     const z = camera.distance * (1.0 + 0.1 * direction);
-    camera.setLocation(camera.height, z);
+    camera.setLocation(null, camera.height, z);
     // viewMatrix to camera transform => -pos
     this.onCameraDistance(z);
     e.preventDefault();
@@ -329,7 +329,7 @@ class Renderer {
   applyTranslationDeltas() {
     const { camera } = this.views[0];
     const y = camera.height + this.mouseState.dY * 10;
-    camera.setLocation(y);
+    camera.setLocation(null, y);
     // viewMatrix to camera transform => -pos
     this.onCameraHeight(y);
   }

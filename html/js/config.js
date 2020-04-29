@@ -13,6 +13,7 @@ const Config = {
     {
       distance: 3.01,
       height: 0.95,
+      offsetX: 0,
       pitch: 0,
       rotationY: 0,
       fov: 26.9
@@ -20,6 +21,7 @@ const Config = {
     {
       distance: 3.01,
       height: 0.95,
+      offsetX: 0,
       pitch: 0,
       rotationY: 45,
       fov: 26.9
@@ -27,6 +29,7 @@ const Config = {
     {
       distance: 3.01,
       height: 0.95,
+      offsetX: 0,
       pitch: 0,
       rotationY: -45,
       fov: 26.9
@@ -34,6 +37,7 @@ const Config = {
     {
       distance: 3.01,
       height: 0.95,
+      offsetX: 0,
       pitch: 0,
       rotationY: 180,
       fov: 26.9

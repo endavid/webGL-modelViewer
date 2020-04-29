@@ -16,6 +16,7 @@ class Camera {
     this.setFOV(fov);
     this.transform = new Transform({});
     this.viewMatrix = VMath.getI4();
+    this.offsetX = 0;
     this.height = 0;
     this.distance = 0;
     this.pitch = 0;
@@ -24,13 +25,14 @@ class Camera {
   getPosition() {
     return this.transform.position;
   }
-  setLocation(height, distance, pitch, rotationY) {
-    this.height = height;
+  setLocation(offsetX, height, distance, pitch, rotationY) {
+    this.offsetX = valueOrDefault(offsetX, this.offsetX);
+    this.height = valueOrDefault(height, this.distance);
     this.distance = valueOrDefault(distance, this.distance);
     this.pitch = valueOrDefault(pitch, this.pitch);
     this.rotationY = valueOrDefault(rotationY, this.rotationY);
     const Ry = VMath.rotationMatrixAroundY(VMath.degToRad(this.rotationY));
-    const p = math.multiply(Ry, [0, this.height, this.distance]);
+    const p = math.multiply(Ry, [this.offsetX, this.height, this.distance]);
     this.transform.position = p;
     this.transform.eulerAngles = [this.pitch, this.rotationY, 0];
     const M = this.transform.toMatrix();

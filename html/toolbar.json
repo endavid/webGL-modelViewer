@@ -8,6 +8,7 @@
         "camera": {
           "distance": 3,
           "height": 1.35,
+          "offsetX": 0,
           "pitch": -7,
           "rotationY": 0,
           "fov": 26.9
@@ -22,6 +23,7 @@
         "camera": {
           "distance": 3.01,
           "height": 0.95,
+          "offsetX": 0,
           "pitch": 0,
           "rotationY": 0,
           "fov": 26.9

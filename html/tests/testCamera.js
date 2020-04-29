@@ -9,7 +9,7 @@ QUnit.module('Camera');
 // https://github.com/endavid/VidEngine/blob/master/VidTests/VidTestsTests/VidTestsTests.swift
 QUnit.test('projection', (assert) => {
   const camera = new Camera(90, 1, 0.1, 100);
-  camera.setLocation(2, 20);
+  camera.setLocation(0, 2, 20);
   const worldPoint = [0.6, 1.2, -5, 1];
   const viewPoint = VMath.mulVector(camera.viewMatrix, worldPoint);
   assert.deepEqual(viewPoint, [0.6, -0.8, -25.0, 1]);
@@ -25,7 +25,7 @@ QUnit.test('projection', (assert) => {
 
 QUnit.test('ray from screen coords', (assert) => {
   const camera = new Camera(90, 1, 0.1, 100);
-  camera.setLocation(2, 20);
+  camera.setLocation(0, 2, 20);
   const ray = camera.rayFromScreenCoordinates(0.6 / 25, -0.8 / 25);
   const worldPoint = [0.6, 1.2, -5];
   const distance = VMath.distance(worldPoint, camera.getPosition());

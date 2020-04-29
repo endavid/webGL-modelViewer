@@ -156,6 +156,7 @@ const Update = {
     const camera = viewer.getCamera(i || 0);
     const cfgCamera = Config.cameras[i || 0];
     camera.setLocation(
+      cfgCamera.offsetX,
       cfgCamera.height,
       cfgCamera.distance,
       cfgCamera.pitch,
@@ -229,6 +230,11 @@ const UISetter = {
       $('#cameraHeight').val(y);
       $('#cameraHeight_number').val(y);
       Config.cameras[Config.selectedCamera].height = y;
+    },
+    offsetX: (x) => {
+      $('#cameraOffsetX').val(x);
+      $('#cameraOffsetX_number').val(x);
+      Config.cameras[Config.selectedCamera].offsetX = x;
     },
     pitch: (a) => {
       $('#cameraPitch').val(a);
@@ -1026,6 +1032,11 @@ function populateControls() {
     UiUtils.createSlider('cameraHeight', 'height',
       Config.cameras[0].height, -2, 2, 0.01, (value) => {
         Config.cameras[Config.selectedCamera].height = parseFloat(value);
+        Update.cameraLocation(Config.selectedCamera);
+      }),
+    UiUtils.createSlider('cameraOffsetX', 'offset X',
+      Config.cameras[0].offsetX, -2, 2, 0.01, (value) => {
+        Config.cameras[Config.selectedCamera].offsetX = parseFloat(value);
         Update.cameraLocation(Config.selectedCamera);
       }),
     UiUtils.createSlider('cameraPitch', 'pitch',
