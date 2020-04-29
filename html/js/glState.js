@@ -46,6 +46,12 @@ class GlState {
       this.gl.clearColor(v[0], v[1], v[2], 1);
     }
   }
+  setScissorTest(enable) {
+    if (this.scissorTest !== enable) {
+      this.scissorTest = enable;
+      this.glToggle(enable, this.gl.SCISSOR_TEST);
+    }
+  }
   setDepthTest(enable) {
     if (this.depthTest !== enable) {
       this.depthTest = enable;
@@ -133,6 +139,9 @@ class GlState {
   }
   viewport(x, y, w, h) {
     this.gl.viewport(x, y, w, h);
+  }
+  scissor(x, y, w, h) {
+    this.gl.scissor(x, y, w, h);
   }
   clear() {
     const { gl } = this;

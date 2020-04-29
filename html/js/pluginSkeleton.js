@@ -16,11 +16,10 @@ class PluginSkeleton {
     context.textAlign = 'center';
     /* eslint-enable no-param-reassign */
   }
-  draw(context, scene) {
+  draw(context, scene, camera) {
     const self = this;
     const { canvas } = context;
     const { width, height } = canvas;
-    const { camera } = scene;
     const [mainModel] = scene.models;
     if (!mainModel) {
       return;

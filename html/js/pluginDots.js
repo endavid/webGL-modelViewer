@@ -26,13 +26,12 @@ class PluginDots {
     glState.setDefaultStencil();
     glState.setStencilTest(false);
   }
-  draw(glState, scene) {
+  draw(glState, scene, camera) {
     if (!scene.labels.showPoints) {
       return;
     }
     const self = this;
     const { gl } = glState;
-    const { camera } = scene;
     PluginDots.setOpaquePass(glState);
     scene.models.forEach((model) => {
       if (!model || !model.dotBuffer) {

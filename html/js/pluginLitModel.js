@@ -28,8 +28,7 @@ class PluginLitModel {
     if (!model || !model.vertexBuffer) {
       return;
     }
-    const { whiteTexture, gl, scene, normalShader, skinShader } = args;
-    const { camera } = scene;
+    const { camera, whiteTexture, gl, scene, normalShader, skinShader } = args;
     const [light] = scene.lights;
     const skinned = model.skinnedModel;
     const shader = skinned ? skinShader : normalShader;
@@ -75,10 +74,11 @@ class PluginLitModel {
     });
     shader.disable(gl);
   }
-  draw(glState, scene) {
+  draw(glState, scene, camera) {
     const irradiance = scene.lights[0].irradiance;
     PluginLitModel.setDepthPass(glState, irradiance[3] < 0.99);
     const args = {
+      camera: camera,
       whiteTexture: this.whiteTexture,
       gl: glState.gl,
       scene: scene,

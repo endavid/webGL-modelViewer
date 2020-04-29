@@ -152,8 +152,8 @@ function updateRotationLock() {
 }
 
 const Update = {
-  cameraLocation: () => {
-    const { camera } = viewer.scene;
+  cameraLocation: (i) => {
+    const camera = viewer.getCamera(i || 0);
     camera.setLocation(
       Config.camera.height,
       Config.camera.distance,
@@ -161,13 +161,13 @@ const Update = {
       Config.camera.rotationY,
     );
   },
-  cameraFov: () => {
-    const { camera } = viewer.scene;
+  cameraFov: (i) => {
+    const camera = viewer.getCamera(i || 0);
     camera.setFOV(Config.camera.fov);  
   },
-  camera: () => {
-    Update.cameraLocation();
-    Update.cameraFov();
+  camera: (i) => {
+    Update.cameraLocation(i);
+    Update.cameraFov(i);
   },
   modelTransform: () => {
     const p = Config.model.position;
@@ -727,7 +727,7 @@ function populateControls() {
   function saveIntrinsicViewMatrix() {
     const w = viewer.canvas.width;
     const h = viewer.canvas.height;
-    const KV = viewer.scene.camera.getIntrinsicViewMatrix(w, h);
+    const KV = viewer.getCamera(0).getIntrinsicViewMatrix(w, h);
     const obj = {
       image_width: w,
       image_height: h,
@@ -1006,43 +1006,50 @@ function populateControls() {
     UiUtils.createSlider('cameraDistance', 'distance',
       Config.camera.distance, 0.2, 10, 0.01, (value) => {
         Config.camera.distance = parseFloat(value);
-        Update.cameraLocation();
+        Update.cameraLocation(0);
       }),
     UiUtils.createSlider('cameraHeight', 'height',
       Config.camera.height, -2, 2, 0.01, (value) => {
         Config.camera.height = parseFloat(value);
-        Update.cameraLocation();
+        Update.cameraLocation(0);
       }),
     UiUtils.createSlider('cameraPitch', 'pitch',
       Config.camera.pitch, -90, 90, 1, (value) => {
         Config.camera.pitch = parseFloat(value);
-        Update.cameraLocation();
+        Update.cameraLocation(0);
       }),
     UiUtils.createSlider('cameraRotationY', 'rotation Y',
       Config.camera.rotationY, -180, 180, 1, (value) => {
         Config.camera.rotationY = parseFloat(value);
-        Update.cameraLocation();
+        Update.cameraLocation(0);
       }),
     UiUtils.createSlider('cameraFOV', 'Field of View',
       Config.camera.fov, 1, 90, 1, (value) => {
         Config.camera.fov = parseFloat(value);
-        Update.cameraFov()
+        Update.cameraFov(0)
+      }),
+    UiUtils.createButtonWithOptions('setCamera', 'Set Camera',
+      'in viewport', 
+      [{name: 0, value: 0}, {name: 1, value: 1}, {name: 2, value: 2}, {name: 3, value: 3}],
+      (e) => {
+        const cameraId = $(`#${e.target.id}_select`).val();
+        Update.camera(cameraId);
       }),
     UiUtils.createButtons('cameraDumps', [
       {
         id: 'dumpProjection',
         text: 'Dump Proj',
-        callback: () => setInfo(matrixToString(viewer.scene.camera.projectionMatrix)),
+        callback: () => setInfo(matrixToString(viewer.getCamera(0).projectionMatrix)),
       },
       {
         id: 'dumpView',
         text: 'Dump View',
-        callback: () => setInfo(matrixToString(viewer.scene.camera.viewMatrix)),
+        callback: () => setInfo(matrixToString(viewer.getCamera(0).viewMatrix)),
       },
       {
         id: 'dumpRotation',
         text: 'Dump R',
-        callback: () => setInfo(matrixToString(viewer.scene.camera.getFlippedRotation())),
+        callback: () => setInfo(matrixToString(viewer.getCamera(0).getFlippedRotation())),
       },
       {
         id: 'saveIntrinsicView',
@@ -1153,7 +1160,9 @@ $(document).ready(() => {
   viewer.setCameraDistanceCallback(UISetter.camera.distance);
   viewer.setJointSelectionCallback(UISetter.anim.selectJoint);
   viewer.setBackgroundColor(Config.backgroundColor);
-  Update.camera();
+  for (let i = 0; i < viewer.views.length; i++) {
+    Update.camera(i);
+  }
   populateControls();
   toggleUninterestingGroups();
   Actions.model.reload();

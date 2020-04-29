@@ -15,11 +15,11 @@ class PluginLabels {
     context.textAlign = 'center';
     /* eslint-enable no-param-reassign */
   }
-  draw(context, scene) {
+  draw(context, scene, camera) {
     const self = this;
     const { canvas } = context;
     context.clearRect(0, 0, canvas.width, canvas.height);
-    const { labels, camera } = scene;
+    const { labels } = scene;
     if (!labels.showLabels) {
       return;
     }

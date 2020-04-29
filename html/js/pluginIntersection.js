@@ -66,13 +66,13 @@ class PluginIntersection {
     glState.setStencilMask(0xffffffff);
     glState.setStencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
   }
-  draw(glState, scene) {
+  draw(glState, scene, camera) {
     const args = {
+      camera,
       whiteTexture: this.whiteTexture,
       gl: glState.gl,
       scene: {
         selectedMesh: scene.selectedMesh,
-        camera: scene.camera,
         lights: [
           { 
             irradiance: [0, 1, 0],

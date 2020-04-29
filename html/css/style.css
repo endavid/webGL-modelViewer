@@ -12,7 +12,7 @@ body {
 
 #page {
   background-color: #2b2626;
-  width: 1350px;
+  width: 100%;
   margin:auto;
   margin-top: 10px;
   padding: auto;
@@ -22,7 +22,6 @@ body {
 #sidemenu {
   color: #e6e6e6;
   flex:14%;
-  width:340px;
   padding-top: 20px;
   padding-bottom: 20px;
   margin-left: 2px;
@@ -34,8 +33,7 @@ body {
 
 #sidemenuRight {
   color: #e6e6e6;
-  flex:14%;
-  width:340px;
+  flex: 14%;
   padding-top: 20px;
   padding-bottom: 20px;
   margin-left: 10px;
@@ -92,27 +90,6 @@ body {
   text-align:center;
   line-height:14pt;
   color: #c8c4a0;
-}
-
-#listarea {
-  height: 600px;
-  width: 430px;
-  padding-left: 10px;
-  padding-right:10px;
-  line-height:14pt;
-  padding-top: 10px;
-  padding-bottom:10px;
-  overflow: auto;
-  float: left;
-}
-
-#productarea {
-  padding: 10px;
-  height: 600px;
-  width: 430px;
-  line-height:14pt;
-  overflow: auto;
-  float: right;
 }
 
 #infoDiv {

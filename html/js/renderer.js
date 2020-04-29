@@ -11,6 +11,7 @@ import PluginLabels from './pluginLabels.js';
 import PluginSkeleton from './pluginSkeleton.js';
 import { SunLight } from './lights.js';
 import Camera from './camera.js';
+import CanvasView from './canvasView.js';
 
 // private things
 let captureNextFrameCallback = null;
@@ -68,13 +69,14 @@ function createFloatFramebuffer(glState, width, height) {
 }
 
 // https://stackoverflow.com/a/17130415/1765629
-function getMousePos(canvas, evt) {
+function getMousePos(canvas, evt, viewRect) {
   const rect = canvas.getBoundingClientRect();
   const x = evt.clientX - rect.left;
   const y = evt.clientY - rect.top;
+  const {width, height} = viewRect;
   // normalized coordinates
-  const u = x / canvas.width;
-  const v = 1 - y / canvas.height;
+  const u = x / width;
+  const v = 1 - y / height;
   // clip coordinates (-1, 1)
   const clipx = 2 * u - 1;
   const clipy = 2 * v - 1;
@@ -91,6 +93,16 @@ class Renderer {
       this.canvas2d = document.getElementById(canvas2dId);
       this.context2d = this.canvas2d.getContext('2d');
     }
+    const { width, height } = this.canvas;
+    const mainWidth = 3 * width / 4;
+    const auxWidth = width / 4;
+    const auxHeight = height / 3;
+    this.views = [
+      new CanvasView({x: 0, y: 0, width: mainWidth, height}),
+      new CanvasView({x: mainWidth, y: height - auxHeight, width: auxWidth, height: auxHeight}),
+      new CanvasView({x: mainWidth, y: height - 2 * auxHeight, width: auxWidth, height: auxHeight}),
+      new CanvasView({x: mainWidth, y: 0, width: auxWidth, height: auxHeight})
+    ];
     this.mouseState = {
       amortization: 0.06,
       drag: false,
@@ -114,9 +126,7 @@ class Renderer {
       textures: {},
     };
     this.outputSurface = 'default';
-    const aspect = this.canvas.width / this.canvas.height;
     this.scene = {
-      camera: new Camera(33.4, aspect, 0.1, 500),
       models: [],
       lights: [new SunLight(1, 0.2)],
       background: {},
@@ -231,11 +241,15 @@ class Renderer {
       glState.gl.bindFramebuffer(glState.gl.FRAMEBUFFER, fb);
       glState.gl.bindRenderbuffer(glState.gl.RENDERBUFFER, rb);
     }
-    glState.viewport(0, 0, this.canvas.width, this.canvas.height);
     glState.clear();
-    this.plugins.forEach((plugin) => {
-      plugin.draw(glState, scene, deltaTime);
-    });
+    this.views.forEach((view) => {
+      const { camera } = view;
+      const {x, y, width, height} = view.rect;
+      glState.viewport(x, y, width, height);
+      this.plugins.forEach((plugin) => {
+        plugin.draw(glState, scene, camera, deltaTime);
+      });  
+    })
     if (captureNextFrameCallback) {
       const imgData = readPixelsAsImageData(glState.gl, s);
       captureNextFrameCallback(imgData);
@@ -243,8 +257,9 @@ class Renderer {
     }
     glState.popFramebuffer();
     glState.popRenderbuffer();
+    const { camera } = this.views[0];
     this.plugins2d.forEach((plugin) => {
-      plugin.draw(context2d, scene, deltaTime);
+      plugin.draw(context2d, scene, camera, deltaTime);
     });
     glState.flush();
   }
@@ -258,7 +273,7 @@ class Renderer {
   mouseDown(e) {
     const midButton = 4;
     const bothLeftAndRight = 3; // for mice without mid button
-    const screenCoords = getMousePos(this.canvas, e);
+    const screenCoords = getMousePos(this.canvas, e, this.views[0].rect);
     if (e.buttons === midButton || e.buttons === bothLeftAndRight) {
       this.tryToAddLabelAt(screenCoords);
     } else {
@@ -296,7 +311,7 @@ class Renderer {
   onWheel(e) {
     // eslint-disable-next-line no-nested-ternary
     const direction = e.deltaY === 0 ? 0 : e.deltaY > 0 ? 1 : -1;
-    const { camera } = this.scene;
+    const { camera } = this.views[0];
     const z = camera.distance * (1.0 + 0.1 * direction);
     camera.setLocation(camera.height, z);
     // viewMatrix to camera transform => -pos
@@ -316,7 +331,7 @@ class Renderer {
     }
   }
   applyTranslationDeltas() {
-    const { camera } = this.scene;
+    const { camera } = this.views[0];
     const y = camera.height + this.mouseState.dY * 10;
     camera.setLocation(y);
     // viewMatrix to camera transform => -pos
@@ -351,6 +366,10 @@ class Renderer {
         self.extensions[e] = ext;
       }
     });
+  }
+  getCamera(i) {
+    const { camera } = this.views[i];
+    return camera;
   }
   getSelectedModel() {
     return this.scene.models[this.selectedModel];
@@ -458,7 +477,7 @@ class Renderer {
   }
   tryToAddLabelAt(screenCoords) {
     const { selected } = this.scene.labels;
-    const { camera } = this.scene;
+    const { camera } = this.views[0];
     const { clipx, clipy } = screenCoords;
     const ray = camera.rayFromScreenCoordinates(clipx, clipy);
     const model = this.scene.models[this.selectedModel];
@@ -473,8 +492,8 @@ class Renderer {
   trySelectJoint(screenCoords) {
     const model = this.scene.models[this.selectedModel];
     if (model && model.skinnedModel && model.skinnedModel.showSkeleton) {
-      const { camera } = this.scene;
-      const { width, height } = this.canvas;
+      const { camera } = this.views[0];
+      const { width, height } = this.views[0].rect;
       const m = model.getTransformMatrix();
       const {joint, distance} = model.skinnedModel.getClosestJoint(screenCoords, m, camera, width, height);
       if (distance < this.selectionRadiusInPixels) {
