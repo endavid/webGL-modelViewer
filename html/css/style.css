@@ -16,16 +16,16 @@ body {
   margin:auto;
   margin-top: 10px;
   padding: auto;
+  display: flex;
 }
 
 #sidemenu {
   color: #e6e6e6;
-  float:left;
+  flex:14%;
   width:340px;
-  padding-left: 10px;
-  padding-right: 10px;
   padding-top: 20px;
   padding-bottom: 20px;
+  margin-left: 2px;
   margin-right: 10px;
   background-color: #5c5050;
   border-radius: 15px;
@@ -34,13 +34,12 @@ body {
 
 #sidemenuRight {
   color: #e6e6e6;
-  float:right;
+  flex:14%;
   width:340px;
-  padding-left: 10px;
-  padding-right: 10px;
   padding-top: 20px;
   padding-bottom: 20px;
-  margin-right: 10px;
+  margin-left: 10px;
+  margin-right: 2px;
   background-color: #5c5050;
   border-radius: 15px;
   -moz-border-radius: 15px;
@@ -59,9 +58,8 @@ body {
 }
 
 #mainarea {
-  width: 600px;
   padding-top:0px;
-  display: inline-block;
+  display: flex;
 }
 
 #header {
@@ -82,7 +80,7 @@ body {
 
 #footer {
   text-shadow: 1px 1px 1px black;
-  width:870px;
+  width:100%;
   clear:both;
   height:30px;
   margin-left: auto;
