@@ -475,11 +475,12 @@ class SkinnedModel {
       console.warning("pointBoneToTarget: not a bone.");
       return;
     }
+    const t = VMath.readCoordinates(targetPosition).slice(0, 3);
     const j = this.jointIndices[parent];
     const p0 = this.getJointPosition(j, keyframe);
     const p1 = this.getJointPosition(i, keyframe);
     const v0 = VMath.normalize(VMath.diff(p1, p0));
-    const v1 = VMath.normalize(VMath.diff(targetPosition, p0));
+    const v1 = VMath.normalize(VMath.diff(t, p0));
     const axis = VMath.normalize(math.cross(v0, v1));
     const angle = Math.acos(math.dot(v0, v1));
     const res = this.getEulerAndAngleAxis(angle, axis, parent);
@@ -501,18 +502,25 @@ class SkinnedModel {
       console.warning("twistParentToPointBoneToTarget: no parent bone.");
       return;
     }
+    const t = VMath.readCoordinates(targetPosition).slice(0, 3);
     const k = this.jointIndices[grandparent];
     const p0 = this.getJointPosition(k, keyframe);
     const p1 = this.getJointPosition(j, keyframe);
     const p2 = this.getJointPosition(i, keyframe);
     const v0 = VMath.normalize(VMath.diff(p1, p0));
     const v1 = VMath.normalize(VMath.diff(p2, p1));
-    const vt = VMath.normalize(VMath.diff(targetPosition, p1));
+    const vt = VMath.normalize(VMath.diff(t, p1));
     const right = VMath.normalize(math.cross(v0, v1));
     const up = VMath.normalize(math.cross(right, vt));
     const vt_projected = VMath.normalize(math.cross(right, up));
     const v1_projected = VMath.normalize(math.cross(right, v0));
     const angle = Math.acos(math.dot(v1_projected, vt_projected))
+    // @todo this is wrong because the twist should be defined with
+    // respect to the bind pose! 
+    // First add twist, side, bend controls to make sure
+    // we get twist right.
+    // Check GetRotationInLocalAxis in Skeleton.cpp
+    // You just need to convert the angleAxis to the bone frame of ref.
     const res = this.getEulerAndAngleAxis(angle, v0, grandparent);
     console.log(`bones: ${v0}, ${v1}; target dir: ${vt}; v1_proj: ${v1_projected}; angle: ${VMath.radToDeg(angle)}`);
     return res;

@@ -1,4 +1,5 @@
 import ParseUtils from './parseUtils.js';
+import VMath from './math.js';
 // failed to import as a module atm
 const { X2JS } = window;
 
@@ -14,12 +15,29 @@ const LabelUtils = {
       labelFile.forEach((item) => {
         labels[item.name] = item.position;
       });
+    } else if (labelFile.armature) {
+      return LabelUtils.importArmature(labelFile);
     }
     const keys = Object.keys(labels);
     keys.forEach((k) => {
       if (Array.isArray(labels[k])) {
         labels[k] = ParseUtils.vectorToObject(labels[k]);
       }
+    });
+    return labels;
+  },
+
+  importArmature(labelFile) {
+    const { armature } = labelFile;
+    let labels = {};
+    const keys = Object.keys(armature);
+    keys.forEach((k) => {
+      let { displacement, parent } = armature[k];
+      while (parent) {
+        displacement = VMath.sum(displacement, armature[parent].displacement);
+        parent = armature[parent].parent;
+      }
+      labels[k] = ParseUtils.vectorToObject(displacement);      
     });
     return labels;
   },
