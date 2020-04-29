@@ -8,13 +8,37 @@ const Config = {
     rotation: { x: 0, y: 0, z: 0 },
     scale: 1
   },
-  camera: {
-    distance: 3,
-    height: 1.35,
-    pitch: -7,
-    rotationY: 0,
-    fov: 26.9
-  },
+  selectedCamera: 0,
+  cameras: [
+    {
+      distance: 3.01,
+      height: 0.95,
+      pitch: 0,
+      rotationY: 0,
+      fov: 26.9
+    },
+    {
+      distance: 3.01,
+      height: 0.95,
+      pitch: 0,
+      rotationY: 45,
+      fov: 26.9
+    },
+    {
+      distance: 3.01,
+      height: 0.95,
+      pitch: 0,
+      rotationY: -45,
+      fov: 26.9
+    },
+    {
+      distance: 3.01,
+      height: 0.95,
+      pitch: 0,
+      rotationY: 180,
+      fov: 26.9
+    },
+  ],
   sun: {
     altitude: 1,
     eastWest: 0.2,

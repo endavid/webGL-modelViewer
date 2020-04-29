@@ -154,16 +154,18 @@ function updateRotationLock() {
 const Update = {
   cameraLocation: (i) => {
     const camera = viewer.getCamera(i || 0);
+    const cfgCamera = Config.cameras[i || 0];
     camera.setLocation(
-      Config.camera.height,
-      Config.camera.distance,
-      Config.camera.pitch,
-      Config.camera.rotationY,
+      cfgCamera.height,
+      cfgCamera.distance,
+      cfgCamera.pitch,
+      cfgCamera.rotationY,
     );
   },
   cameraFov: (i) => {
     const camera = viewer.getCamera(i || 0);
-    camera.setFOV(Config.camera.fov);  
+    const cfgCamera = Config.cameras[i || 0];
+    camera.setFOV(cfgCamera.fov);  
   },
   camera: (i) => {
     Update.cameraLocation(i);
@@ -221,27 +223,27 @@ const UISetter = {
     distance: (z) => {
       $('#cameraDistance').val(z);
       $('#cameraDistance_number').val(z);
-      Config.camera.distance = z;
+      Config.cameras[Config.selectedCamera].distance = z;
     },
     height: (y) => {
       $('#cameraHeight').val(y);
       $('#cameraHeight_number').val(y);
-      Config.camera.height = y;
+      Config.cameras[Config.selectedCamera].height = y;
     },
     pitch: (a) => {
       $('#cameraPitch').val(a);
       $('#cameraPitch_number').val(a);
-      Config.camera.pitch = a;
+      Config.cameras[Config.selectedCamera].pitch = a;
     },
     rotationY: (a) => {
       $('#cameraRotationY').val(a);
       $('#cameraRotationY_number').val(a);
-      Config.camera.rotationY = a;
+      Config.cameras[Config.selectedCamera].rotationY = a;
     },
     fov: (a) => {
       $('#cameraFOV').val(a);
       $('#cameraFOV_number').val(a);
-      Config.camera.fov = a;
+      Config.cameras[Config.selectedCamera].fov = a;
     }
   },
   model: {
@@ -1017,29 +1019,29 @@ function populateControls() {
   // * Camera Settings
   UiUtils.addGroup('gCamera', 'Camera Settings', [
     UiUtils.createSlider('cameraDistance', 'distance',
-      Config.camera.distance, 0.2, 10, 0.01, (value) => {
-        Config.camera.distance = parseFloat(value);
-        Update.cameraLocation(0);
+      Config.cameras[0].distance, 0.2, 10, 0.01, (value) => {
+        Config.cameras[Config.selectedCamera].distance = parseFloat(value);
+        Update.cameraLocation(Config.selectedCamera);
       }),
     UiUtils.createSlider('cameraHeight', 'height',
-      Config.camera.height, -2, 2, 0.01, (value) => {
-        Config.camera.height = parseFloat(value);
-        Update.cameraLocation(0);
+      Config.cameras[0].height, -2, 2, 0.01, (value) => {
+        Config.cameras[Config.selectedCamera].height = parseFloat(value);
+        Update.cameraLocation(Config.selectedCamera);
       }),
     UiUtils.createSlider('cameraPitch', 'pitch',
-      Config.camera.pitch, -90, 90, 1, (value) => {
-        Config.camera.pitch = parseFloat(value);
-        Update.cameraLocation(0);
+      Config.cameras[0].pitch, -90, 90, 1, (value) => {
+        Config.cameras[Config.selectedCamera].pitch = parseFloat(value);
+        Update.cameraLocation(Config.selectedCamera);
       }),
     UiUtils.createSlider('cameraRotationY', 'rotation Y',
-      Config.camera.rotationY, -180, 180, 1, (value) => {
-        Config.camera.rotationY = parseFloat(value);
-        Update.cameraLocation(0);
+      Config.cameras[0].rotationY, -180, 180, 1, (value) => {
+        Config.cameras[Config.selectedCamera].rotationY = parseFloat(value);
+        Update.cameraLocation(Config.selectedCamera);
       }),
     UiUtils.createSlider('cameraFOV', 'Field of View',
-      Config.camera.fov, 1, 90, 1, (value) => {
-        Config.camera.fov = parseFloat(value);
-        Update.cameraFov(0)
+      Config.cameras[0].fov, 1, 90, 1, (value) => {
+        Config.cameras[Config.selectedCamera].fov = parseFloat(value);
+        Update.cameraFov(Config.selectedCamera)
       }),
     UiUtils.createButtonWithOptions('setCamera', 'Set Camera',
       'in viewport', 
@@ -1047,6 +1049,9 @@ function populateControls() {
       (e) => {
         const cameraId = $(`#${e.target.id}_select`).val();
         Update.camera(cameraId);
+      },
+      (e) => {
+        Config.selectedCamera = parseInt(e.target.value);
       }),
     UiUtils.createButtons('cameraDumps', [
       {
