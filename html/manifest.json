@@ -1,9 +1,9 @@
 {
   "name": "EnDavid ModelViewer",
-  "version": "1.0.2",
+  "version": "2.0",
   "icons": {
-    "24": "resources/vidLogo.png",
-    "128": "resources/vidLogo.png"
+    "24": "resources/logo-24.png",
+    "128": "resources/logo-128.png"
   },
   "app": {
     "launch": {
