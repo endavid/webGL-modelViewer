@@ -3,7 +3,7 @@
     {
       "id": "cameraFrontA",
       "text": "Front A",
-      "icon": "/icons/camera-A.png",
+      "icon": "icons/camera-A.png",
       "preset": {
         "camera": {
           "distance": 3,
@@ -18,7 +18,7 @@
     {
       "id": "cameraFrontB",
       "text": "Front B",
-      "icon": "/icons/camera-front.png",
+      "icon": "icons/camera-front.png",
       "preset": {
         "camera": {
           "distance": 3.01,
@@ -33,7 +33,7 @@
     {
       "id": "cameraBack",
       "text": "Back",
-      "icon": "/icons/camera-back.png",
+      "icon": "icons/camera-back.png",
       "preset": {
         "camera": {
           "rotationY": 180
@@ -43,7 +43,7 @@
     {
       "id": "cameraLeft",
       "text": "Left",
-      "icon": "/icons/camera-left.png",
+      "icon": "icons/camera-left.png",
       "preset": {
         "camera": {
           "rotationY": 90
@@ -53,7 +53,7 @@
     {
       "id": "cameraRight",
       "text": "Right",
-      "icon": "/icons/camera-right.png",
+      "icon": "icons/camera-right.png",
       "preset": {
         "camera": {
           "rotationY": -90
@@ -63,7 +63,7 @@
     {
       "id": "cameraQuarterLeft",
       "text": "Left",
-      "icon": "/icons/camera-quarter-left.png",
+      "icon": "icons/camera-quarter-left.png",
       "preset": {
         "camera": {
           "rotationY": 45
@@ -73,7 +73,7 @@
     {
       "id": "cameraQuarterRight",
       "text": "Right",
-      "icon": "/icons/camera-quarter-right.png",
+      "icon": "icons/camera-quarter-right.png",
       "preset": {
         "camera": {
           "rotationY": -45
@@ -83,7 +83,7 @@
     {
       "id": "sunBright",
       "text": "Bright",
-      "icon": "/icons/sun-bright.png",
+      "icon": "icons/sun-bright.png",
       "preset": {
         "sun": {
           "intensity": 0.8
@@ -93,7 +93,7 @@
     {
       "id": "sunDark",
       "text": "Dark",
-      "icon": "/icons/sun.png",
+      "icon": "icons/sun.png",
       "preset": {
         "sun": {
           "intensity": 0.5
@@ -105,7 +105,7 @@
     {
       "id": "bakeLabels",
       "text": "Bake",
-      "icon": "/icons/bake.png",
+      "icon": "icons/bake.png",
       "actions": {
         "labels": [
           { "cmd": "bake" }
@@ -115,12 +115,12 @@
     {
       "id": "placeCheckerboard",
       "text": "Place Checkerboard",
-      "icon": "/resources/gray-checkerboard.png",
+      "icon": "resources/gray-checkerboard.png",
       "actions": {
         "model": [
           {
             "cmd": "load",
-            "args": [1, "plane", "/resources/plane.obj"]
+            "args": [1, "plane", "resources/plane.obj"]
           }
         ]
       }
@@ -128,7 +128,7 @@
     {
       "id": "resetModelPosition",
       "text": "Reset Model Position",
-      "icon": "/icons/center.png",
+      "icon": "icons/center.png",
       "preset": {
         "model": {
           "rotation": [0, 0, 0],
@@ -141,13 +141,13 @@
     {
       "id": "handStraightR",
       "text": "Hand Straight R",
-      "icon": "/icons/pose-hand-straight-R.png",
+      "icon": "icons/pose-hand-straight-R.png",
       "iconType": "medium",
       "actions": {
         "anim": [
           {
             "cmd": "setPose",
-            "args": ["/resources/poses/hand-straight-R.json"]
+            "args": ["resources/poses/hand-straight-R.json"]
           }
         ]
       }
@@ -155,13 +155,13 @@
     {
       "id": "handStraightL",
       "text": "Hand Straight L",
-      "icon": "/icons/pose-hand-straight-L.png",
+      "icon": "icons/pose-hand-straight-L.png",
       "iconType": "medium",
       "actions": {
         "anim": [
           {
             "cmd": "setPose",
-            "args": ["/resources/poses/hand-straight-L.json"]
+            "args": ["resources/poses/hand-straight-L.json"]
           }
         ]
       }
@@ -169,13 +169,13 @@
     {
       "id": "handRelaxedR",
       "text": "Hand Relaxed R",
-      "icon": "/icons/pose-hand-relaxed-R.png",
+      "icon": "icons/pose-hand-relaxed-R.png",
       "iconType": "medium",
       "actions": {
         "anim": [
           {
             "cmd": "setPose",
-            "args": ["/resources/poses/hand-relaxed-R.json"]
+            "args": ["resources/poses/hand-relaxed-R.json"]
           }
         ]
       }
@@ -183,13 +183,13 @@
     {
       "id": "handRelaxedL",
       "text": "Hand Relaxed L",
-      "icon": "/icons/pose-hand-relaxed-L.png",
+      "icon": "icons/pose-hand-relaxed-L.png",
       "iconType": "medium",
       "actions": {
         "anim": [
           {
             "cmd": "setPose",
-            "args": ["/resources/poses/hand-relaxed-L.json"]
+            "args": ["resources/poses/hand-relaxed-L.json"]
           }
         ]
       }
@@ -197,13 +197,13 @@
     {
       "id": "handClosedR",
       "text": "Hand Closed R",
-      "icon": "/icons/pose-hand-closed-R.png",
+      "icon": "icons/pose-hand-closed-R.png",
       "iconType": "medium",
       "actions": {
         "anim": [
           {
             "cmd": "setPose",
-            "args": ["/resources/poses/hand-closed-R.json"]
+            "args": ["resources/poses/hand-closed-R.json"]
           }
         ]
       }
@@ -211,13 +211,13 @@
     {
       "id": "handClosedL",
       "text": "Hand Closed L",
-      "icon": "/icons/pose-hand-closed-L.png",
+      "icon": "icons/pose-hand-closed-L.png",
       "iconType": "medium",
       "actions": {
         "anim": [
           {
             "cmd": "setPose",
-            "args": ["/resources/poses/hand-closed-L.json"]
+            "args": ["resources/poses/hand-closed-L.json"]
           }
         ]
       }

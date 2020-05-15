@@ -824,7 +824,7 @@ function populateControls() {
 
   // Create the UI controls
   // * Toolbar (it won't execute if toolbar.json doesn't exist)
-  $.getJSON('/toolbar.json', (cfg) => {
+  $.getJSON('toolbar.json', (cfg) => {
     let elements = [];
     Object.keys(cfg).forEach((g) => {
       let row = [];
