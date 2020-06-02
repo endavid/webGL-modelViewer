@@ -31,9 +31,9 @@ class PluginIntersection {
     shaders.light.litSkin = await Shader.createAsync(gl, vs.skin, fs.light, attribsSkin, uniformsSkin);
     return new PluginIntersection(shaders, whiteTexture);
   }
-  static setBackPass(glState) {
+  static setBackPass(glState, isBlend) {
     const { gl } = glState;
-    glState.setBlend(false)
+    glState.setBlend(isBlend);
     glState.setDepthTest(true);
     glState.setDepthMask(true);
     glState.setStencilTest(true);
@@ -42,24 +42,27 @@ class PluginIntersection {
     glState.setStencilMask(0xffffffff);
     glState.setStencilOp(gl.KEEP, gl.INCR, gl.INCR);
   }
-  static setFrontPass(glState) {
+  static setFrontPass(glState, isBlend) {
     const { gl } = glState;
+    glState.setBlend(isBlend);
     glState.setDepthMask(false);
     glState.setCullFace(glState.Cull.back);
     glState.setStencilFunc(gl.ALWAYS, 0, 0x0);
     glState.setStencilMask(0xffffffff);
     glState.setStencilOp(gl.KEEP, gl.DECR, gl.KEEP);
   }
-  static setIntersectionPass(glState) {
+  static setIntersectionPass(glState, isBlend) {
     const { gl } = glState;
+    glState.setBlend(isBlend);
     glState.setDepthMask(true);
     glState.setCullFace(glState.Cull.back);
     glState.setStencilFunc(gl.LESS, 0x01, 0xffffffff);
     glState.setStencilMask(0xffffffff);
     glState.setStencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
   }
-  static setLightPass(glState) {
+  static setLightPass(glState, isBlend) {
     const { gl } = glState;
+    glState.setBlend(isBlend);
     glState.setDepthMask(true);
     glState.setCullFace(glState.Cull.back);
     glState.setStencilFunc(gl.GEQUAL, 0x01, 0xffffffff);
@@ -68,6 +71,10 @@ class PluginIntersection {
   }
   draw(glState, scene, view) {
     const { camera } = view;
+    const irradiance = scene.lights[0].irradiance;
+    const alpha = irradiance[3];
+    const isBlend = alpha < 0.99;
+    const flatColorAlpha = isBlend ? (this.doLightPass ? 0 : alpha) : 1;
     const args = {
       camera,
       whiteTexture: this.whiteTexture,
@@ -76,7 +83,7 @@ class PluginIntersection {
         selectedMesh: scene.selectedMesh,
         lights: [
           { 
-            irradiance: [0, 1, 0],
+            irradiance: [0, 1, 0, flatColorAlpha],
             direction: scene.lights[0].direction
           }
         ]
@@ -85,17 +92,18 @@ class PluginIntersection {
       skinShader: this.shaders.flat.litSkin
     }
     const drawModel = PluginLitModel.drawModel.bind(this, args);
-    PluginIntersection.setBackPass(glState);
+    PluginIntersection.setBackPass(glState, isBlend);
     scene.models.forEach(drawModel);
-    PluginIntersection.setFrontPass(glState);
-    args.scene.lights[0].irradiance = [0, 1, 1, 1];
+    PluginIntersection.setFrontPass(glState, isBlend);
+    args.scene.lights[0].irradiance = [0, 1, 1, flatColorAlpha];
     scene.models.forEach(drawModel);
-    PluginIntersection.setIntersectionPass(glState);
-    args.scene.lights[0].irradiance = [1, 0, 0, 1];
+    PluginIntersection.setIntersectionPass(glState, isBlend);
+    args.scene.lights[0].irradiance = [1, 0, 0, alpha];
     scene.models.forEach(drawModel);
     if (this.doLightPass) { // optional
-      PluginIntersection.setLightPass(glState);
-      args.scene.lights[0].irradiance = scene.lights[0].irradiance;
+      const irradiance = scene.lights[0].irradiance;
+      PluginIntersection.setLightPass(glState, isBlend);
+      args.scene.lights[0].irradiance = irradiance;
       args.normalShader = this.shaders.light.lit;
       args.skinShader = this.shaders.light.litSkin;
       scene.models.forEach(drawModel);
