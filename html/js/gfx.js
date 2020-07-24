@@ -387,6 +387,10 @@ class Gfx {
   }
 
   // https://bocoup.com/blog/counting-uniforms-in-webgl
+  // To check the capabilities of your browser: https://webglreport.com/
+  // Windows FireFox seems to be using ANGLE D3D11, so it lets you use
+  // more uniforms than Windows Chrome. No limits on macOS.
+  // Also https://stackoverflow.com/a/51628844
   static getProgramInfo(gl, program) {
     const result = {
         attributes: [],
