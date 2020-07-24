@@ -15,6 +15,11 @@ class Shader {
   }
   static async createAsync(gl, vs, fs, attribs, uniforms) {
     const program = await Gfx.useShader(gl, vs, fs);
+    // debug information
+    console.log(`program(${vs}, ${fs})`);
+    const info = Gfx.getProgramInfo(gl, program);
+    console.table(info.uniforms);
+    console.table(info.attributes);
     return new Shader(gl, program, attribs, uniforms);
   }
   enableVertexAttributes(gl) {
