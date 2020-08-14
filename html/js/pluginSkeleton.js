@@ -35,6 +35,11 @@ class PluginSkeleton {
       for (let i = 0; i < jointNames.length; i += 1) {
         const name = jointNames[i];
         const node = skeleton[name];
+        if (!node) {
+          // this means the names in the rig do not correspond
+          // to the names in poses! Bad COLLADA!
+          continue;
+        }
         const { parent } = node;
         const w1 = getJointPosition(i);
         const p1 = camera.worldToPixels(w1, width, height);
