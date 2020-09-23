@@ -1,3 +1,4 @@
+import VMath from './math.js';
 
 function toMatrix(angle, axis) {
   // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToMatrix/index.htm
@@ -94,6 +95,26 @@ class AngleAxis {
     this.rotationOrder = rotationOrder;
     this.rotationMatrix = toMatrix(angle, axis);
     this.eulerAngles = toEuler(this.rotationMatrix, rotationOrder);
+  }
+  static fromMatrix(R, rotationOrder) {
+    const angle = Math.acos((R[0][0] + R[1][1] + R[2][2] - 1.0) / 2.0);
+    let rx = 0.0;
+    let ry = 0.0;
+    let rz = 1.0;
+    if (!VMath.isClose(angle, 0)) {
+      const dx = R[2][1] - R[1][2];
+      const dy = R[0][2] - R[2][0];
+      const dz = R[1][0] - R[0][1];
+      const dd = Math.hypot(dx, dy, dz);
+      if (!VMath.isClose(dd, 0)) {
+        rx = (R[2][1] - R[1][2]) / dd;
+        ry = (R[0][2] - R[2][0]) / dd;
+        rz = (R[1][0] - R[0][1]) / dd;
+      }
+    }
+    const axis = [rx, ry, rz ];
+    const aa = new AngleAxis(angle, axis, rotationOrder);
+    return aa;
   }
 };
 

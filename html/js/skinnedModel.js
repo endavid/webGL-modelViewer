@@ -67,12 +67,84 @@ function guessRotationOrder(jointName) {
   return 'zxy';
 }
 
+function guessRightAxis(jointName) {
+  const cheatSheet = {
+    bendRight: [
+      "hip", "pelvis", "abdomen", "chest", "neck", "head",
+      "thigh", "shin", "foot", "pectoral"],
+    bendBack: ["collar", "shldr", "hand"],
+    bendDown: ["arm"]
+  };
+  const axis = {
+    bendRight: [1, 0, 0],
+    bendBack: [0, 0, -1],
+    bendDown: [0, -1, 0]
+  }
+  const rs = Object.keys(cheatSheet);
+  const name = jointName.toLowerCase();
+  for (let i = 0; i < rs.length; i += 1) {
+    const ro = rs[i];
+    for (let j = 0; j < cheatSheet[ro].length; j += 1) {
+      if (name.indexOf(cheatSheet[ro][j]) >= 0) {
+        return axis[ro];
+      }
+    }
+  }
+  // default
+  return [1, 0, 0];
+}
+
+function findChildren(skeleton, jointName) {
+  let children = [];
+  const joints = Object.keys(skeleton);
+  joints.forEach((j) => {
+    if (skeleton[j].parent === jointName) {
+      children.push(j);
+    }
+  });
+  return children;
+}
+
+function getDisplacement(skeleton, jointName) {
+  let jm = skeleton[jointName].matrix;
+  return [jm[3], jm[7], jm[11]];
+}
+
+function guessBoneAxis(skeleton, jointName) {
+  if (!jointName) {
+    return [0, 1, 0];
+  }
+  const name = jointName.toLowerCase();
+  if (name.indexOf('head') >= 0) {
+    return [0, 1, 0];
+  }
+  const children = findChildren(skeleton, jointName);
+  if (children.length !== 1 && name.indexOf('chest') < 0) {
+    // Not exactly true for hands. It would be better to average the direction
+    // of the 3 children of the hand joint, but in general we don't want to average children.
+    return guessBoneAxis(skeleton, skeleton[jointName].parent);
+  }
+  let sum = [0, 0, 0];
+  children.forEach((j) => {
+    sum = VMath.sum(sum, getDisplacement(skeleton, j));
+  });
+  return VMath.normalize(sum);
+}
+
 function setRotationOrders(skeleton) {
   const joints = Object.keys(skeleton);
   joints.forEach((j) => {
     if (!skeleton[j].rotationOrder) {
       skeleton[j].rotationOrder = guessRotationOrder(j);
     }
+  });
+}
+
+function setReferenceFrame(skeleton) {
+  const joints = Object.keys(skeleton);
+  joints.forEach((j) => {
+    skeleton[j].right = guessRightAxis(j);
+    skeleton[j].up = guessBoneAxis(skeleton, j);
   });
 }
 
@@ -192,6 +264,7 @@ class SkinnedModel {
     }
     this.inverseBindMatrices = skin.bindPoses;
     setRotationOrders(skeleton);
+    setReferenceFrame(skeleton);
     this.skeleton = skeleton;
     this.applyDefaultPose();
     const animKeys = Object.keys(anims);
@@ -263,6 +336,17 @@ class SkinnedModel {
     m = math.multiply(mt, m);
     // flatten row-major matrix
     return [].concat(...m);
+  }
+  getRotationMatrix(name, keyframe) {
+    const jointAnim = this.anims[name] || {};
+    if (jointAnim.matrix) {
+      console.warn("Not supported: getRotationMatrix");
+      return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+    }
+    const transform = arrayValueOrDefault(jointAnim.transforms, keyframe, Transform.identity());
+    const angles = transform.eulerAngles.map(VMath.degToRad);
+    const order = this.skeleton[name].rotationOrder;
+    return VMath.rotationMatrixFromEuler(angles, order);
   }
   getAnimMatrix(i, keyframe) {
     const name = this.jointNames[i];
@@ -349,7 +433,7 @@ class SkinnedModel {
       const jointAnim = anims[joint];
       const transform = jointAnim.transforms[keyframe];
       if (transform) {
-        let t = VMath.round(transform.eulerAngles, 2);
+        let t = VMath.round(transform.eulerAngles, 4);
         const hasScale = !VMath.isClose(transform.scale, [1, 1, 1]);
         const hasTranslation = !VMath.isClose(transform.position, [0, 0, 0]);
         if (hasScale || hasTranslation) {
@@ -452,6 +536,11 @@ class SkinnedModel {
     const m = this.getAnimMatrix(index, keyframe);
     return [m[3], m[7], m[11]];
   }
+  getJointRotationAngleAxis(joint, keyframe) {
+    let node = this.skeleton[joint];
+    let R = this.getRotationMatrix(joint, keyframe);
+    return AngleAxis.fromMatrix(R, node.rotationOrder);
+  }
   getEulerAndAngleAxis(angle, axis, joint) {
     let node = this.skeleton[joint];
     const angleAxis = new AngleAxis(angle, axis, node.rotationOrder);
@@ -524,6 +613,31 @@ class SkinnedModel {
     const res = this.getEulerAndAngleAxis(angle, v0, grandparent);
     console.log(`bones: ${v0}, ${v1}; target dir: ${vt}; v1_proj: ${v1_projected}; angle: ${VMath.radToDeg(angle)}`);
     return res;
+  }
+
+  // MARK: Rotations
+  getBoneRotationFrameOfReference(jointName) {
+    const { up, right } = this.skeleton[jointName];
+    return VMath.rotationMatrixFromReferenceFrame(up, right);
+  }
+  getRotationInLocalAxis(joint, frame) {
+    const R = this.getBoneRotationFrameOfReference(joint);
+    const aa = this.getJointRotationAngleAxis(joint, frame);
+    const newAxis = math.multiply(math.inv(R), aa.axis);
+    // Always applied in twist (Y), side (Z), bend (X) order, where Y comes first: X * Z * Y
+    const angleAxis = new AngleAxis(aa.angle, newAxis, 'xzy');
+    const eulerAngles = angleAxis.eulerAngles.map(VMath.radToDeg);
+    return {x: eulerAngles[0], y: eulerAngles[1], z: eulerAngles[2]};
+  }
+  convertLocalRotationToGlobalAxis(joint, eulerAngles) {
+    const angles = eulerAngles.map(VMath.degToRad);
+    // Local rotation always applied in twist (Y), side (Z), bend (X) order
+    const M = VMath.rotationMatrixFromEuler(angles, 'xzy');
+    let aa = AngleAxis.fromMatrix(M, 'xzy');
+    const R = this.getBoneRotationFrameOfReference(joint);
+    const newAxis = math.multiply(R, aa.axis);
+    const order = this.skeleton[joint].rotationOrder;
+    return new AngleAxis(aa.angle, newAxis, order);
   }
 }
 export { SkinnedModel as default };

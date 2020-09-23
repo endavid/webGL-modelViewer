@@ -60,6 +60,19 @@ const UiUtils = {
     }
     return slider;
   },
+  createLocalAngleSliders(id, parentId, values, callback) {
+    const slider = UiUtils.createMultiSlider(
+      `${id}_localAngle`,
+      ['x', 'y', 'z'],
+      'bend, twist, side',
+      values, -180, 180, 0.1,
+      callback,
+    );
+    if (parentId) {
+      slider.attr('parent', parentId);
+    }
+    return slider;
+  },
   createTranslationSliders(id, parentId, values, callback) {
     const slider = UiUtils.createMultiSlider(
       `${id}_translation`,

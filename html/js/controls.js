@@ -266,7 +266,7 @@ const UISetter = {
     rotation: (rotation) => {
       ['x', 'y', 'z'].forEach((axis, i) => {
         const angle = rotation[i] !== undefined
-          ? VMath.round(rotation[i], 2) : Config.model.rotation[axis];
+          ? VMath.round(rotation[i], 4) : Config.model.rotation[axis];
         Config.model.rotation[axis] = angle;
         $(`#armature_angle${axis}`).val(angle);
         $(`#armature_angle${axis}_number`).val(angle);
@@ -360,6 +360,7 @@ const UISetter = {
     },
     updateJointControls: () => {
       let angles = {x: 0, y: 0, z: 0};
+      let localAngles = {x: 0, y: 0, z: 0};
       let pos = {x: 0, y: 0, z: 0};
       const model = viewer.getSelectedModel();
       if (model && model.skinnedModel) {
@@ -374,11 +375,15 @@ const UISetter = {
           y: $(`#gPose_${joint}_translationy`).val(),
           z: $(`#gPose_${joint}_translationz`).val(),
         };
+        const frame = Config.keyframe;
+        localAngles = model.skinnedModel.getRotationInLocalAxis(joint, frame);
       }
       // copy values from main controller to shortcut for selected joint
       ['x', 'y', 'z'].forEach((axis) => {
         $(`#joint_angle${axis}`).val(angles[axis]);
         $(`#joint_angle${axis}_number`).val(angles[axis]);
+        $(`#joint_localAngle${axis}`).val(localAngles[axis]);
+        $(`#joint_localAngle${axis}_number`).val(localAngles[axis]);
         $(`#joint_translation${axis}`).val(pos[axis]);
         $(`#joint_translation${axis}_number`).val(pos[axis]);
       });
@@ -511,6 +516,27 @@ const Actions = {
       if (model && model.skinnedModel) {
         const joint = model.skinnedModel.selectedJoint;
         UISetter.anim.setJointRotation(joint, axis, value);
+        UISetter.anim.updateJointControls();
+      }
+    },
+    jointLocalAngle: (value, axis) => {
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        const joint = model.skinnedModel.selectedJoint;
+        const eulerAngles = [
+          $(`#joint_localAnglex`).val(),
+          $(`#joint_localAngley`).val(),
+          $(`#joint_localAnglez`).val()
+        ];
+        const angleAxis = model.skinnedModel.convertLocalRotationToGlobalAxis(joint, eulerAngles);
+        const angles = angleAxis.eulerAngles.map(VMath.radToDeg);
+        ['x', 'y', 'z'].forEach((axis, i) => {
+          UISetter.anim.setJointRotation(joint, axis, angles[i]);
+          $(`#joint_angle${axis}`).val(angles[i]);
+          $(`#joint_angle${axis}_number`).val(angles[i]);
+          $(`#gPose_${joint}_angle${axis}`).val(angles[i]);
+          $(`#gPose_${joint}_angle${axis}_number`).val(angles[i]);
+        });
       }
     },
     jointTranslation: (value, axis) => {
@@ -1137,6 +1163,7 @@ function populateControls() {
     }, Actions.anim.setOption),
     UiUtils.createDropdownList('selectedJoint', 'Joint', [], Update.jointSelection),
     UiUtils.createAngleSliders('joint', null, [0, 0, 0], Actions.anim.jointAngle),
+    UiUtils.createLocalAngleSliders('joint', null, [0, 0, 0], Actions.anim.jointLocalAngle),
     UiUtils.createTranslationSliders('joint', null, [0, 0, 0], Actions.anim.jointTranslation),
     UiUtils.createColorPicker('jointColor', 'Skin weight', '#000000', Actions.anim.jointColor),
     UiUtils.createButtons('jointButtons', [
