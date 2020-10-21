@@ -1,5 +1,6 @@
 {
   "editor.tabSize": 2,
   "editor.detectIndentation": false,
-  "jshint.enable": false
+  "jshint.enable": false,
+  "cmake.configureOnOpen": false
 }
