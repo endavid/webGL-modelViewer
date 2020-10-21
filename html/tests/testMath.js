@@ -171,3 +171,32 @@ QUnit.test('euler conversion collar', (assert) => {
   assert.deepEqual(roundAnglesFromAngleAxis(angleAxis, 'zxy'), [6.84, -17.19, 0.88]);
   assert.deepEqual(roundAnglesFromAngleAxis(angleAxis, 'zyx'), [7.16, -17.06, -1.23]);
 });
+
+QUnit.test('rotation from ref frame - UpSimilarToY', (assert) => {
+  const R = VMath.rotationMatrixFromReferenceFrame([0, 0.8, 0.6], [1, 0, 0]);
+  assert.deepEqual(R, [
+    [ 1, 0, 0 ],
+    [ 0, 0.8, -0.6 ],
+    [ 0, 0.6, 0.8 ]
+  ]);
+});
+
+QUnit.test('rotation from ref frame - UpDiagonal', (assert) => {
+  const sq3 = Math.sqrt(1.0 / 3.0);
+  const R = VMath.rotationMatrixFromReferenceFrame([sq3, sq3, sq3], [1, 0, 0]);
+  assert.deepEqual(R, [
+    [  0.816496580927726, sq3, 0 ],
+    [ -0.408248290463863, sq3, -0.7071067811865475 ],
+    [ -0.408248290463863, sq3, 0.7071067811865475 ]
+  ]);
+});
+
+QUnit.test('rotation from ref frame - UpToTheLeft', (assert) => {
+  const sq3 = Math.sqrt(1.0 / 3.0);
+  const R = VMath.rotationMatrixFromReferenceFrame([-0.9, 0.4, 0.1732], [0, 0, -1]);
+  assert.deepEqual(R, [
+    [-0.15827229950071336, -0.9000007920010454, 0.40613846605344767],
+    [0.07034324422253929, 0.4000003520004647, 0.9138115486202572],
+    [-0.9848866468802411, 0.17320015241620118, 0]
+  ]);
+});

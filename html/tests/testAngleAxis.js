@@ -89,3 +89,57 @@ QUnit.test('from matrix', (assert) => {
   almostEqual(assert, [aa.angle], [Math.PI / 4]);
   assert.deepEqual(aa.axis, VMath.normalize([1, 2, 3]));
 });
+
+QUnit.test('toLocalAxis - rotate Y', (assert) => {
+  const R = VMath.rotationMatrixFromReferenceFrame([0, 0.8, 0.6], [1, 0, 0]);
+  const angle = VMath.degToRad(45);
+  rotationOrders.forEach(ro => {
+    const aaIn = new AngleAxis(angle, [0, 1, 0], ro);
+    const aaOut = aaIn.toLocalAxis(R); 
+    almostEqual(assert, [aaOut.angle], [angle]);
+    almostEqual(assert, aaOut.axis, [0, 0.8, -0.6]);
+  });
+});
+
+QUnit.test('toLocalAxis - rotate XY', (assert) => {
+  const R = VMath.rotationMatrixFromReferenceFrame([0, 0.8, 0.6], [1, 0, 0]);
+  const angle = VMath.degToRad(45);
+  const axis = VMath.normalize([-1, 1, 0]);
+  rotationOrders.forEach(ro => {
+    const aaIn = new AngleAxis(angle, axis, ro);
+    const aaOut = aaIn.toLocalAxis(R); 
+    almostEqual(assert, [aaOut.angle], [angle]);
+    almostEqual(assert, aaOut.axis, [-0.707107, 0.565685, -0.424264]);
+  });
+});
+
+QUnit.test('fromLocalRotation - rotate Y', (assert) => {
+  const R = VMath.rotationMatrixFromReferenceFrame([0, 0.8, 0.6], [1, 0, 0]);
+  const angle = VMath.degToRad(45);
+  const aaIn = new AngleAxis(angle, [0, 0.8, -0.6], 'xzy');
+  assert.deepEqual(aaIn.eulerAngles, [
+    -0.15588486607817825,
+    0.6747409422235526,
+    -0.43814903058417026]);
+  rotationOrders.forEach(ro => {
+    const aaOut = AngleAxis.fromLocalRotation(R, ro, aaIn.eulerAngles);
+    almostEqual(assert, [aaOut.angle], [angle]);
+    almostEqual(assert, aaOut.axis, [0, 1, 0]);
+  });
+});
+
+QUnit.test('fromLocalRotation - rotate XY', (assert) => {
+  const R = VMath.rotationMatrixFromReferenceFrame([0, 0.8, 0.6], [1, 0, 0]);
+  const angle = VMath.degToRad(45);
+  const aaIn = new AngleAxis(angle, [-0.707107, 0.565685, -0.424264], 'xzy');
+  assert.deepEqual(aaIn.eulerAngles, [
+    -0.6188186389141818,
+    0.5192545907144399,
+    -0.18387713760287244]);
+  const expectedAxis = VMath.normalize([-1, 1, 0]);
+  rotationOrders.forEach(ro => {
+    const aaOut = AngleAxis.fromLocalRotation(R, ro, aaIn.eulerAngles);
+    almostEqual(assert, [aaOut.angle], [angle]);
+    almostEqual(assert, aaOut.axis, expectedAxis, 5);
+  });
+});

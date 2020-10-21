@@ -623,21 +623,15 @@ class SkinnedModel {
   getRotationInLocalAxis(joint, frame) {
     const R = this.getBoneRotationFrameOfReference(joint);
     const aa = this.getJointRotationAngleAxis(joint, frame);
-    const newAxis = math.multiply(math.inv(R), aa.axis);
-    // Always applied in twist (Y), side (Z), bend (X) order, where Y comes first: X * Z * Y
-    const angleAxis = new AngleAxis(aa.angle, newAxis, 'xzy');
+    const angleAxis = aa.toLocalAxis(R);
     const eulerAngles = angleAxis.eulerAngles.map(VMath.radToDeg);
     return {x: eulerAngles[0], y: eulerAngles[1], z: eulerAngles[2]};
   }
   convertLocalRotationToGlobalAxis(joint, eulerAngles) {
     const angles = eulerAngles.map(VMath.degToRad);
-    // Local rotation always applied in twist (Y), side (Z), bend (X) order
-    const M = VMath.rotationMatrixFromEuler(angles, 'xzy');
-    let aa = AngleAxis.fromMatrix(M, 'xzy');
     const R = this.getBoneRotationFrameOfReference(joint);
-    const newAxis = math.multiply(R, aa.axis);
     const order = this.skeleton[joint].rotationOrder;
-    return new AngleAxis(aa.angle, newAxis, order);
+    return AngleAxis.fromLocalRotation(R, order, angles);
   }
 }
 export { SkinnedModel as default };

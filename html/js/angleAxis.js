@@ -1,4 +1,5 @@
 import VMath from './math.js';
+const { math } = window;
 
 function toMatrix(angle, axis) {
   // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToMatrix/index.htm
@@ -115,6 +116,29 @@ class AngleAxis {
     const axis = [rx, ry, rz ];
     const aa = new AngleAxis(angle, axis, rotationOrder);
     return aa;
+  }
+  /**
+   * Create an angle axis from 3 euler angles expressed as [twist, bend, side].
+   * @param {number[]} frameOfReference 3x3 Rotation Matrix
+   * @param {string} rotationOrder 'xzy', 'xyz', ...
+   * @param {number[]} eulerAngles [twist, bend, side] in radians
+   */
+  static fromLocalRotation(frameOfReference, rotationOrder, eulerAngles) {
+    // Local rotation always applied in twist (Y), side (Z), bend (X) order
+    const M = VMath.rotationMatrixFromEuler(eulerAngles, 'xzy');
+    let aa = AngleAxis.fromMatrix(M, 'xzy');
+    const newAxis = math.multiply(frameOfReference, aa.axis);
+    return new AngleAxis(aa.angle, newAxis, rotationOrder);
+  }
+  /** 
+   * Convert this AngleAxis to a new one based on the new frame of reference
+   * @param frameOfReference 3x3 Rotation Matrix
+   * @returns Another angle axis with 'xzy' rotation order, so always applied in twist (Y), side (Z), bend (X) order
+   * */
+  toLocalAxis(frameOfReference) {
+    const R = math.inv(frameOfReference);
+    const newAxis = math.multiply(R, this.axis);
+    return new AngleAxis(this.angle, newAxis, 'xzy');
   }
 };
 
