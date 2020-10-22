@@ -382,8 +382,10 @@ const UISetter = {
       ['x', 'y', 'z'].forEach((axis) => {
         $(`#joint_angle${axis}`).val(angles[axis]);
         $(`#joint_angle${axis}_number`).val(angles[axis]);
-        $(`#joint_localAngle${axis}`).val(localAngles[axis]);
-        $(`#joint_localAngle${axis}_number`).val(localAngles[axis]);
+        // keep only 4 digits (in degrees)
+        const a = VMath.round(localAngles[axis], 4);
+        $(`#joint_localAngle${axis}`).val(a);
+        $(`#joint_localAngle${axis}_number`).val(a);
         $(`#joint_translation${axis}`).val(pos[axis]);
         $(`#joint_translation${axis}_number`).val(pos[axis]);
       });
@@ -529,7 +531,8 @@ const Actions = {
           $(`#joint_localAnglez`).val()
         ];
         const angleAxis = model.skinnedModel.convertLocalRotationToGlobalAxis(joint, eulerAngles);
-        const angles = angleAxis.eulerAngles.map(VMath.radToDeg);
+        // keep only 4 digits (in degrees)
+        const angles = VMath.round(angleAxis.eulerAngles.map(VMath.radToDeg), 4);
         ['x', 'y', 'z'].forEach((axis, i) => {
           UISetter.anim.setJointRotation(joint, axis, angles[i]);
           $(`#joint_angle${axis}`).val(angles[i]);
