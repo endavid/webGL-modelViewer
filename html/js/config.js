@@ -1,6 +1,7 @@
 const Config = {
   isZAxisUp: false,
   recomputeNormals: false,
+  reRig: false,
   isLockRotationY: false,
   isLockRotationX: false,
   model: {

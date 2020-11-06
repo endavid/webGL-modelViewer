@@ -170,7 +170,10 @@ const VMath = {
   },
   rotationMatrixFromReferenceFrame(up, right) {
     const yAxis = VMath.normalize(up);
-    const zAxis = VMath.normalize(VMath.cross(right, yAxis));
+    let zAxis = VMath.normalize(VMath.cross(right, yAxis));
+    if (VMath.isClose(zAxis, [0, 0, 0])) {
+      zAxis = [0, 0, 1];
+    }
     const xAxis = VMath.normalize(VMath.cross(up, zAxis));
     // the orthogonal basis are the columns:
     // https://www.euclideanspace.com/maths/algebra/matrix/orthogonal/index.htm

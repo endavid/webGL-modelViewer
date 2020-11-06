@@ -148,7 +148,7 @@ function setReferenceFrame(skeleton) {
   });
 }
 
-function standardizeAnimsToUseTransforms(skeleton, anims) {
+function standardizeAnimsToUseTransforms(skeleton, anims, reRig) {
   const animKeys = Object.keys(anims);
   const standardized = anims;
   animKeys.forEach((joint) => {
@@ -168,11 +168,22 @@ function standardizeAnimsToUseTransforms(skeleton, anims) {
     if (a.matrix) {
       a.matrix.forEach((matrix, i) => {
         if (Array.isArray(matrix)) {
-          const t = Transform.fromRowMajorArray(matrix, rotationOrder);
-          transforms[i] = t;
-          const jm = skeleton[joint].matrix;
-          const rigTranslation = [jm[3], jm[7], jm[11]];
-          transforms[i].position = math.subtract(t.position, rigTranslation);
+          if (reRig) {
+            // multiply from the left the inverse of the rig to obtain the local transform
+            // @todo Fix this because it doesn't seem to work. Missing armature transform?
+            let pinv = math.diag([1, 1, 1, 1]);
+            if (skeleton[joint].matrix) {
+              pinv = math.inv(math.reshape(skeleton[joint].matrix, [4, 4]));
+            }
+            const m = math.multiply(pinv, math.reshape(matrix, [4, 4]));
+            transforms[i] = Transform.fromMatrix(m, rotationOrder);  
+          } else {
+            const t = Transform.fromRowMajorArray(matrix, rotationOrder);
+            transforms[i] = t;
+            const jm = skeleton[joint].matrix;
+            const rigTranslation = [jm[3], jm[7], jm[11]];
+            transforms[i].position = math.subtract(t.position, rigTranslation);
+          }
         }
       });
     }
@@ -203,6 +214,55 @@ function standardizeAnimsToUseTransforms(skeleton, anims) {
     standardized[joint] = { keyframes, transforms };
   });
   return standardized;
+}
+
+function computeJointMatrix(skeleton, jointName) {
+  const joint = skeleton[jointName];
+  let m = joint.matrix;
+  let node = skeleton[joint.parent];
+  while (node) {
+    m = VMath.mulMatrix(node.matrix, m);
+    node = skeleton[node.parent];
+  }
+  return m;
+}
+
+function removeRotationsFromRig(skeleton) {
+  const jointNames = Object.keys(skeleton);
+  const jointMatrices = {};
+  // concatenate all the transforms to compute the final joint locations
+  jointNames.forEach((j) => {
+    jointMatrices[j] = computeJointMatrix(skeleton, j);
+  });
+  jointNames.forEach((j) => {
+    const m = jointMatrices[j];
+    let t = [m[3], m[7], m[11]];
+    let mParent = jointMatrices[skeleton[j].parent];
+    if (mParent) {
+      // the translation should just be the diff respect parent
+      t[0] -= mParent[3];
+      t[1] -= mParent[7];
+      t[2] -= mParent[11];
+    }
+    skeleton[j].matrix = [
+      1, 0, 0, t[0],
+      0, 1, 0, t[1],
+      0, 0, 1, t[2],
+      0, 0, 0, 1
+    ];
+  });
+}
+
+function recomputeBindMatrices(jointNames, skeleton, armatureTransform, bindMatrices) {
+  const mA = armatureTransform.toMatrix();
+  for (let i = 0; i < jointNames.length; i += 1) {
+    const name = jointNames[i];
+    let m = computeJointMatrix(skeleton, name);
+    m = math.reshape(m, [4, 4]);
+    m = math.inv(math.multiply(mA, m));
+    m = math.reshape(m, [16, 1]);
+    bindMatrices[i] = m;
+  }
 }
 
 function createJointColorPalette(joints) {
@@ -250,31 +310,56 @@ function getSkeletonTopology(skeleton) {
   return traverse();
 }
 
+// Finds relevant root joints. Useful to ignore IK joints that are not skinned.
+function isParentOfAnyOfTheSkinned(jointName, skinnedJointNames, skeleton) {
+  for (let i = 0; i < skinnedJointNames.length; i++) {
+    const j = skinnedJointNames[i];
+    if (skeleton[j].parent === jointName) {
+      return true;
+    }
+  }
+  return false;
+}
 
 class SkinnedModel {
-  constructor(skin, skeleton, anims) {
+  constructor(skin, skeleton, anims, armatureTransform, config) {
+    let self = this;
     this.joints = new Array(MAX_JOINTS * 16);
     for (let offset = 0; offset < 16 * MAX_JOINTS; offset += 16) {
       VMath.setI4(this.joints, offset);
     }
+    this.inverseBindMatrices = skin.bindPoses;
+    // the skin may not contain the root joint, so add any extra joints here
+    const allJoints = Object.keys(skeleton);
+    allJoints.forEach((j) => {
+      if (skin.joints.indexOf(j) < 0
+          && isParentOfAnyOfTheSkinned(j, skin.joints, skeleton)) {
+        self.inverseBindMatrices.push(VMath.getI4());
+        skin.joints.push(j);
+      }
+    });
     this.jointNames = skin.joints;
     this.jointIndices = {};
     for (let i = 0; i < skin.joints.length; i += 1) {
       this.jointIndices[skin.joints[i]] = i;
     }
-    this.inverseBindMatrices = skin.bindPoses;
     setRotationOrders(skeleton);
     setReferenceFrame(skeleton);
     this.skeleton = skeleton;
-    this.applyDefaultPose();
     const animKeys = Object.keys(anims);
     this.keyframeCount = animKeys.length > 0 ? anims[animKeys[0]].keyframes.length : 0;
-    this.anims = standardizeAnimsToUseTransforms(skeleton, anims);
+    this.anims = standardizeAnimsToUseTransforms(skeleton, anims, config.reRig);
+    if (config.reRig) {
+      // when re-rigging, we only keep translations in the rig
+      removeRotationsFromRig(skeleton);
+      recomputeBindMatrices(this.jointNames, skeleton, armatureTransform, this.inverseBindMatrices);
+    }
     this.jointColorPalette = createJointColorPalette(skin.joints);
     this.topology = getSkeletonTopology(skeleton);
     this.showSkeleton = false;
     this.currentKeyframe = 0;
     this.selectedJoint = '';
+    this.applyDefaultPose();
     // this.applyPose(0);
   }
   // JointMatrix * InvBindMatrix

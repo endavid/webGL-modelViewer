@@ -39,15 +39,15 @@ class Model {
   //         indices: // faces of the submesh
   //      }]
   // }
-  constructor(gl, json, imageUrls) {
+  constructor(gl, json, imageUrls, config) {
     this.name = json.name;
     this.meterUnits = json.meterUnits || 1;
+    let armatureTransform = new Transform({});
+    this.transform = new Transform({});
     if (json.armature) {
-      this.transform = Transform.fromRowMajorArray(json.armature.matrix, json.armature.rotationOrder || 'xyz');
+      armatureTransform = Transform.fromRowMajorArray(json.armature.matrix, json.armature.rotationOrder || 'xyz');
       const s = json.meterUnits || 1;
-      this.transform.position = this.transform.position.map(a => s * a);
-    } else {
-      this.transform = new Transform({});
+      this.transform.position = armatureTransform.position.map(a => s * a);
     }
     // override order because for the UI we want to
     // apply Y rotation (1) before X (0)
@@ -57,7 +57,7 @@ class Model {
     this.stride = json.stride;
     this.stats = getModelStats(json);
     if (json.skin) {
-      this.skinnedModel = new SkinnedModel(json.skin, json.skeleton, json.anims);
+      this.skinnedModel = new SkinnedModel(json.skin, json.skeleton, json.anims, armatureTransform, config);
     } else {
       this.skinnedModel = null;
     }
@@ -119,7 +119,7 @@ class Model {
               if (e.data.done && e.data.vertices) {
                 const jsonRef = json;
                 jsonRef.vertices = e.data.vertices;
-                onDone(new Model(gl, jsonRef, imageUrls));
+                onDone(new Model(gl, jsonRef, imageUrls, config));
               }
             };
             worker.postMessage(load);
@@ -127,7 +127,7 @@ class Model {
             throw new Error("Can't create Worker to compute normals");
           }
         } else {
-          onDone(new Model(gl, json, imageUrls));
+          onDone(new Model(gl, json, imageUrls, config));
         }
       })
       .catch(onError);
