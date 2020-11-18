@@ -89,13 +89,68 @@ function sourceIdToSemantics(id) {
   return null;
 }
 
+// interleave vertex data as 
+// position (3), normal (3), UVs (2) [, skin weights (4), skin indices (4)]
+function interleaveVertexData(vertexData, polygons, skin, invertAxis) {
+  const vertices = [];
+  const d = vertexData;
+  let missingNormals = false;
+  let missingUVs = false;
+  polygons.forEach((p) => {
+    vertices.push(d.positions[3 * p[0]]);
+    if (invertAxis) {
+      vertices.push(d.positions[3 * p[0] + 2]);
+      vertices.push(-d.positions[3 * p[0] + 1]);
+    } else {
+      vertices.push(d.positions[3 * p[0] + 1]);
+      vertices.push(d.positions[3 * p[0] + 2]);
+    }
+    const noNormals = p[1] === undefined;
+    if (noNormals) {
+      missingNormals = true;
+    }
+    vertices.push(noNormals ? 0 : d.normals[3 * p[1]]);
+    if (invertAxis) {
+      vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 2]);
+      vertices.push(noNormals ? 0 : -d.normals[3 * p[1] + 1]);
+    } else {
+      vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 1]);
+      vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 2]);
+    }
+    const noUVs = p[2] === undefined;
+    if (noUVs) {
+      missingUVs = true;
+    }
+    vertices.push(noUVs ? 0 : d.uvs[2 * p[2]] || 0);
+    vertices.push(noUVs ? 0 : d.uvs[2 * p[2] + 1] || 0);
+    if (skin) {
+      const weights = [1.0, 0.0, 0.0, 0.0];
+      const indices = [0, 0, 0, 0];
+      const list = skin.weights[p[0]];
+      for (let k = 0; k < Math.min(list.length, 4); k += 1) {
+        /* eslint-disable prefer-destructuring */
+        indices[k] = list[k][0];
+        weights[k] = list[k][1];
+        /* eslint-enable prefer-destructuring */
+      }
+      weights.forEach((w) => { vertices.push(w); });
+      indices.forEach((i) => { vertices.push(i); });
+    }
+  });
+  return {
+    vertices,
+    missingNormals,
+    missingUVs
+  };
+}
+
 function readMeshes(json, skin, defaultMaterial) {
-  const d = {
+  const vertexData = {
     positions: [],
     normals: [],
     uvs: [],
   };
-  const vertices = [];
+  let vertices = [];
   const meshes = [];
   const ngons = {};
   const invertAxis = isZUp(json);
@@ -112,7 +167,7 @@ function readMeshes(json, skin, defaultMaterial) {
   src.forEach((e) => {
     const key = sourceIdToSemantics(e._id);
     if (key) {
-      d[key] = floatStringToArray(e.float_array.__text);
+      vertexData[key] = floatStringToArray(e.float_array.__text);
     }
   });
   const polylists = getPolylistsAndTriangleLists(json);
@@ -132,49 +187,12 @@ function readMeshes(json, skin, defaultMaterial) {
       material: polylist._material || defaultMaterial,
       indices: [],
     };
-    // interleave vertex data as
-    // position (3), normal (3), UVs (2)
-    polygons.forEach((p) => {
-      vertices.push(d.positions[3 * p[0]]);
-      if (invertAxis) {
-        vertices.push(d.positions[3 * p[0] + 2]);
-        vertices.push(-d.positions[3 * p[0] + 1]);
-      } else {
-        vertices.push(d.positions[3 * p[0] + 1]);
-        vertices.push(d.positions[3 * p[0] + 2]);
-      }
-      const noNormals = p[1] === undefined;
-      if (noNormals) {
-        missingNormals = true;
-      }
-      vertices.push(noNormals ? 0 : d.normals[3 * p[1]]);
-      if (invertAxis) {
-        vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 2]);
-        vertices.push(noNormals ? 0 : -d.normals[3 * p[1] + 1]);
-      } else {
-        vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 1]);
-        vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 2]);
-      }
-      const noUVs = p[2] === undefined;
-      if (noUVs) {
-        missingUVs = true;
-      }
-      vertices.push(noUVs ? 0 : d.uvs[2 * p[2]] || 0);
-      vertices.push(noUVs ? 0 : d.uvs[2 * p[2] + 1] || 0);
-      if (skin) {
-        const weights = [1.0, 0.0, 0.0, 0.0];
-        const indices = [0, 0, 0, 0];
-        const list = skin.weights[p[0]];
-        for (let k = 0; k < Math.min(list.length, 4); k += 1) {
-          /* eslint-disable prefer-destructuring */
-          indices[k] = list[k][0];
-          weights[k] = list[k][1];
-          /* eslint-enable prefer-destructuring */
-        }
-        weights.forEach((w) => { vertices.push(w); });
-        indices.forEach((i) => { vertices.push(i); });
-      }
-    });
+    const interleaved = interleaveVertexData(vertexData, polygons, skin, invertAxis);
+    missingNormals |= interleaved.missingNormals;
+    missingUVs |= interleaved.missingUVs;
+    // !! Maximum call stack size exceeded, if we concatenate like below:
+    // !! vertices.push(...interleaved.vertices);
+    vertices = vertices.concat(interleaved.vertices);
     vcount.forEach((c) => {
       if (c === 3 || c === 4) {
         submesh.indices.push(j);
