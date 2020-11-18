@@ -60,9 +60,9 @@ function getMeterUnits(json) {
   return meter;
 }
 
-function getPolylistsAndTriangleLists(json) {
+function getPolylistsAndTriangleLists(geometry) {
   const lists = [];
-  const { mesh } = json.COLLADA.library_geometries.geometry;
+  const { mesh } = geometry;
   ['polylist', 'triangles'].forEach((key) => {
     if (mesh[key]) {
       if (Array.isArray(mesh[key])) {
@@ -144,23 +144,18 @@ function interleaveVertexData(vertexData, polygons, skin, invertAxis) {
   };
 }
 
-function readMeshes(json, skin, defaultMaterial) {
+function readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffset) {
+  let vertices = [];
+  const meshes = [];
+  const ngons = {};
+  let missingNormals = false;
+  let missingUVs = false;
   const vertexData = {
     positions: [],
     normals: [],
     uvs: [],
   };
-  let vertices = [];
-  const meshes = [];
-  const ngons = {};
-  const invertAxis = isZUp(json);
-  let missingNormals = false;
-  let missingUVs = false;
-  if (Array.isArray(json.COLLADA.library_geometries.geometry)) {
-    console.error(json.COLLADA.library_geometries.geometry);
-    throw new Error('Collada files with more than 1 geometries are not supported');
-  }
-  let src = json.COLLADA.library_geometries.geometry.mesh.source;
+  let src = geometry.mesh.source;
   if (!Array.isArray(src)) {
     src = [src];
   }
@@ -170,8 +165,8 @@ function readMeshes(json, skin, defaultMaterial) {
       vertexData[key] = floatStringToArray(e.float_array.__text);
     }
   });
-  const polylists = getPolylistsAndTriangleLists(json);
-  let j = 0; // face index
+  const polylists = getPolylistsAndTriangleLists(geometry);
+  let j = vertexOffset; // face index
   polylists.forEach((polylist) => {
     const numInputs = Array.isArray(polylist.input) ? polylist.input.length : 1;
     let vcount = [];
@@ -210,12 +205,41 @@ function readMeshes(json, skin, defaultMaterial) {
     });
     meshes.push(submesh);
   });
+  const name = geometry._name || geometry._id;
   Object.keys(ngons).forEach((n) => {
-    console.warn(`${n}-gons not supported. Only triangles and quads`);
+    console.warn(`${name} contains ${n}-gons, which aren't supported. Only triangles and quads`);
   });
   return {
     meshes,
-    stride: skin ? 16 : 8,
+    vertices,
+    missingNormals,
+    missingUVs
+  };
+}
+
+function readMeshes(json, skin, defaultMaterial) {
+  let vertices = [];
+  let meshes = [];
+  const invertAxis = isZUp(json);
+  let missingNormals = false;
+  let missingUVs = false;
+  let geometries = json.COLLADA.library_geometries.geometry;
+  if (!Array.isArray(geometries))
+  {
+    geometries = [geometries];
+  }
+  const stride = skin ? 16 : 8;
+  geometries.forEach((geometry) => {
+    const vertexOffset = vertices.length / stride;
+    const g = readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffset);
+    missingNormals |= g.missingNormals;
+    missingUVs |= g.missingUVs;
+    vertices = vertices.concat(g.vertices);
+    meshes = meshes.concat(g.meshes);
+  });
+  return {
+    meshes,
+    stride,
     vertices,
     materials: {},
     missingNormals,
