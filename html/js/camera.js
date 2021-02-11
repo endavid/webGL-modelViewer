@@ -1,11 +1,28 @@
 import VMath from './math.js';
 import Transform from './transform.js';
+import AngleAxis from './angleAxis.js';
 
 // Unfortunately, I wasn't able to import math.js as a module
 const { math } = window;
 
 function valueOrDefault(v, d) {
   return (v == null) ? d : v;
+}
+
+function coordinateOrDefault(v, d) {
+  return [
+    valueOrDefault(v.x, d[0]),
+    valueOrDefault(v.y, d[1]),
+    valueOrDefault(v.z, d[2])
+  ];
+}
+
+function viewMatrixFromTransform(transform) {
+  const M = transform.toMatrix();
+  // viewMatrix is the inverse, and we transpose it because
+  // the shader expects matrices in column order
+  const V = math.transpose(math.inv(M));
+  return [].concat(...V);
 }
 
 class Camera {
@@ -21,6 +38,7 @@ class Camera {
     this.distance = 0;
     this.pitch = 0;
     this.rotationY = 0;
+    this.rotationZ = 0;
   }
   getPosition() {
     return this.transform.position;
@@ -31,15 +49,28 @@ class Camera {
     this.distance = valueOrDefault(distance, this.distance);
     this.pitch = valueOrDefault(pitch, this.pitch);
     this.rotationY = valueOrDefault(rotationY, this.rotationY);
+    this.rotationZ = 0;
     const Ry = VMath.rotationMatrixAroundY(VMath.degToRad(this.rotationY));
     const p = math.multiply(Ry, [this.offsetX, this.height, this.distance]);
     this.transform.position = p;
-    this.transform.eulerAngles = [this.pitch, this.rotationY, 0];
+    this.transform.eulerAngles = [this.pitch, this.rotationY, this.rotationZ];
+    this.viewMatrix = viewMatrixFromTransform(this.transform);
+  }
+  setEye(eye) {
+    const position = coordinateOrDefault(eye.position, this.transform.position);
+    const target = coordinateOrDefault(eye.target, [0, 0, 0]);
     const M = this.transform.toMatrix();
-    // viewMatrix is the inverse, and we transpose it because
-    // the shader expects matrices in column order
-    const V = math.transpose(math.inv(M));
-    this.viewMatrix = [].concat(...V);
+    const up = VMath.normalize(coordinateOrDefault(eye.up, [M[0][1], M[1][1], M[2][1]]));
+    this.transform.position = position;
+    const z = VMath.normalize(VMath.diff(position, target));
+    const right = VMath.cross(up, z);
+    const R = VMath.rotationMatrixFromReferenceFrame(up, right);
+    const aa = AngleAxis.fromMatrix(R, this.transform.rotationOrder);
+    this.pitch = aa.eulerAngles[0];
+    this.rotationY = aa.eulerAngles[1];
+    this.rotationZ = aa.eulerAngles[2];
+    this.transform.eulerAngles = aa.eulerAngles;
+    this.viewMatrix = viewMatrixFromTransform(this.transform);
   }
   setFOV(fov) {
     this.fov = fov;

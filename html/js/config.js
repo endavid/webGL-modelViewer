@@ -17,7 +17,8 @@ const Config = {
       offsetX: 0,
       pitch: 0,
       rotationY: 0,
-      fov: 26.9
+      fov: 26.9,
+      eye: { position: {}, target: {}, up: {} }
     },
     {
       distance: 3.01,
@@ -25,7 +26,8 @@ const Config = {
       offsetX: 0,
       pitch: 0,
       rotationY: 45,
-      fov: 26.9
+      fov: 26.9,
+      eye: { position: {}, target: {}, up: {} }
     },
     {
       distance: 3.01,
@@ -33,7 +35,8 @@ const Config = {
       offsetX: 0,
       pitch: 0,
       rotationY: -45,
-      fov: 26.9
+      fov: 26.9,
+      eye: { position: {}, target: {}, up: {} }
     },
     {
       distance: 3.01,
@@ -41,7 +44,8 @@ const Config = {
       offsetX: 0,
       pitch: 0,
       rotationY: 180,
-      fov: 26.9
+      fov: 26.9,
+      eye: { position: {}, target: {}, up: {} }
     },
   ],
   sun: {

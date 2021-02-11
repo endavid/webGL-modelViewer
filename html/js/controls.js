@@ -174,6 +174,24 @@ const Update = {
     Update.cameraLocation(i);
     Update.cameraFov(i);
   },
+  cameraPosition: (value, axis) => {
+    const camera = viewer.getCamera(Config.selectedCamera);
+    const cfgCamera = Config.cameras[Config.selectedCamera];
+    cfgCamera.eye.position[axis] = parseFloat(value);
+    camera.setEye(cfgCamera.eye);
+  },
+  cameraTarget: (value, axis) => {
+    const camera = viewer.getCamera(Config.selectedCamera);
+    const cfgCamera = Config.cameras[Config.selectedCamera];
+    cfgCamera.eye.target[axis] = parseFloat(value);
+    camera.setEye(cfgCamera.eye);
+  },
+  cameraUp: (value, axis) => {
+    const camera = viewer.getCamera(Config.selectedCamera);
+    const cfgCamera = Config.cameras[Config.selectedCamera];
+    cfgCamera.eye.up[axis] = parseFloat(value);
+    camera.setEye(cfgCamera.eye);
+  },
   modelTransform: () => {
     const p = Config.model.position;
     const r = Config.model.rotation;
@@ -249,6 +267,15 @@ const UISetter = {
     rotationY: (a) => {
       UISetter.global.setSlider('camera_rotationY', a);
       Config.cameras[Config.selectedCamera].rotationY = a;
+    },
+    position: (position) => {
+      const p = VMath.round(position, 4);
+      const cfgCamera = Config.cameras[Config.selectedCamera];
+      ['x', 'y', 'z'].forEach((axis, i) => {
+        cfgCamera.position[axis] = p[i];
+        $(`#camera_position${axis}`).val(p[i]);
+        $(`#camera_position${axis}_number`).val(p[i]);
+      });
     },
     fov: (a) => {
       UISetter.global.setSlider('camera_fov', a);
@@ -1089,6 +1116,27 @@ function populateControls() {
         Config.cameras[Config.selectedCamera].rotationY = parseFloat(value);
         Update.cameraLocation(Config.selectedCamera);
       }),
+    UiUtils.createMultiSlider(
+      `camera_position`,
+      ['x', 'y', 'z'],
+      'position XYZ',
+      [0, 0.95, 3.01], -10, 10, 0.01,
+      Update.cameraPosition
+    ),
+    UiUtils.createMultiSlider(
+      `camera_target`,
+      ['x', 'y', 'z'],
+      'target XYZ',
+      [0, 0.95, 0], -10, 10, 0.01,
+      Update.cameraTarget
+    ),
+    UiUtils.createMultiSlider(
+      `camera_up`,
+      ['x', 'y', 'z'],
+      'up XYZ',
+      [0, 1, 0], -1, 1, 0.01,
+      Update.cameraUp
+    ),
     UiUtils.createSlider('camera_fov', 'Field of View',
       Config.cameras[0].fov, 1, 90, 1, (value) => {
         Config.cameras[Config.selectedCamera].fov = parseFloat(value);
