@@ -280,7 +280,34 @@ class Model {
       };
       worker.postMessage(load);
     } else {
-      console.error("Can't create Worker to compute normals");
+      console.error("Can't create Worker to find surface intersections");
+    }
+  }
+  getBoundingBox(onDone) {
+    if (window.Worker) {
+      const worker = new Worker('./js/modelDistanceWorker.js');
+      const boundingBox = {
+        min: {x: Number.MAX_VALUE, y: Number.MAX_VALUE, z: Number.MAX_VALUE},
+        max: {x: Number.MIN_VALUE, y: Number.MIN_VALUE, z: Number.MIN_VALUE},
+      };
+      const load = {
+        boundingBox,
+        vertices: this.vertices,
+        triangles: this.triangles,
+        stride: this.stride,
+        transformMatrix: this.transform.toRowMajorArray(),
+      };
+      if (this.skinnedModel) {
+        load.joints = this.skinnedModel.joints;
+      }
+      worker.onmessage = (e) => {
+        if (e.data.done && e.data.boundingBox) {
+          onDone(e.data.boundingBox);
+        }
+      };
+      worker.postMessage(load);        
+    } else {
+      console.error("Can't create Worker to find bounding box");
     }
   }
 }

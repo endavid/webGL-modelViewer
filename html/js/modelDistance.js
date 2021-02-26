@@ -99,28 +99,25 @@
       this.landmarks = Object.keys(this.positions || {});
       this.indices = {};
       this.distances = {};
+      if (!this.boundingBox) {
+        this.boundingBox = null;
+      }
     }
     step(step) {
       if (this.ray) {
         return this.stepRayIntersection(step);
+      } else if (this.boundingBox) {
+        return this.stepFindBoundingBox(step);
       }
       return this.stepFindClosestPoints(step);
     }
     stepFindClosestPoints(step) {
-      const self = this;
-      const total = this.getNumVertices();
-      const progress = {
-        step,
-        total,
-        done: step === total,
-      };
+      const progress = this.getProgress(step, this.getNumVertices());
       if (progress.done) {
         return progress;
       }
-      const position = this.getPosition(step);
-      const skinningWeights = this.getSkinningWeights(step);
-      const skinningIndices = this.getSkinningIndices(step);
-      const worldPos = this.transformVertex(position, skinningWeights, skinningIndices);
+      const worldPos = this.getWorldPosition(step);
+      const self = this;
       // update distance to every landmark, and remember closest vertex
       this.landmarks.forEach((key) => {
         const landmarkPos = self.getLandmarkWorldPos(key);
@@ -133,13 +130,26 @@
       });
       return progress;
     }
+    stepFindBoundingBox(step) {
+      const progress = this.getProgress(step, this.getNumVertices());
+      if (progress.done) {
+        return progress;
+      }
+      const worldPos = this.getWorldPosition(step);
+      const { min, max } = this.boundingBox;
+      const self = this;
+      ['x', 'y', 'z'].forEach((axis, i) => {
+        if (worldPos[i] < min[axis]) {
+          self.boundingBox.min[axis] = worldPos[i];
+        }
+        if (worldPos[i] > max[axis]) {
+          self.boundingBox.max[axis] = worldPos[i];
+        }
+      });
+      return progress;
+    }
     stepRayIntersection(step) {
-      const total = this.getNumTriangles();
-      const progress = {
-        step,
-        total,
-        done: step === total,
-      };
+      const progress = this.getProgress(step, this.getNumTriangles());
       if (progress.done) {
         return progress;
       }
@@ -152,6 +162,14 @@
         }
       }
       return progress;
+    }
+    getProgress(step, total) {
+      const progress = {
+        step,
+        total,
+        done: step === total,
+      };
+      return progress
     }
     getNumVertices() {
       return this.vertices.length / this.stride;
@@ -177,6 +195,15 @@
         t = positions.map(p => self.transformVertex(p));
       }
       return t;
+    }
+    getWorldPosition(vertexIndex) {
+      const position = this.getPosition(vertexIndex);
+      if (this.joints) {
+        const skinningWeights = this.getSkinningWeights(vertexIndex);
+        const skinningIndices = this.getSkinningIndices(vertexIndex);
+        return this.transformVertex(position, skinningWeights, skinningIndices);  
+      }
+      return this.transformVertex(position);
     }
     getPosition(vertexIndex) {
       const i = vertexIndex * this.stride;

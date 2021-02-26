@@ -6,6 +6,8 @@ import VMath from './math.js';
 import Gfx from './gfx.js';
 import LabelUtils from './labelUtils.js';
 
+const { math } = window;
+
 const ImageUrls = {
   'banana.png': 'resources/banana.png',
   'orange.png': 'resources/orange.png',
@@ -51,7 +53,15 @@ function matrixToString(m) {
 }
 
 function vectorToString(v) {
-  const p = v.map(a => Math.round(a * 100000) / 100000);
+  const rounder = a => Math.round(a * 100000) / 100000;
+  let p = [];
+  if (v.x !== undefined) {
+    Object.keys(v).forEach((axis) => {
+      p.push(rounder(v[axis]));
+    });
+  } else {
+    p = v.map(rounder);
+  }
   return p.join(', ');
 }
 
@@ -458,7 +468,31 @@ const Actions = {
       const name = $('#selectedModel option:selected').text();
       const slot = viewer.selectedModel;
       Actions.model.load(slot, name, url);
-    }
+    },
+    placeOnFloor: () => {
+      const model = viewer.getSelectedModel();
+      if (model) {
+        progressBarUpdate(0);
+        $('#progressBarDiv').show();
+        model.getBoundingBox((bb) => {
+          setInfo(`BoundingBox: {min: [${vectorToString(bb.min)}], max: [${vectorToString(bb.max)}]}`);
+          const p = model.transform.position;
+          const t = [p[0], -bb.min.y, p[2]];
+          UISetter.model.translation(t);
+          Update.modelTransform();
+          $('#progressBarDiv').hide();
+        });
+      }
+    },
+    dumpScaledTranslation: () => {
+      const model = viewer.getSelectedModel();
+      if (model) {
+        const scaled = math.dotDivide(model.transform.position, model.transform.scale);
+        const p = math.subtract([0, 0, 0], scaled);
+        const str = vectorToString(p);
+        setInfo(`Position: ${str}`);
+      }
+    },
   },
   anim: {
     setPose: (url) => {
@@ -1058,6 +1092,17 @@ function populateControls() {
         UISetter.model.translation(scaled);
         Update.modelTransform();
       }),
+    UiUtils.createButtons('modelButtons', [{
+        id: 'placeOnFloor',
+        text: 'Place on floor',
+        callback: Actions.model.placeOnFloor,
+      },
+      {
+        id: 'dumpScaledTranslation',
+        text: 'Dump scaled translation',
+        callback: Actions.model.dumpScaledTranslation,
+      }
+    ]),
     UiUtils.createDropdownList('submesh', 'Submesh', [], (obj) => {
       viewer.selectSubmesh(obj.value);
     }),
