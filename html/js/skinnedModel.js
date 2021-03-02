@@ -729,7 +729,7 @@ class SkinnedModel {
   /// Mirrors the rotations and translations from one side to the other
   makeSymmetric(referenceSide, frame) {
     const self = this;
-    const { anims } = this;
+    const { anims, skeleton } = this;
     const keys = Object.keys(anims);
     const mirroring = {l: 'r', r: 'l', L: 'R', R: 'L'};
     if (!mirroring[referenceSide]) {
@@ -744,6 +744,10 @@ class SkinnedModel {
       const name = joint.substr(1);
       const mirrorJoint = `${mirrorSide}${name}`;
       if (!anims[joint] && !anims[mirrorJoint]) {
+        return;
+      }
+      if (!skeleton[mirrorJoint]) {
+        // this check avoids copying lowerJaw to "rowerJaw" :D
         return;
       }
       self.addJointAnimationEntryIfMissing(joint, frame);
