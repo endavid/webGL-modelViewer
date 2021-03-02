@@ -510,6 +510,26 @@ const Actions = {
         console.error(e);
       });
     },
+    makeSymmetric: (referenceSide) => {
+      const frame = Config.keyframe;
+      const model = viewer.getSelectedModel();
+      if (!model || !model.skinnedModel) {
+        setWarning('Not a skinned model');
+        return;
+      }
+      model.skinnedModel.makeSymmetric(referenceSide, frame);
+      UISetter.anim.keyframe(frame);
+    },
+    zeroTranslations: () => {
+      const frame = Config.keyframe;
+      const model = viewer.getSelectedModel();
+      if (!model || !model.skinnedModel) {
+        setWarning('Not a skinned model');
+        return;
+      }
+      model.skinnedModel.zeroTranslations(frame);
+      UISetter.anim.keyframe(frame);
+    },
     setOption: (key, value) => {
       UISetter.anim.setOption(key, value);
       const model = viewer.getSelectedModel();
@@ -1231,6 +1251,23 @@ function populateControls() {
         text: 'Zero',
         callback: Actions.anim.zeroJoint
       }
+    ]),
+    UiUtils.createButtons('poseAlgoButtons', [
+      {
+        id: 'poseZeroTranslations',
+        text: 'Zero Tx',
+        callback: Actions.anim.zeroTranslations
+      },
+      {
+        id: 'poseMirrorLeft',
+        text: 'Mirror L',
+        callback: Actions.anim.makeSymmetric.bind(null, 'l')
+      },
+      {
+        id: 'poseMirrorRight',
+        text: 'Mirror R',
+        callback: Actions.anim.makeSymmetric.bind(null, 'r')
+      },
     ]),
     UiUtils.createButtonWithOptions('savePose', 'Save Pose', ' as ', 'Json', saveCurrentPose),
   ], '#controlsRight');
