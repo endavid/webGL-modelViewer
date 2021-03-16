@@ -8,7 +8,7 @@ const MAX_JOINTS = 100;
 
 // generated with http://palettist.endavid.com/
 const JOINT_PALETTE = [
-  0, 0, 0, 1,
+  0, 0, 1, 1,
   0.635, 0.733, 0.945, 1,
   0.329, 0.541, 0.953, 1,
   0.839, 0.624, 1, 1,
