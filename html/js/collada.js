@@ -169,41 +169,43 @@ function readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffse
   let j = vertexOffset; // face index
   polylists.forEach((polylist) => {
     const numInputs = Array.isArray(polylist.input) ? polylist.input.length : 1;
-    let vcount = [];
-    if (polylist.vcount) {
-      vcount = intStringToArray(polylist.vcount);
-    } else {
-      // all triangles
-      const count = parseInt(polylist._count, 10);
-      vcount = Array(...Array(count)).map(() => 3);
-    }
     const polygons = toVectorArray(intStringToArray(polylist.p), numInputs);
     const submesh = {
       material: polylist._material || defaultMaterial,
       indices: [],
     };
+    const addTriangle = (a, b, c) => {
+      submesh.indices.push(j + a);
+      submesh.indices.push(j + b);
+      submesh.indices.push(j + c);
+    };
+    if (polylist.vcount) {
+      const vcount = intStringToArray(polylist.vcount);
+      vcount.forEach((c) => {
+        addTriangle(0, 1, 2);
+        if (c === 4) {
+          addTriangle(0, 2, 3);
+        }
+        if (c > 4) {
+          ngons[`${c}`] = true;
+        }
+        j += c;
+      });  
+    } else {
+      // all triangles
+      const count = parseInt(polylist._count, 10);
+      for (let k = 0; k < count; k++) {
+        addTriangle(0, 1, 2);
+        j += 3;
+      }
+    }
+    meshes.push(submesh);
     const interleaved = interleaveVertexData(vertexData, polygons, skin, invertAxis);
     missingNormals |= interleaved.missingNormals;
     missingUVs |= interleaved.missingUVs;
     // !! Maximum call stack size exceeded, if we concatenate like below:
     // !! vertices.push(...interleaved.vertices);
     vertices = vertices.concat(interleaved.vertices);
-    vcount.forEach((c) => {
-      if (c === 3 || c === 4) {
-        submesh.indices.push(j);
-        submesh.indices.push(j + 1);
-        submesh.indices.push(j + 2);
-        if (c === 4) {
-          submesh.indices.push(j);
-          submesh.indices.push(j + 2);
-          submesh.indices.push(j + 3);
-        }
-      } else {
-        ngons[`${c}`] = true;
-      }
-      j += c;
-    });
-    meshes.push(submesh);
   });
   const name = geometry._name || geometry._id;
   Object.keys(ngons).forEach((n) => {
