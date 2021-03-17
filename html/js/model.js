@@ -16,6 +16,8 @@ function getModelStats(json) {
   const stats = {
     vertexCount: json.vertices.length / json.stride,
     meshCount: json.meshes.length,
+    missingUVs: json.missingUVs ? true : false,
+    missingNormals: json.missingNormals ? true : false
   };
   if (json.skin) {
     stats.jointCount = json.skin.joints.length;
