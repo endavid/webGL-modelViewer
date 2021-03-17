@@ -201,8 +201,8 @@ function readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffse
     }
     meshes.push(submesh);
     const interleaved = interleaveVertexData(vertexData, polygons, skin, invertAxis);
-    missingNormals |= interleaved.missingNormals;
-    missingUVs |= interleaved.missingUVs;
+    missingNormals ||= interleaved.missingNormals;
+    missingUVs ||= interleaved.missingUVs;
     // !! Maximum call stack size exceeded, if we concatenate like below:
     // !! vertices.push(...interleaved.vertices);
     vertices = vertices.concat(interleaved.vertices);

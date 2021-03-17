@@ -867,7 +867,9 @@ function populateControls() {
 
   const shaderPresets = [
     { name: 'default shading', value: 'shaders/lighting.fs' },
+    { name: 'albedo', value: 'shaders/debugAlbedo.fs' },
     { name: 'depth', value: 'shaders/debugDepth.fs' },
+    { name: 'UVs', value: 'shaders/debugUVs.fs' },
     { name: 'skin weights', value: 'shaders/debugSkinWeights.fs' },
     { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },
     { name: 'intersect', value: 'intersect' },

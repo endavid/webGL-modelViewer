@@ -80,8 +80,11 @@ class Model {
       const id = m.material || '';
       const mat = json.materials[id] || {};
       const albedoMapName = mat.albedoMap || 'missing';
-      // if the .dds texture is missing, try to find equivalent .png
-      const albedoMapUrl = imageUrls[albedoMapName] || imageUrls[`${Gfx.getFileNameWithoutExtension(albedoMapName)}.png`];
+      let albedoMapUrl = imageUrls[albedoMapName]
+        // if the .dds texture is missing, try to find equivalent .png
+        || imageUrls[`${Gfx.getFileNameWithoutExtension(albedoMapName)}.png`]
+        // or use the 'missing' texture otherwise
+        || imageUrls.missing;
       const mesh = {
         id,
         indexBuffer: gl.createBuffer(),
