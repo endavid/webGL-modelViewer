@@ -293,7 +293,7 @@ function skinSourceIdToSemantics(id) {
 }
 
 function readSkin(json) {
-  const { controller } = json.COLLADA.library_controllers;
+  const { controller } = json.COLLADA.library_controllers || {};
   const skin = controller ? controller.skin : controller;
   if (!skin) {
     return null;
