@@ -11,9 +11,13 @@ function simplifyName(name) {
   if (!name) {
     return name;
   }
-  // Collada files exported from FBX have some ugly _ncl1_1 appended
+  // Collada files exported from FBX have some ugly _ncl1_x appended
   // to every joint name
-  return name.replace('_ncl1_1', '');
+  let s = name;
+  for (let i = 0; i < 4; i++) {
+    s = s.replace(`_ncl1_${i}`, '');
+  }
+  return s;
 }
 // [a b c d e ...] -> [ [a b], [b c], ...]
 function toVectorArray(array, stride) {
