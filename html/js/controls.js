@@ -6,6 +6,8 @@ import VMath from './math.js';
 import Gfx from './gfx.js';
 import LabelUtils from './labelUtils.js';
 
+const { math } = window;
+
 const ImageUrls = {
   'banana.png': 'resources/banana.png',
   'orange.png': 'resources/orange.png',
@@ -51,7 +53,15 @@ function matrixToString(m) {
 }
 
 function vectorToString(v) {
-  const p = v.map(a => Math.round(a * 100000) / 100000);
+  const rounder = a => Math.round(a * 100000) / 100000;
+  let p = [];
+  if (v.x !== undefined) {
+    Object.keys(v).forEach((axis) => {
+      p.push(rounder(v[axis]));
+    });
+  } else {
+    p = v.map(rounder);
+  }
   return p.join(', ');
 }
 
@@ -485,7 +495,31 @@ const Actions = {
       const name = $('#selectedModel option:selected').text();
       const slot = viewer.selectedModel;
       Actions.model.load(slot, name, url);
-    }
+    },
+    placeOnFloor: () => {
+      const model = viewer.getSelectedModel();
+      if (model) {
+        progressBarUpdate(0);
+        $('#progressBarDiv').show();
+        model.getBoundingBox((bb) => {
+          setInfo(`BoundingBox: {min: [${vectorToString(bb.min)}], max: [${vectorToString(bb.max)}]}`);
+          const p = model.transform.position;
+          const t = [p[0], -bb.min.y, p[2]];
+          UISetter.model.translation(t);
+          Update.modelTransform();
+          $('#progressBarDiv').hide();
+        });
+      }
+    },
+    dumpScaledTranslation: () => {
+      const model = viewer.getSelectedModel();
+      if (model) {
+        const scaled = math.dotDivide(model.transform.position, model.transform.scale);
+        const p = math.subtract([0, 0, 0], scaled);
+        const str = vectorToString(p);
+        setInfo(`Position: ${str}`);
+      }
+    },
   },
   anim: {
     setPose: (url) => {
@@ -502,6 +536,26 @@ const Actions = {
       .fail((e) => {
         console.error(e);
       });
+    },
+    makeSymmetric: (referenceSide) => {
+      const frame = Config.keyframe;
+      const model = viewer.getSelectedModel();
+      if (!model || !model.skinnedModel) {
+        setWarning('Not a skinned model');
+        return;
+      }
+      model.skinnedModel.makeSymmetric(referenceSide, frame);
+      UISetter.anim.keyframe(frame);
+    },
+    zeroTranslations: () => {
+      const frame = Config.keyframe;
+      const model = viewer.getSelectedModel();
+      if (!model || !model.skinnedModel) {
+        setWarning('Not a skinned model');
+        return;
+      }
+      model.skinnedModel.zeroTranslations(frame);
+      UISetter.anim.keyframe(frame);
     },
     setOption: (key, value) => {
       UISetter.anim.setOption(key, value);
@@ -840,7 +894,9 @@ function populateControls() {
 
   const shaderPresets = [
     { name: 'default shading', value: 'shaders/lighting.fs' },
+    { name: 'albedo', value: 'shaders/debugAlbedo.fs' },
     { name: 'depth', value: 'shaders/debugDepth.fs' },
+    { name: 'UVs', value: 'shaders/debugUVs.fs' },
     { name: 'skin weights', value: 'shaders/debugSkinWeights.fs' },
     { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },
     { name: 'intersect', value: 'intersect' },
@@ -1085,6 +1141,17 @@ function populateControls() {
         UISetter.model.translation(scaled);
         Update.modelTransform();
       }),
+    UiUtils.createButtons('modelButtons', [{
+        id: 'placeOnFloor',
+        text: 'Place on floor',
+        callback: Actions.model.placeOnFloor,
+      },
+      {
+        id: 'dumpScaledTranslation',
+        text: 'Dump scaled translation',
+        callback: Actions.model.dumpScaledTranslation,
+      }
+    ]),
     UiUtils.createDropdownList('submesh', 'Submesh', [], (obj) => {
       viewer.selectSubmesh(obj.value);
     }),
@@ -1234,6 +1301,23 @@ function populateControls() {
         text: 'Zero',
         callback: Actions.anim.zeroJoint
       }
+    ]),
+    UiUtils.createButtons('poseAlgoButtons', [
+      {
+        id: 'poseZeroTranslations',
+        text: 'Zero Tx',
+        callback: Actions.anim.zeroTranslations
+      },
+      {
+        id: 'poseMirrorLeft',
+        text: 'Mirror L',
+        callback: Actions.anim.makeSymmetric.bind(null, 'l')
+      },
+      {
+        id: 'poseMirrorRight',
+        text: 'Mirror R',
+        callback: Actions.anim.makeSymmetric.bind(null, 'r')
+      },
     ]),
     UiUtils.createButtonWithOptions('savePose', 'Save Pose', ' as ', 'Json', saveCurrentPose),
   ], '#controlsRight');

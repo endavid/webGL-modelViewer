@@ -8,7 +8,7 @@ const MAX_JOINTS = 100;
 
 // generated with http://palettist.endavid.com/
 const JOINT_PALETTE = [
-  0, 0, 0, 1,
+  0, 0, 1, 1,
   0.635, 0.733, 0.945, 1,
   0.329, 0.541, 0.953, 1,
   0.839, 0.624, 1, 1,
@@ -448,20 +448,25 @@ class SkinnedModel {
     // m = armatureTransform * m;
     return m;
   }
-  setPose(pose, frame) {
+  addJointAnimationEntryIfMissing(joint, frame) {
     const { anims, skeleton } = this;
+    if (!anims[joint]) {
+      anims[joint] = { transforms: [] };
+    }
+    if (!anims[joint].transforms[frame]) {
+      anims[joint].transforms[frame] = new Transform({});
+      if (skeleton[joint]) {
+        const ro = skeleton[joint].rotationOrder;
+        anims[joint].transforms[frame].rotationOrder = ro;
+      }
+    }
+  }
+  setPose(pose, frame) {
+    const self = this;
+    const { anims } = this;
     const keys = Object.keys(pose);
     keys.forEach((joint) => {
-      if (!anims[joint]) {
-        anims[joint] = { transforms: [] };
-      }
-      if (!anims[joint].transforms[frame]) {
-        anims[joint].transforms[frame] = new Transform({});
-        if (skeleton[joint]) {
-          const ro = skeleton[joint].rotationOrder;
-          anims[joint].transforms[frame].rotationOrder = ro;
-        }
-      }
+      self.addJointAnimationEntryIfMissing(joint, frame);
       if (Array.isArray(pose[joint])) {
         // [rx, ry, rz, sx, sy, sz, tx, ty, tz]
         for (let i = 0; i < 3; i += 1) {
@@ -717,6 +722,57 @@ class SkinnedModel {
     const R = this.getBoneRotationFrameOfReference(joint);
     const order = this.skeleton[joint].rotationOrder;
     return AngleAxis.fromLocalRotation(R, order, angles);
+  }
+
+  // MARK: Global pose editing
+
+  /// Mirrors the rotations and translations from one side to the other
+  makeSymmetric(referenceSide, frame) {
+    const self = this;
+    const { anims, skeleton } = this;
+    const keys = Object.keys(anims);
+    const mirroring = {l: 'r', r: 'l', L: 'R', R: 'L'};
+    if (!mirroring[referenceSide]) {
+      console.error(`Unsupported referenceSide: ${referenceSide}`);
+      return
+    }
+    const mirrorSide = mirroring[referenceSide];
+    keys.forEach((joint) => {
+      if (!joint.startsWith(referenceSide)) {
+        return;
+      }
+      const name = joint.substr(1);
+      const mirrorJoint = `${mirrorSide}${name}`;
+      if (!anims[joint] && !anims[mirrorJoint]) {
+        return;
+      }
+      if (!skeleton[mirrorJoint]) {
+        // this check avoids copying lowerJaw to "rowerJaw" :D
+        return;
+      }
+      self.addJointAnimationEntryIfMissing(joint, frame);
+      self.addJointAnimationEntryIfMissing(mirrorJoint, frame);
+      const {position, eulerAngles} = anims[joint].transforms[frame];
+      const mirrorPosition = [...position];
+      const mirrorAngles = [...eulerAngles];
+      mirrorPosition[0] = -mirrorPosition[0];
+      mirrorAngles[1] = -mirrorAngles[1];
+      mirrorAngles[2] = -mirrorAngles[2];
+      anims[mirrorJoint].transforms[frame].position = mirrorPosition;
+      anims[mirrorJoint].transforms[frame].eulerAngles = mirrorAngles;
+    });
+  }
+
+  /// Removes all the translations from the current pose
+  zeroTranslations(frame) {
+    const { anims } = this;
+    const keys = Object.keys(anims);
+    keys.forEach((joint) => {
+      if (!anims[joint]) {
+        return;
+      }
+      anims[joint].transforms[frame].position = [0, 0, 0];
+    });
   }
 }
 export { SkinnedModel as default };

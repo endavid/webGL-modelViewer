@@ -73,6 +73,8 @@ class WavefrontObj {
         });
       }
     });
+    model.missingUVs = uvs.length === 0;
+    model.missingNormals = normals.length === 0;
     let countSharedVertices = 0;
     const uniqueIndexKeys = Object.keys(uniqueIndexTriplets);
     let newVertexIndex = 0;

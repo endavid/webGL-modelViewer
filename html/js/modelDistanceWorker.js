@@ -18,6 +18,7 @@ onmessage = (e) => {
   msg.done = true;
   msg.surfaceIntersection = modelDistance.surfaceIntersection;
   msg.indices = modelDistance.indices;
+  msg.boundingBox = modelDistance.boundingBox;
   postMessage(msg);
   // eslint-disable-next-line no-restricted-globals
   close(); // this worker is done, terminate
