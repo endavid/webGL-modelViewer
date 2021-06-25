@@ -51,7 +51,7 @@ function guessRotationOrder(jointName) {
     yxz: ['eye'],
     yzx: ['arm', 'thumb'],
     zxy: [],
-    zyx: ['collar', 'shoulder', 'shldr', 'hand', 'carpal', 'index', 'mid', 'ring', 'pinky', 'ear'],
+    zyx: ['collar', 'shoulder', 'shldr', 'hand', 'carpal', 'index', 'mid', 'ring', 'pinky', 'ear', 'trap', 'bicep', 'tricep'],
   };
   const rs = Object.keys(cheatSheet);
   const name = jointName.toLowerCase();
