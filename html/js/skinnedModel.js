@@ -47,7 +47,7 @@ function guessRotationOrder(jointName) {
   const cheatSheet = {
     xyz: ['foot', 'metatarsal', 'toe', 'jaw', 'tongue', 'pectoral'],
     // vertical bones, so twist is along Y, therefore applied first
-    xzy: ['hip', 'pelvis', 'thigh', 'shin', 'abdomen', 'chest', 'neck', 'head'],
+    xzy: ['hip', 'pelvis', 'thigh', 'shin', 'abdomen', 'chest', 'neck', 'head', 'armpit'],
     yxz: ['eye'],
     yzx: ['arm', 'thumb'],
     zxy: [],
