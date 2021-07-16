@@ -478,6 +478,7 @@ const Actions = {
           $('#keyframe_number').val(-1);
           Config.keyframe = -1;
           Actions.anim.setOption('showSkeleton', Config.showSkeleton);
+          Actions.anim.setOption('showJointLabels', Config.showJointLabels);
           UISetter.anim.setJointNames(model.skinnedModel.jointNames);
           addPoseGroup(model.skinnedModel);
         }
@@ -1278,7 +1279,8 @@ function populateControls() {
     }),
     UiUtils.createFileBrowser('jrofileBrowser', 'load joint rotation order', false, onAddJroFile),
     UiUtils.createCheckboxes('animOptions', {
-      showSkeleton: { text: 'showSkeleton', default: Config.showSkeleton }
+      showSkeleton: { text: 'showSkeleton', default: Config.showSkeleton },
+      showJointLabels: { text: 'showJointLabels', default: Config.showJointLabels }
     }, Actions.anim.setOption),
     UiUtils.createDropdownList('selectedJoint', 'Joint', [], Update.jointSelection),
     UiUtils.createAngleSliders('joint', null, [0, 0, 0], Actions.anim.jointAngle),

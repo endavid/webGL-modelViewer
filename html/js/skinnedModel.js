@@ -357,6 +357,7 @@ class SkinnedModel {
     this.jointColorPalette = createJointColorPalette(skin.joints);
     this.topology = getSkeletonTopology(skeleton);
     this.showSkeleton = false;
+    this.showJointLabels = false;
     this.currentKeyframe = 0;
     this.selectedJoint = '';
     this.applyDefaultPose();

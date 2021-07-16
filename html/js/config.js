@@ -61,6 +61,7 @@ const Config = {
   labelScale: 1,
   showLabels: true,
   showPoints: true,
-  showSkeleton: false
+  showSkeleton: false,
+  showJointLabels: false
 };
 export default Config;

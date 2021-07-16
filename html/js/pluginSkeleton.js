@@ -6,7 +6,8 @@ class PluginSkeleton {
       root: '#999999',
       bone: '#00ff00',
       selected: '#ff00ff',
-      unparented: '#ff0000'
+      unparented: '#ff0000',
+      shadow: '#000000'
     }
   }
   setColor(context, color) {
@@ -43,15 +44,23 @@ class PluginSkeleton {
         const { parent } = node;
         const w1 = getJointPosition(i);
         const p1 = camera.worldToPixels(w1, width, height);
+        const jointColor = PluginSkeleton.getJointColor(skinnedModel, name);
+        const shadowColor = name === skinnedModel.selectedJoint ? self.colors.selected : self.colors.shadow;
         if (!parent) {
           self.setColor(context, self.colors.root);
           PluginSkeleton.drawCircle(context, p1);
+          if (skinnedModel.showJointLabels) {
+            self.drawLabel(context, p1, name, jointColor, shadowColor);
+          }
           continue;
         }
         const j = jointIndices[parent];
         if (j === undefined) {
           self.setColor(context, self.colors.unparented);
           PluginSkeleton.drawCircle(context, p1);
+          if (skinnedModel.showJointLabels) {
+            self.drawLabel(context, p1, name, jointColor, shadowColor);
+          }
           continue;
         }
         const color = name === skinnedModel.selectedJoint ? self.colors.selected : self.colors.bone;
@@ -60,8 +69,16 @@ class PluginSkeleton {
         const p0 = camera.worldToPixels(w0, width, height);
         PluginSkeleton.drawLine(context, p0, p1);
         PluginSkeleton.drawCircle(context, p1);
-      }
+        if (skinnedModel.showJointLabels) {
+          self.drawLabel(context, p1, name, jointColor, shadowColor);
+        }
     }
+    }
+  }
+  static getJointColor(skinnedModel, jointName) {
+    const jointIndex = skinnedModel.jointIndices[jointName];
+    const colorVector = skinnedModel.jointColorPalette.slice(4 * jointIndex, 4 * jointIndex + 3);
+    return VMath.vectorToHexColor(colorVector);
   }
   static drawLine(ctx, from, to) {
     const tx = to[0] - from[0];
@@ -82,6 +99,28 @@ class PluginSkeleton {
     ctx.beginPath();
     ctx.arc(0, 0, 5, 0, 2 * Math.PI, false);
     ctx.stroke();
+    ctx.restore();
+  }
+  drawLabel(ctx, point, label, color, shadowColor) {
+    // save all the canvas settings
+    ctx.save();
+    // translate the canvas origin so 0, 0 is at
+    // the top front right corner of our F
+    ctx.translate(point[0], point[1]);
+    // draw an arrow
+    ctx.beginPath();
+    ctx.moveTo(10, 5);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(5, 10);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(15, 15);
+    ctx.stroke();
+    // draw the text.
+    this.setColor(ctx, shadowColor);
+    ctx.fillText(label, 21, 25);
+    this.setColor(ctx, color);
+    ctx.fillText(label, 20, 24);
+    // restore the canvas to its old settings.
     ctx.restore();
   }
 }
