@@ -137,6 +137,9 @@ class Renderer {
         showLabels: true,
         showPoints: true,
       },
+      settings: {
+        debugJointCount: false,
+      }
     };
     this.selectionRadiusInPixels = 10;
     this.selectedModel = 0;
@@ -214,7 +217,8 @@ class Renderer {
       }
     } else {
       plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri);
-    }    
+    }
+    this.scene.settings.debugJointCount = fragmentShaderUri.indexOf('JointCount') >= 0;
     this.plugins[this.pluginIndeces.litModel] = plugin;
   }
   static readImageData() {

@@ -11,7 +11,7 @@ class PluginIntersection {
   static async createAsync(gl, whiteTexture) {
     const attribs = ['uv', 'position', 'normal'];
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'lightIrradiance', 'sampler'];
-    const attribsSkin = attribs.concat(['boneWeights', 'boneIndices']);
+    const attribsSkin = attribs.concat(['objectId', 'boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['joints', 'jointDebugPalette']);
     const shaders = {
       flat: {},

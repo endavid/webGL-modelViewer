@@ -211,11 +211,11 @@
     }
     getSkinningWeights(vertexIndex) {
       const i = vertexIndex * this.stride;
-      return this.vertices.slice(i + 8, i + 12);
+      return this.vertices.slice(i + 9, i + 13);
     }
     getSkinningIndices(vertexIndex) {
       const i = vertexIndex * this.stride;
-      return this.vertices.slice(i + 12, i + 16);
+      return this.vertices.slice(i + 13, i + 17);
     }
     getJointMatrix(jointIndex) {
       const i = jointIndex * 16; // 4x4 matrix

@@ -10,6 +10,7 @@ varying vec3 cameraPosition;
 varying vec3 worldPosition;
 varying highp float viewDepth;
 varying vec4 debugBoneWeightColor;
+varying vec4 debugBoneCount;
 void main(void) { // pre-built function
   vec4 worldPos = Mmatrix * vec4(position, 1.);
   worldPosition = worldPos.xyz;
@@ -22,4 +23,5 @@ void main(void) { // pre-built function
   vec4 camTranslation = Vmatrix * vec4(0,0,0,1);
   cameraPosition = -camTranslation.xyz;
   debugBoneWeightColor = vec4(0.5, 0.5, 0.5, 1.0);
+  debugBoneCount = vec4(0.5, 0.5, 0.5, 1.0);
 }

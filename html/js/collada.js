@@ -94,7 +94,7 @@ function sourceIdToSemantics(id) {
 }
 
 // interleave vertex data as 
-// position (3), normal (3), UVs (2) [, skin weights (4), skin indices (4)]
+// position (3), normal (3), UVs (2) [, objectId (1), skin weights (4), skin indices (4)]
 function interleaveVertexData(vertexData, polygons, skin, invertAxis) {
   const vertices = [];
   const d = vertexData;
@@ -128,6 +128,7 @@ function interleaveVertexData(vertexData, polygons, skin, invertAxis) {
     vertices.push(noUVs ? 0 : d.uvs[2 * p[2]] || 0);
     vertices.push(noUVs ? 0 : d.uvs[2 * p[2] + 1] || 0);
     if (skin) {
+      vertices.push(skin.jointCount[p[0]]);
       const weights = [1.0, 0.0, 0.0, 0.0];
       const indices = [0, 0, 0, 0];
       const list = skin.weights[p[0]];
@@ -234,7 +235,7 @@ function readMeshes(json, skin, defaultMaterial) {
   {
     geometries = [geometries];
   }
-  const stride = skin ? 16 : 8;
+  const stride = skin ? 17 : 8;
   geometries.forEach((geometry) => {
     const vertexOffset = vertices.length / stride;
     const g = readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffset);
@@ -255,9 +256,12 @@ function readMeshes(json, skin, defaultMaterial) {
 
 function mapWeightsPerVertex(vcount, jointWeightIndices, weightData) {
   const weights = [];
+  const jointCount = [];
   const overflowCount = {};
+  let maxJointCount = 0;
   let iv = 0;
   vcount.forEach((jointsPerVertex) => {
+    if (jointsPerVertex > maxJointCount) maxJointCount = jointsPerVertex;
     if (jointsPerVertex > 4) {
       overflowCount[jointsPerVertex] = 1 + (overflowCount[jointsPerVertex] || 0);
     }
@@ -274,12 +278,14 @@ function mapWeightsPerVertex(vcount, jointWeightIndices, weightData) {
     // if there are more joints, ignore the least important ones
     const mostImportant = jointWeightPairs.slice(0, 4);
     weights.push(mostImportant);
+    // the jointCount will be passed as objectId
+    jointCount.push(jointsPerVertex - 1);
   });
   Object.keys(overflowCount).forEach((key) => {
     const count = overflowCount[key];
     console.warn(`There are ${count} vertices with ${key} contributing joints! Only taking the most important 4 and ignoring the rest...`);
   });
-  return weights;
+  return { weights, jointCount, maxJointCount };
 }
 
 function skinSourceIdToSemantics(id) {
@@ -331,7 +337,10 @@ function readSkin(json) {
   } else {
     skinData.bindShapeMatrix = bsm;
   }
-  skinData.weights = mapWeightsPerVertex(vcount, jointWeightIndices, weightData);
+  const m = mapWeightsPerVertex(vcount, jointWeightIndices, weightData);
+  skinData.weights = m.weights;
+  skinData.jointCount = m.jointCount;
+  skinData.maxJointCount = m.maxJointCount;
   return skinData;
 }
 

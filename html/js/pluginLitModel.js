@@ -8,7 +8,7 @@ class PluginLitModel {
   static async createAsync(gl, whiteTexture, fragmentShader) {
     const attribs = ['uv', 'position', 'normal'];
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'lightIrradiance', 'sampler'];
-    const attribsSkin = attribs.concat(['boneWeights', 'boneIndices']);
+    const attribsSkin = attribs.concat(['objectId', 'boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['joints', 'jointDebugPalette']);
     const shaders = {};
     const fs = fragmentShader || 'shaders/lighting.fs';
@@ -47,12 +47,15 @@ class PluginLitModel {
     gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4 * 3);
     gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, 4 * (3 + 3));
     if (skinned) {
+      gl.vertexAttribPointer(shader.attribs.objectId, 1, gl.FLOAT, false, stride, 4 * (3 + 3 + 2));
       gl.vertexAttribPointer(shader.attribs.boneWeights,
-        4, gl.FLOAT, false, stride, 4 * (3 + 3 + 2));
+        4, gl.FLOAT, false, stride, 4 * (3 + 3 + 3));
       gl.vertexAttribPointer(shader.attribs.boneIndices,
-        4, gl.FLOAT, false, stride, 4 * (3 + 3 + 2 + 4));
+        4, gl.FLOAT, false, stride, 4 * (3 + 3 + 3 + 4));
       gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
-      gl.uniform4fv(shader.uniforms.jointDebugPalette, skinned.jointColorPalette);
+      const debugJointCount = (scene.settings || {}).debugJointCount;
+      gl.uniform4fv(shader.uniforms.jointDebugPalette,
+        debugJointCount ? skinned.jointCountPalette : skinned.jointColorPalette);
     }
     // draw submeshes
     model.meshes.forEach((mesh) => {

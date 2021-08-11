@@ -298,6 +298,26 @@ function createJointColorPalette(joints) {
   return palette;
 }
 
+function createJointCountPalette(maxJointCount) {
+  let count = Math.max(4, maxJointCount);
+  const palette = new Float32Array(count * 4);
+  for (let i = 0; i < 4; i += 1) {
+    // blue to green
+    palette[4 * i] = 0;
+    palette[4 * i + 1] = i / 3;
+    palette[4 * i + 2] = 1 - i / 3;
+    palette[4 * i + 3] = 1;
+  }
+  for (let i = 4; i < count; i += 1) {
+    // green to red
+    palette[4 * i] = i / (count - 1);
+    palette[4 * i + 1] = 1 - i / (count - 1);
+    palette[4 * i + 2] = 0;
+    palette[4 * i + 3] = 1;
+  }
+  return palette;
+}
+
 function getJointMatrix(index, matrices) {
   const i = index * 16;
   const m = matrices.slice(i, i + 16);
@@ -365,6 +385,7 @@ class SkinnedModel {
       recomputeBindMatrices(this.jointNames, skeleton, armatureTransform, this.inverseBindMatrices);
     }
     this.jointColorPalette = createJointColorPalette(skin.joints);
+    this.jointCountPalette = createJointCountPalette(skin.maxJointCount);
     this.topology = getSkeletonTopology(skeleton);
     this.showSkeleton = false;
     this.showJointLabels = false;

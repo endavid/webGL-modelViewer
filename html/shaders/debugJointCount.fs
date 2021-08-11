@@ -9,5 +9,5 @@ varying vec3 cameraPosition;
 varying vec4 debugBoneWeightColor;
 varying vec4 debugBoneCount;
 void main(void) {
-  gl_FragColor = debugBoneWeightColor;
+  gl_FragColor = debugBoneCount;
 }

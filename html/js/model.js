@@ -21,6 +21,7 @@ function getModelStats(json) {
   };
   if (json.skin) {
     stats.jointCount = json.skin.joints.length;
+    stats.maxJointsPerVertex = json.skin.maxJointCount;
   }
   return stats;
 }
@@ -232,7 +233,7 @@ class Model {
   }
   getSkinningData(vertexIndex) {
     const i = vertexIndex * this.stride;
-    return this.vertices.slice(i + 8, i + 16);
+    return this.vertices.slice(i + 9, i + 17);
   }
   getSkinnedPosition(vertexIndex, position) {
     const pos = position || this.getPosition(vertexIndex);

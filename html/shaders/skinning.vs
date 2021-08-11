@@ -1,6 +1,7 @@
 attribute vec3 position;
 attribute vec3 normal;
 attribute vec2 uv;
+attribute float objectId;
 attribute vec4 boneWeights;
 attribute vec4 boneIndices;
 const int BONE_COUNT = 100;
@@ -15,6 +16,7 @@ varying vec3 cameraPosition;
 varying vec3 worldPosition;
 varying highp float viewDepth;
 varying vec4 debugBoneWeightColor;
+varying vec4 debugBoneCount;
 void main(void) { // pre-built function
   vec4 p = vec4(position, 1.);
   int i0 = int(boneIndices.x);
@@ -49,4 +51,7 @@ void main(void) { // pre-built function
   vec4 jointColor3 = jointDebugPalette[i3];
   debugBoneWeightColor = jointColor0 * boneWeights.x + jointColor1 * boneWeights.y + jointColor2 * boneWeights.z + jointColor3 * boneWeights.w;
   debugBoneWeightColor.a = 1.0;
+  // for debugging bone count
+  int count = int(objectId);
+  debugBoneCount = jointDebugPalette[count];
 }
