@@ -271,8 +271,18 @@ function createJointColorPalette(joints) {
   const palette = new Float32Array(count * 4);
   const jointColorHash = {};
   for (let i = 0, j = 0; i < count; i += 1) {
-    // try to detect symmetric joints by removing starting or ending Ls/Rs
-    const jointKey = joints[i].substr(1, joints[i].length - 2);
+    // try to detect symmetric joints by removing starting or ending Ls/Rs, Left or Right
+    const name = joints[i].toLowerCase();
+    let jointKey = name;
+    if (name.startsWith("left")) {
+      jointKey = name.substr(4, name.length);
+    } else if (name.startsWith("right")) {
+      jointKey = name.substr(5, name.length);
+    } else if (name.endsWith("_l") || name.endsWith("_r")) {
+      jointKey = name.substr(0, name.length - 2);
+    } else if (name.startsWith("l") || name.startsWith("r")) {
+      jointKey = name.substr(1, name.length);
+    }
     const colorIndex = j % numColors;
     let color = JOINT_PALETTE.slice(4 * colorIndex, 4 * colorIndex + 4);
     if (jointColorHash[jointKey]) {
