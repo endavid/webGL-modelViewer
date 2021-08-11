@@ -172,8 +172,8 @@ class Renderer {
     const self = this;
     Promise.all([
       PluginBackground.createAsync(gl),
-      PluginLitModel.createAsync(gl, this.whiteTexture),
-      PluginDots.createAsync(gl),
+      PluginLitModel.createAsync(gl, this.whiteTexture, false, this.scene),
+      PluginDots.createAsync(gl, this.scene),
       PluginOverlay.createAsync(gl),
     ]).then((list) => {
       self.plugins = list;
@@ -211,12 +211,12 @@ class Renderer {
     const { gl } = this.glState;
     var plugin;
     if (fragmentShaderUri.startsWith('intersect')) {
-      plugin = await PluginIntersection.createAsync(gl, this.whiteTexture);
+      plugin = await PluginIntersection.createAsync(gl, this.whiteTexture, this.scene);
       if (fragmentShaderUri.endsWith('lit')) {
         plugin.doLightPass = true;
       }
     } else {
-      plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri);
+      plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri, this.scene);
     }
     this.scene.settings.debugJointCount = fragmentShaderUri.indexOf('JointCount') >= 0;
     this.plugins[this.pluginIndeces.litModel] = plugin;
@@ -523,6 +523,13 @@ class Renderer {
   }
   selectSubmesh(name) {
     this.scene.selectedMesh = name === 'all' ? false : name;
+  }
+  async onSceneUpdate() {
+    for (let i = 0; i < this.plugins.length; i++) {
+      if (this.plugins[i].onSceneUpdate) {
+        await this.plugins[i].onSceneUpdate(this.glState, this.scene);
+      }
+    }
   }
 }
 export { Renderer as default };

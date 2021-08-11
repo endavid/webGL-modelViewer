@@ -10,6 +10,7 @@ class Viewer extends Renderer {
     Model.createAsync(gl, name, url, config, imageUrls, materialUrls,
       onProgress, (model) => {
         self.scene.models[i] = model;
+        self.onSceneUpdate();
         onComplete(model);
       }, onError);
   }

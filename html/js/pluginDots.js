@@ -1,22 +1,29 @@
 import Shader from './shader.js';
+import PluginLitModel from './pluginLitModel.js'
 
 // Renders dots in 3D
 class PluginDots {
-  constructor(shaders) {
+  constructor(shaders, vsConstants) {
     this.shaders = shaders;
     this.pointSize = 3.0;
     this.tint = [1, 1, 1, 1];
+    this.vsConstants = vsConstants;
   }
-  static async createAsync(gl) {
+  static getAttribs() {
     const attribs = ['position', 'color'];
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'pointSize', 'tint'];
     const attribsSkin = attribs.concat(['boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['joints']);
+    return { attribs, uniforms, attribsSkin, uniformsSkin };
+  }
+  static async createAsync(gl, scene) {
+    const {attribs, uniforms, attribsSkin, uniformsSkin } = PluginDots.getAttribs();
     const shaders = {};
     const fs = 'shaders/outColor.fs';
+    const vsConstants = PluginLitModel.getVsConstants(scene);
     shaders.normal = await Shader.createAsync(gl, 'shaders/dotGeometry.vs', fs, attribs, uniforms);
-    shaders.skin = await Shader.createAsync(gl, 'shaders/dotSkinning.vs', fs, attribsSkin, uniformsSkin);
-    return new PluginDots(shaders);
+    shaders.skin = await Shader.createAsync(gl, 'shaders/dotSkinning.vs', fs, attribsSkin, uniformsSkin, vsConstants);
+    return new PluginDots(shaders, vsConstants);
   }
   static setOpaquePass(glState) {
     glState.setDepthTest(true);
@@ -60,6 +67,19 @@ class PluginDots {
       gl.drawArrays(gl.POINTS, 0, model.numDots);
       shader.disable(gl);
     });
+  }
+  async onSceneUpdate(glState, scene) {
+    const self = this;
+    const vsConstants = PluginLitModel.getVsConstants(scene);
+    let someDiffer = false;
+    Object.keys(vsConstants).forEach((k) => {
+      someDiffer = someDiffer || (self.vsConstants[k] != vsConstants[k]);
+    });
+    if (someDiffer) {
+      const {attribsSkin, uniformsSkin } = PluginDots.getAttribs();
+      const { vs, fs } = this.shaders.skin;
+      this.shaders.skin = await Shader.createAsync(glState.gl, vs, fs, attribsSkin, uniformsSkin, vsConstants);
+    }
   }
 }
 

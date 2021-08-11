@@ -1,20 +1,43 @@
 import Shader from './shader.js';
 
+function getMaxBoneCount(scene) {
+  let boneCount = 1;
+  scene.models.forEach((model) => {
+    if (model.skinnedModel) {
+      boneCount = Math.max(boneCount, model.skinnedModel.jointCount);
+    }
+  });
+  return boneCount;
+}
+
 class PluginLitModel {
-  constructor(shaders, whiteTexture) {
+  constructor(shaders, whiteTexture, vsConstants) {
     this.shaders = shaders;
     this.whiteTexture = whiteTexture;
+    this.vsConstants = vsConstants;
   }
-  static async createAsync(gl, whiteTexture, fragmentShader) {
+  static getAttribs() {
     const attribs = ['uv', 'position', 'normal'];
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'lightIrradiance', 'sampler'];
     const attribsSkin = attribs.concat(['objectId', 'boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['joints', 'jointDebugPalette']);
+    return {attribs, uniforms, attribsSkin, uniformsSkin};
+  }
+  static getVsConstants(scene) {
+    const boneCount = getMaxBoneCount(scene);
+    const vsConstants = {
+      "const int BONE_COUNT": boneCount
+    };
+    return vsConstants;
+  }
+  static async createAsync(gl, whiteTexture, fragmentShader, scene) {
+    const {attribs, uniforms, attribsSkin, uniformsSkin } = PluginLitModel.getAttribs();
     const shaders = {};
     const fs = fragmentShader || 'shaders/lighting.fs';
+    const vsConstants = PluginLitModel.getVsConstants(scene);
     shaders.lit = await Shader.createAsync(gl, 'shaders/geometry.vs', fs, attribs, uniforms);
-    shaders.litSkin = await Shader.createAsync(gl, 'shaders/skinning.vs', fs, attribsSkin, uniformsSkin);
-    return new PluginLitModel(shaders, whiteTexture);
+    shaders.litSkin = await Shader.createAsync(gl, 'shaders/skinning.vs', fs, attribsSkin, uniformsSkin, vsConstants);
+    return new PluginLitModel(shaders, whiteTexture, vsConstants);
   }
   static setDepthPass(glState, isBlend) {
     glState.setBlend(isBlend);
@@ -91,6 +114,19 @@ class PluginLitModel {
     }
     const drawModel = PluginLitModel.drawModel.bind(this, args);
     scene.models.forEach(drawModel);
+  }
+  async onSceneUpdate(glState, scene) {
+    const self = this;
+    const vsConstants = PluginLitModel.getVsConstants(scene);
+    let someDiffer = false;
+    Object.keys(vsConstants).forEach((k) => {
+      someDiffer = someDiffer || (self.vsConstants[k] != vsConstants[k]);
+    });
+    if (someDiffer) {
+      const {attribsSkin, uniformsSkin } = PluginLitModel.getAttribs();
+      const { vs, fs } = this.shaders.litSkin;
+      this.shaders.litSkin = await Shader.createAsync(glState.gl, vs, fs, attribsSkin, uniformsSkin, vsConstants);
+    }
   }
 }
 export { PluginLitModel as default };

@@ -1,7 +1,7 @@
 import Gfx from './gfx.js';
 
 class Shader {
-  constructor(gl, program, attribs, uniforms) {
+  constructor(gl, program, attribs, uniforms, vs, fs) {
     const self = this;
     self.program = program;
     self.attribs = {};
@@ -12,15 +12,18 @@ class Shader {
     uniforms.forEach((u) => {
       self.uniforms[u] = gl.getUniformLocation(program, u);
     });
+    // remember the location
+    self.vs = vs;
+    self.fs = fs;
   }
-  static async createAsync(gl, vs, fs, attribs, uniforms) {
-    const program = await Gfx.useShader(gl, vs, fs);
+  static async createAsync(gl, vs, fs, attribs, uniforms, vsConstants) {
+    const program = await Gfx.useShader(gl, vs, fs, vsConstants);
     // debug information
     console.log(`program(${vs}, ${fs})`);
     const info = Gfx.getProgramInfo(gl, program);
     console.table(info.uniforms);
     console.table(info.attributes);
-    return new Shader(gl, program, attribs, uniforms);
+    return new Shader(gl, program, attribs, uniforms, vs, fs);
   }
   enableVertexAttributes(gl) {
     const attribKeys = Object.keys(this.attribs);

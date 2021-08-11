@@ -47,10 +47,17 @@ class Gfx {
 
   // Eg. Gfx.useShader(gl, 'shaders/main.vs', 'shaders/main.fs');
   // Returns a promise
-  static async useShader(gl, vsPath, fsPath) {
-    const [vd, fd] = await Promise.all([
+  static async useShader(gl, vsPath, fsPath, vsConstants) {
+    let [vd, fd] = await Promise.all([
       $.get(vsPath), $.get(fsPath),
     ]);
+    if (vsConstants) {
+      let vertexConstants = "";
+      Object.keys(vsConstants).forEach((k) => {
+        vertexConstants += `${k} = ${vsConstants[k]};\n`;
+      });
+      vd = vertexConstants + vd;
+    }
     const vertexShader = createAndCompileShader(gl, vd, ShaderType.vertex);
     const fragmentShader = createAndCompileShader(gl, fd, ShaderType.fragment);
     const prog = gl.createProgram();

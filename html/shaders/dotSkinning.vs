@@ -1,8 +1,9 @@
+// BONE_COUNT needs to be set dynamically when loading the shader
+// const int BONE_COUNT = 100;
 attribute vec3 position;
 attribute vec4 color;
 attribute vec4 boneWeights;
 attribute vec4 boneIndices;
-const int BONE_COUNT = 100;
 uniform mat4 joints[BONE_COUNT];
 uniform mat4 Pmatrix;
 uniform mat4 Vmatrix;

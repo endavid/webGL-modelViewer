@@ -3,16 +3,14 @@ import PluginLitModel from './pluginLitModel.js'
 
 /** Renders the intersection volume of a mesh, using stencil buffer operations */
 class PluginIntersection {
-  constructor(shaders, whiteTexture) {
+  constructor(shaders, whiteTexture, vsConstants) {
     this.shaders = shaders;
     this.whiteTexture = whiteTexture;
     this.doLightPass = false;
+    this.vsConstants = vsConstants;
   }
-  static async createAsync(gl, whiteTexture) {
-    const attribs = ['uv', 'position', 'normal'];
-    const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'lightIrradiance', 'sampler'];
-    const attribsSkin = attribs.concat(['objectId', 'boneWeights', 'boneIndices']);
-    const uniformsSkin = uniforms.concat(['joints', 'jointDebugPalette']);
+  static async createAsync(gl, whiteTexture, scene) {
+    const {attribs, uniforms, attribsSkin, uniformsSkin } = PluginLitModel.getAttribs();
     const shaders = {
       flat: {},
       light: {}
@@ -25,11 +23,12 @@ class PluginIntersection {
       geom: 'shaders/geometry.vs',
       skin: 'shaders/skinning.vs'
     }
+    const vsConstants = PluginLitModel.getVsConstants(scene);
     shaders.flat.lit = await Shader.createAsync(gl, vs.geom, fs.flat, attribs, uniforms);
-    shaders.flat.litSkin = await Shader.createAsync(gl, vs.skin, fs.flat, attribsSkin, uniformsSkin);
+    shaders.flat.litSkin = await Shader.createAsync(gl, vs.skin, fs.flat, attribsSkin, uniformsSkin, vsConstants);
     shaders.light.lit = await Shader.createAsync(gl, vs.geom, fs.light, attribs, uniforms);
-    shaders.light.litSkin = await Shader.createAsync(gl, vs.skin, fs.light, attribsSkin, uniformsSkin);
-    return new PluginIntersection(shaders, whiteTexture);
+    shaders.light.litSkin = await Shader.createAsync(gl, vs.skin, fs.light, attribsSkin, uniformsSkin, vsConstants);
+    return new PluginIntersection(shaders, whiteTexture, vsConstants);
   }
   static setBackPass(glState, isBlend) {
     const { gl } = glState;
@@ -107,6 +106,24 @@ class PluginIntersection {
       args.normalShader = this.shaders.light.lit;
       args.skinShader = this.shaders.light.litSkin;
       scene.models.forEach(drawModel);
+    }
+  }
+  async onSceneUpdate(glState, scene) {
+    const self = this;
+    const { gl } = glState;
+    const vsConstants = PluginLitModel.getVsConstants(scene);
+    let someDiffer = false;
+    Object.keys(vsConstants).forEach((k) => {
+      someDiffer = someDiffer || (self.vsConstants[k] != vsConstants[k]);
+    });
+    if (someDiffer) {
+      const {attribsSkin, uniformsSkin } = PluginLitModel.getAttribs();
+      let vs0 = this.shaders.flat.litSkin.vs;
+      let fs0 = this.shaders.flat.litSkin.fs;
+      let vs1 = this.shaders.light.litSkin.vs;
+      let fs1 = this.shaders.light.litSkin.fs;
+      this.shaders.flat.litSkin = await Shader.createAsync(gl, vs0, fs0, attribsSkin, uniformsSkin, vsConstants);
+      this.shaders.light.litSkin = await Shader.createAsync(gl, vs1, fs1, attribsSkin, uniformsSkin, vsConstants);
     }
   }
 }

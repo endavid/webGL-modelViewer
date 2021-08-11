@@ -4,8 +4,6 @@ import AngleAxis from './angleAxis.js';
 
 const { math } = window;
 
-const MAX_JOINTS = 100;
-
 // generated with http://palettist.endavid.com/
 const JOINT_PALETTE = [
   0, 0, 1, 1,
@@ -354,8 +352,9 @@ function isParentOfAnyOfTheSkinned(jointName, skinnedJointNames, skeleton) {
 class SkinnedModel {
   constructor(skin, skeleton, anims, armatureTransform, config) {
     let self = this;
-    this.joints = new Array(MAX_JOINTS * 16);
-    for (let offset = 0; offset < 16 * MAX_JOINTS; offset += 16) {
+    this.jointCount = skin.joints.length;
+    this.joints = new Array(this.jointCount * 16);
+    for (let offset = 0; offset < 16 * this.jointCount; offset += 16) {
       VMath.setI4(this.joints, offset);
     }
     this.inverseBindMatrices = skin.bindPoses;
@@ -370,7 +369,7 @@ class SkinnedModel {
     });
     this.jointNames = skin.joints;
     this.jointIndices = {};
-    for (let i = 0; i < skin.joints.length; i += 1) {
+    for (let i = 0; i < this.jointCount; i += 1) {
       this.jointIndices[skin.joints[i]] = i;
     }
     setRotationOrders(skeleton);
