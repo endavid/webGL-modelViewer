@@ -42,14 +42,18 @@ function arrayValueOrDefault(array, index, def) {
 }
 
 function guessRotationOrder(jointName) {
+  // exceptions first
+  if (jointName === 'lHip' || jointName === 'rHip') {
+    return 'zyx';
+  }
   const cheatSheet = {
     xyz: ['foot', 'metatarsal', 'toe', 'jaw', 'tongue', 'pectoral'],
     // vertical bones, so twist is along Y, therefore applied first
-    xzy: ['hip', 'pelvis', 'thigh', 'shin', 'abdomen', 'chest', 'neck', 'head', 'armpit'],
+    xzy: ['hip', 'pelvis', 'thigh', 'shin', 'abdomen', 'chest', 'neck', 'head'],
     yxz: ['eye'],
-    yzx: ['arm', 'thumb'],
+    yzx: ['forearm', 'thumb'],
     zxy: [],
-    zyx: ['collar', 'shoulder', 'shldr', 'hand', 'carpal', 'index', 'mid', 'ring', 'pinky', 'ear', 'trap', 'bicep', 'tricep'],
+    zyx: ['collar', 'shoulder', 'shldr', 'hand', 'carpal', 'index', 'mid', 'ring', 'pinky', 'ear', 'trap', 'bicep', 'tricep', 'armpit'],
   };
   const rs = Object.keys(cheatSheet);
   const name = jointName.toLowerCase();
