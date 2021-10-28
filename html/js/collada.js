@@ -131,7 +131,7 @@ function interleaveVertexData(vertexData, polygons, skin, invertAxis) {
       vertices.push(skin.jointCount[p[0]]);
       const weights = [1.0, 0.0, 0.0, 0.0];
       const indices = [0, 0, 0, 0];
-      const list = skin.weights[p[0]];
+      const list = skin.weights[p[0]] || [];
       for (let k = 0; k < Math.min(list.length, 4); k += 1) {
         /* eslint-disable prefer-destructuring */
         indices[k] = list[k][0];
