@@ -379,8 +379,11 @@ class SkinnedModel {
     setRotationOrders(skeleton);
     setReferenceFrame(skeleton);
     this.skeleton = skeleton;
+    this.keyframeCount = 0;
     const animKeys = Object.keys(anims);
-    this.keyframeCount = animKeys.length > 0 ? anims[animKeys[0]].keyframes.length : 0;
+    if (animKeys.length > 0 && anims[animKeys[0]].keyframes) {
+      this.keyframeCount = anims[animKeys[0]].keyframes.length;
+    }
     this.anims = standardizeAnimsToUseTransforms(skeleton, anims, config.reRig);
     if (config.reRig) {
       // when re-rigging, we only keep translations in the rig
@@ -556,7 +559,7 @@ class SkinnedModel {
     const pose = {};
     joints.forEach((joint) => {
       const jointAnim = anims[joint];
-      const transform = jointAnim.transforms[keyframe];
+      const transform = jointAnim.transforms ? jointAnim.transforms[keyframe] : null;
       if (transform) {
         let t = VMath.round(transform.eulerAngles, 4);
         const hasScale = !VMath.isClose(transform.scale, [1, 1, 1]);
