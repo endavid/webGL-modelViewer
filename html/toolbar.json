@@ -31,6 +31,21 @@
       }
     },
     {
+      "id": "cameraKids",
+      "text": "Front Kids",
+      "icon": "icons/camera-kids.png",
+      "preset": {
+        "camera": {
+          "distance": 3.01,
+          "height": 0.8,
+          "offsetX": 0,
+          "pitch": 0,
+          "rotationY": 0,
+          "fov": 26.9
+        }
+      }
+    },
+    {
       "id": "cameraBack",
       "text": "Back",
       "icon": "icons/camera-back.png",
