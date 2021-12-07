@@ -13,7 +13,7 @@ class WavefrontObj {
       meshes: [],
     };
     let lastGroup = -1;
-    var currentMaterial = '';
+    var currentMaterial = 'unknown';
     lines.forEach((s) => {
       if (s.startsWith('#')) {
         // comments
@@ -162,7 +162,7 @@ class WavefrontObj {
     return materials;
   }
 
-  static export(model, callback) {
+  static export(model, submeshes, callback) {
     let out = '# Vertices\n';
     for (let i = 0; i < model.vertices.length; i += 8) {
       out += `v ${model.vertices[i]} ${model.vertices[i + 1]} ${model.vertices[i + 2]}\n`;
@@ -175,7 +175,11 @@ class WavefrontObj {
     for (let i = 0; i < model.vertices.length; i += 8) {
       out += `vt ${model.vertices[i + 6]} ${model.vertices[i + 7]}\n`;
     }
-    model.meshes.forEach((m) => {
+    var meshesToExport = model.meshes;
+    if (Array.isArray(submeshes)) {
+      meshesToExport = model.meshes.filter((m) => { return submeshes.indexOf(m.material) >= 0; })
+    }
+    meshesToExport.forEach((m) => {
       out += `usemap ${m.texture}\n`; // old Wavefront texture map
       for (let i = 0; i < m.indices.length; i += 3) {
         const i1 = m.indices[i] + 1;

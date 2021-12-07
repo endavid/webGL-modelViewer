@@ -228,7 +228,7 @@ class Gfx {
     return ext;
   }
 
-  static exportModel(name, url, modelType, materialUrls) {
+  static exportModel(name, url, modelType, materialUrls, submeshes = []) {
     const filename = Gfx.getFileNameWithoutExtension(name);
     const onExportSuccess = (text) => {
       const t = `text/plain;charset=${document.characterSet}`;
@@ -239,7 +239,7 @@ class Gfx {
     };
     return Gfx.modelFileToJson(name, url, materialUrls).then((json) => {
       if (modelType === '.obj') {
-        WavefrontObj.export(json, onExportSuccess);
+        WavefrontObj.export(json, submeshes, onExportSuccess);
       } else if (modelType === '.json') {
         const out = Gfx.modelStringify(json);
         onExportSuccess(out);

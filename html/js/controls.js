@@ -990,7 +990,8 @@ function populateControls() {
         const modelType = $(`#${e.target.id}_select`).val();
         const url = $('#selectedModel').val();
         const name = $('#selectedModel option:selected').text();
-        Gfx.exportModel(name, url, modelType, MaterialUrls)
+        const submeshes = viewer.scene.selectedMesh ? [viewer.scene.selectedMesh] : false;
+        Gfx.exportModel(name, url, modelType, MaterialUrls, submeshes)
           .catch((ee) => {
             setError(ee);
           });
