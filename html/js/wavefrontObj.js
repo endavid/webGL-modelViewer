@@ -24,11 +24,13 @@ class WavefrontObj {
       if (m) {
         [, model.materialFile] = m;
       }
-      m = /v\s(.+)\s(.+)\s(.+)/.exec(s);
+      m = /v\s(-?\d*\.?\d+e?-?\d*)\s(-?\d*\.?\d+e?-?\d*)\s(-?\d*\.?\d+e?-?\d*)/.exec(s);
       if (m) {
         m.slice(1, 4).forEach((val) => {
           positions.push(parseFloat(val));
         });
+        // right now, vertex color is not supported
+        // so ignore the RGB values if there are 3 extra numbers at the end
         return;
       }
       m = /vn\s(.+)\s(.+)\s(.+)/.exec(s);
