@@ -19,63 +19,59 @@ class WavefrontObj {
         // comments
         return;
       }
-      let m;
-      m = /mtllib\s(.*)/.exec(s);
-      if (m) {
-        [, model.materialFile] = m;
-      }
-      m = /v\s(-?\d*\.?\d+e?-?\d*)\s(-?\d*\.?\d+e?-?\d*)\s(-?\d*\.?\d+e?-?\d*)/.exec(s);
-      if (m) {
-        m.slice(1, 4).forEach((val) => {
-          positions.push(parseFloat(val));
-        });
-        // right now, vertex color is not supported
-        // so ignore the RGB values if there are 3 extra numbers at the end
+      // the filter is to remove potential extra white spaces
+      // https://stackoverflow.com/a/64942185
+      const m = s.split(" ").filter(Boolean);
+      if (m.length == 0) {
+        // empty line?
         return;
       }
-      m = /vn\s(.+)\s(.+)\s(.+)/.exec(s);
-      if (m) {
-        m.slice(1, 4).forEach((val) => {
-          normals.push(parseFloat(val));
-        });
-        return;
-      }
-      m = /vt\s(.+)\s(.+)/.exec(s);
-      if (m) {
-        uvs.push(parseFloat(m[1]));
-        uvs.push(parseFloat(m[2]));
-        return;
-      }
-      m = /g\s(.*)/.exec(s);
-      if (m) {
-        meshes.push({ name: m[1], indices: [], material: currentMaterial });
-        lastGroup += 1;
-      }
-      m = /usemap\s(.*)/.exec(s);
-      if (m) {
-        const material = { albedoMap: m[1] };
-        model.materials[m[1]] = material;
-        [, currentMaterial] = m;
-        return;
-      }
-      m = /usemtl\s(.*)/.exec(s);
-      if (m) {
-        [, currentMaterial] = m;
-        if (lastGroup >= 0) {
-          meshes[lastGroup].material = currentMaterial;
-        }
-        return;
-      }
-      m = /f\s(\d+(?:\/\d*){0,2})\s(\d+(?:\/\d*){0,2})\s(\d+(?:\/\d*){0,2})/.exec(s);
-      if (m) {
-        if (meshes.length === 0) {
-          // file with no 'g', so create a default mesh
-          meshes.push({ name: 'unknown', indices: [], material: currentMaterial });
-        }
-        m.slice(1, 4).forEach((val) => {
-          uniqueIndexTriplets[val] = (uniqueIndexTriplets[val] || 0) + 1;
-          meshes[meshes.length - 1].indices.push(val);
-        });
+      const cmd = m[0];
+      switch (cmd) {
+        case "mtllib":
+          model.materialFile = m[1];
+          break;
+        case "v":
+          m.slice(1, 4).forEach((val) => {
+            positions.push(parseFloat(val));
+          });
+          // right now, vertex color is not supported
+          // so ignore the RGB values if there are 3 extra numbers at the end
+          break;
+        case "vn":
+          m.slice(1, 4).forEach((val) => {
+            normals.push(parseFloat(val));
+          });
+          break;
+        case "vt":
+          uvs.push(parseFloat(m[1]));
+          uvs.push(parseFloat(m[2]));
+          break;
+        case "g":
+          meshes.push({ name: m[1], indices: [], material: currentMaterial });
+          lastGroup += 1;
+          break;
+        case "usemap":
+          const material = { albedoMap: m[1] };
+          model.materials[m[1]] = material;
+          currentMaterial = m[1];
+          break;
+        case "usemtl":
+          currentMaterial = m[1];
+          if (lastGroup >= 0) {
+            meshes[lastGroup].material = currentMaterial;
+          }
+          break;
+        case "f":
+          if (meshes.length === 0) {
+            // file with no 'g', so create a default mesh
+            meshes.push({ name: 'unknown', indices: [], material: currentMaterial });
+          }
+          m.slice(1, 4).forEach((val) => {
+            uniqueIndexTriplets[val] = (uniqueIndexTriplets[val] || 0) + 1;
+            meshes[meshes.length - 1].indices.push(val);
+          });
+          break;
       }
     });
     model.missingUVs = uvs.length === 0;
