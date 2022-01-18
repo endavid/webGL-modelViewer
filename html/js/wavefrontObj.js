@@ -59,6 +59,9 @@ class WavefrontObj {
       m = /usemtl\s(.*)/.exec(s);
       if (m) {
         [, currentMaterial] = m;
+        if (lastGroup >= 0) {
+          meshes[lastGroup].material = currentMaterial;
+        }
         return;
       }
       m = /f\s(\d+(?:\/\d*){0,2})\s(\d+(?:\/\d*){0,2})\s(\d+(?:\/\d*){0,2})/.exec(s);
