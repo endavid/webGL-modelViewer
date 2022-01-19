@@ -2,6 +2,7 @@ import Gfx from './gfx.js';
 import VMath from './math.js';
 import SkinnedModel from './skinnedModel.js';
 import Transform from './transform.js';
+import MemoryLayout from './memoryLayout.js';
 
 function readColor(landmark) {
   let color = [1, 1, 1];
@@ -14,7 +15,7 @@ function readColor(landmark) {
 
 function getModelStats(json) {
   const stats = {
-    vertexCount: json.vertices.length / json.stride,
+    vertexCount: json.dataArrays.position.length / 3,
     meshCount: json.meshes.length,
     missingUVs: json.missingUVs ? true : false,
     missingNormals: json.missingNormals ? true : false
@@ -34,9 +35,14 @@ class Model {
   //       albedoMap: "image.png",
   //     }
   //   },
-  //   vertices: // float array in this order: position (3), normal (3), uv (2)
-  //         // + weights (4) + joint indices (1 -- 4 bytes) for skinned models
-  //   stride: 8 or 13
+  //   dataArrays: {
+  //     position: [],
+  //     normal: [],
+  //     uv: [],
+  //     objectId: [],
+  //     boneWeights: [],
+  //     jointIndices: []
+  //   },
   //   meshes: // array of submeshes
   //      [ {material: // material reference
   //         indices: // faces of the submesh
@@ -57,23 +63,19 @@ class Model {
     this.transform.rotationOrder = 'xyz';
     // vertices
     this.vertexBuffer = gl.createBuffer();
-    this.stride = json.stride;
     this.stats = getModelStats(json);
     if (json.skin) {
       this.skinnedModel = new SkinnedModel(json.skin, json.skeleton, json.anims, armatureTransform, config);
     } else {
       this.skinnedModel = null;
     }
+    this.memoryLayout = json.skin ? MemoryLayout.skinnedVertexLayout() : MemoryLayout.defaultVertexLayout();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-    // atm, only floats allowed ...
-    // but we should be able to mix with other datatypes
-    // https://www.html5rocks.com/en/tutorials/webgl/typed_arrays/
-    gl.bufferData(gl.ARRAY_BUFFER,
-      new Float32Array(json.vertices),
-      gl.STATIC_DRAW);
+    let arrayBuffer = this.memoryLayout.createInterleavedArrayBufferFromDataArrays(json.dataArrays);
+    gl.bufferData(gl.ARRAY_BUFFER, arrayBuffer, gl.STATIC_DRAW);
     // for rendering purposes only, we don't need to remember .vertices,
     // but we will need them if we want to do things on the CPU side.
-    this.vertices = json.vertices;
+    this.dataArrays = json.dataArrays;
     // submeshes
     const meshes = [];
     let triangles = []; // again, remember for CPU computations
@@ -162,8 +164,7 @@ class Model {
         const worker = new Worker('./js/modelDistanceWorker.js');
         const load = {
           positions,
-          vertices: this.vertices,
-          stride: this.stride,
+          dataArrays: this.dataArrays,
           transformMatrix: this.transform.toRowMajorArray(),
           joints: this.skinnedModel.joints,
         };
@@ -228,8 +229,8 @@ class Model {
     return this.transform.toColumnMajorArray();
   }
   getPosition(vertexIndex) {
-    const i = vertexIndex * this.stride;
-    return this.vertices.slice(i, i + 3);
+    const i = 3 * vertexIndex;
+    return this.dataArrays.position.slice(i, i + 3);
   }
   getSkinningData(vertexIndex) {
     const i = vertexIndex * this.stride;
@@ -271,9 +272,8 @@ class Model {
       const worker = new Worker('./js/modelDistanceWorker.js');
       const load = {
         ray,
-        vertices: this.vertices,
+        dataArrays: this.dataArrays,
         triangles: this.triangles,
-        stride: this.stride,
         transformMatrix: this.transform.toRowMajorArray(),
       };
       if (this.skinnedModel) {
@@ -298,9 +298,8 @@ class Model {
       };
       const load = {
         boundingBox,
-        vertices: this.vertices,
+        dataArrays: this.dataArrays,
         triangles: this.triangles,
-        stride: this.stride,
         transformMatrix: this.transform.toRowMajorArray(),
       };
       if (this.skinnedModel) {

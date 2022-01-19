@@ -3,6 +3,7 @@ import VMath from './math.js';
 import WavefrontObj from './wavefrontObj.js';
 import Collada from './collada.js';
 import PamEncoder from './pamencoder.js';
+import MemoryLayout from './memoryLayout.js';
 
 // Unfortunately, I wasn't able to import saveAs as a module
 const { saveAs } = window;
@@ -258,50 +259,51 @@ class Gfx {
     );
   }
 
+  static formatArray(array, prefix, columns) {
+    let out = "";
+    for (let i = 0; i < array.length; i += columns) {
+      let s = `${prefix}${array[i]}`;
+      for (let j = 1; j < columns; j++) {
+        s += `, ${array[i+j]}`
+      }
+      if (i + columns < array.length) {
+        s += ',';
+      }
+      out += `${s}\n`;
+    }
+    return out;
+  }
+
   // JSON.stringify generates array that are difficult to read...
   static modelStringify(model) {
     let s = '{\n';
-    // JSON.stringify everything but "vertices" and "meshes"
+    // JSON.stringify everything but "dataArrays" and "meshes"
     Object.keys(model).forEach((k) => {
-      if (k !== 'vertices' && k !== 'meshes') {
+      if (k !== 'dataArrays' && k !== 'meshes') {
         const json = JSON.stringify(model[k], null, '  ');
         s += `"${k}": ${json}`;
         s += ',\n';
       }
     });
-    // manually format vertices
-    s += '"vertices": [\n';
-    for (let i = 0; i < model.vertices.length; i += 8) {
-      s += `  ${model.vertices[i]}`;
-      s += `, ${model.vertices[i + 1]}`;
-      s += `, ${model.vertices[i + 2]}`;
-      s += `,    ${model.vertices[i + 3]}`;
-      s += `, ${model.vertices[i + 4]}`;
-      s += `, ${model.vertices[i + 5]}`;
-      s += `,    ${model.vertices[i + 6]}`;
-      s += `, ${model.vertices[i + 7]}`;
-      if (i + 8 < model.vertices.length) {
-        s += ',';
-      }
-      s += '\n';
-    }
-    s += '],\n';
+    // manually format dataArrays
+    const layout = MemoryLayout.skinnedVertexLayout();
+    s += '"dataArrays": {\n';
+    const strArrays = Object.keys(model.dataArrays).map((attribute) => {
+      let str = `  "${attribute}": [\n`;
+      str += Gfx.formatArray(model.dataArrays[attribute], "    ", layout.counts[attribute]);
+      str += `  ]`;
+      return str;
+    });
+    s += strArrays.join(',\n');
+    s += '\n},\n';
     // manually format submeshes (indices)
     s += '"meshes": [\n';
     for (let i = 0; i < model.meshes.length; i += 1) {
       const m = model.meshes[i];
       s += `  {"material": "${m.material}",\n`;
       s += '  "indices": [\n';
-      for (let j = 0; j < m.indices.length; j += 3) {
-        // assume triangles
-        s += `    ${m.indices[j]}`;
-        s += `, ${m.indices[j + 1]}`;
-        s += `, ${m.indices[j + 2]}`;
-        if (j + 3 < m.indices.length) {
-          s += ',';
-        }
-        s += '\n';
-      }
+      // assume triangles
+      s += Gfx.formatArray(m.indices, "    ", 3);
       s += '  ]}';
       if (i + 1 < model.meshes.length) {
         s += ',';
