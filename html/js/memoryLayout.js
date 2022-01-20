@@ -44,9 +44,12 @@ class MemoryLayout {
   static skinnedVertexLayout() {
     let layout = MemoryLayout.defaultVertexLayout().memoryLineDescriptor;
     return new MemoryLayout(layout.concat([
+      // the object Id could be a byte, but the stride needs to be a multiple of 4!
+      // and there's no INT type in WebGL for vertexAttribPointer
+      // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/vertexAttribPointer
       {name: "objectId", count: 1, type: "float32"},
       {name: "boneWeights", count: 4, type: "float32"},
-      {name: "boneIndices", count: 4, type: "float32"}
+      {name: "boneIndices", count: 4, type: "uint8"}
     ]));
   }
   createInterleavedArrayBufferFromDataArrays(namedArrays) {

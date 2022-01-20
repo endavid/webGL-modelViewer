@@ -75,7 +75,7 @@ class PluginLitModel {
       gl.vertexAttribPointer(shader.attribs.boneWeights,
         4, gl.FLOAT, false, stride, layout.byteOffsets.boneWeights);
       gl.vertexAttribPointer(shader.attribs.boneIndices,
-        4, gl.FLOAT, false, stride, layout.byteOffsets.boneIndices);
+        4, gl.UNSIGNED_BYTE, false, stride, layout.byteOffsets.boneIndices);
       gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
       const debugJointCount = (scene.settings || {}).debugJointCount;
       gl.uniform4fv(shader.uniforms.jointDebugPalette,

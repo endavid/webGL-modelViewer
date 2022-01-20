@@ -5,6 +5,7 @@ attribute vec3 normal;
 attribute vec2 uv;
 attribute float objectId;
 attribute vec4 boneWeights;
+// @todo update to webgl2 that supports ivec4
 attribute vec4 boneIndices;
 uniform mat4 joints[BONE_COUNT];
 uniform vec4 jointDebugPalette[BONE_COUNT];
