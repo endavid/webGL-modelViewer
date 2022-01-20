@@ -27,30 +27,71 @@ function getModelStats(json) {
   return stats;
 }
 
+function chunkedAndSorted(array, chunkSize) {
+  let out = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    let t = array.slice(i, i+chunkSize);
+    t.sort();
+    out.push(t);
+  }
+  return out;
+}
+
+function arrayCmp(a, b) {
+  let i = 0;
+  while (i < a.length && i < b.length) {
+    if (a[i] < b[i]) {
+      return -1;
+    }
+    if (a[i] > b[i]) {
+      return 1;
+    }
+    i += 1;
+  }
+  if (a.length < b.length) {
+    return -1;
+  }
+  if (a.length > b.length) {
+    return 1;
+  }
+  return 0;
+}
+
 // Vertex coloring. A planar graph is 4-colorable.
 // A tetrahedron needs 4 colors, but most surfaces may be 3-colorable.
 // We can use this function to paint vertices with
 // barycentric coordinates.
 function colorVertices(vertexCount, meshes, colors) {
   let labels = Array.apply(null, Array(vertexCount)).map(() => {return 0});
+  let coloringFailed = 0;
   meshes.forEach((mesh) => {
-    const triangleCount = mesh.indices.length / 3;
-    for (let i = 0; i < triangleCount; i++) {
+    let triangles = chunkedAndSorted(mesh.indices, 3);
+    triangles.sort(arrayCmp);
+    triangles.forEach((triangle) => {
       let available = [1, 2, 3, 4];
-      for (let j = 0; j < 3; j++) {
-        const k = 3 * i + j;
-        const vertexIndex = mesh.indices[k];
+      triangle.forEach((vertexIndex) => {
+        available = available.filter((x) => { return x != labels[vertexIndex]; });
+      });
+      triangle.forEach((vertexIndex) => {
         if (labels[vertexIndex] === 0) {
-          labels[vertexIndex] = available.shift();
-        } else {
-          available = available.filter((x) => { return x != labels[vertexIndex]; });
+          if (available.length === 0) {
+            coloringFailed += 1;
+          } else {
+            labels[vertexIndex] = available.shift();
+          }
         }
-      }
-    }
+      });
+    });
   });
+  if (coloringFailed > 0) {
+    console.log(`Not 4-colorable?! ${coloringFailed} vertices couldn't be colored.`)
+  } else {
+    let n = (labels.filter((x) => { return x == 4; }).length > 0) ? 4 : 3;
+    console.log(`Model is ${n}-colorable.`);
+  }
   let flatColorData = [];
   labels.forEach((label) => {
-    let color = colors[label-1];
+    let color = label > 0 ? colors[label-1] : 0;
     flatColorData.push(0xff & (color >> 24));
     flatColorData.push(0xff & (color >> 16));
     flatColorData.push(0xff & (color >> 8));
