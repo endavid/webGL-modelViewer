@@ -41,7 +41,7 @@ class Model {
   //     uv: [],
   //     objectId: [],
   //     boneWeights: [],
-  //     jointIndices: []
+  //     boneIndices: []
   //   },
   //   meshes: // array of submeshes
   //      [ {material: // material reference
