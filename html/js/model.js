@@ -27,6 +27,38 @@ function getModelStats(json) {
   return stats;
 }
 
+// Vertex coloring. A planar graph is 4-colorable.
+// A tetrahedron needs 4 colors, but most surfaces may be 3-colorable.
+// We can use this function to paint vertices with
+// barycentric coordinates.
+function colorVertices(vertexCount, meshes, colors) {
+  let labels = Array.apply(null, Array(vertexCount)).map(() => {return 0});
+  meshes.forEach((mesh) => {
+    const triangleCount = mesh.indices.length / 3;
+    for (let i = 0; i < triangleCount; i++) {
+      let available = [1, 2, 3, 4];
+      for (let j = 0; j < 3; j++) {
+        const k = 3 * i + j;
+        const vertexIndex = mesh.indices[k];
+        if (labels[vertexIndex] === 0) {
+          labels[vertexIndex] = available.shift();
+        } else {
+          available = available.filter((x) => { return x != labels[vertexIndex]; });
+        }
+      }
+    }
+  });
+  let flatColorData = [];
+  labels.forEach((label) => {
+    let color = colors[label-1];
+    flatColorData.push(0xff & (color >> 24));
+    flatColorData.push(0xff & (color >> 16));
+    flatColorData.push(0xff & (color >> 8));
+    flatColorData.push(0xff & color);
+  });
+  return flatColorData;
+}
+
 class Model {
   // format:
   // { name: // model name
@@ -69,6 +101,13 @@ class Model {
     } else {
       this.skinnedModel = null;
     }
+    // color with barycentric coordinates (1, 0, 0), (0, 1, 0), (0, 0, 1)
+    json.dataArrays.color = colorVertices(this.stats.vertexCount, json.meshes, [
+      0xff000000,
+      0x00ff0000,
+      0x0000ff00,
+      0x000000ff
+    ]);
     this.memoryLayout = json.skin ? MemoryLayout.skinnedVertexLayout() : MemoryLayout.defaultVertexLayout();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
     let arrayBuffer = this.memoryLayout.createInterleavedArrayBufferFromDataArrays(json.dataArrays);

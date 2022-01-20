@@ -6,6 +6,7 @@ varying vec2 vUV;
 varying vec3 vNormal;
 varying vec3 worldPosition;
 varying vec3 cameraPosition;
+varying vec4 vertexColor;
 void main(void) {
   vec4 albedo = texture2D(sampler, vUV);
   float incidentCos = dot(lightDirection, vNormal);
@@ -23,6 +24,11 @@ void main(void) {
   vec3 direct = albedo.rgb * incidentCos * incidentCos + specular;
   vec4 color = vec4(direct * lightIrradiance.rgb + ambientColor, albedo.a * lightIrradiance.a);
   gl_FragColor = color;
+  //gl_FragColor.rgb = vertexColor.rgb;
+  //vec4 lines = 1.0 / clamp(255.0 * vertexColor, 0.01, 255.0);
+  //float line = max(lines.r, max(lines.g, lines.b));
+  //gl_FragColor.rgb = lines.rgb;
+  //gl_FragColor.rgb = vec3(line, line, line);
   //gl_FragColor = albedo;
   //gl_FragColor = vec4(vNormal, 1.0);
   //gl_FragColor = vec4(vUV, 0, 1);

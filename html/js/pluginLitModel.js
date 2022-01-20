@@ -17,7 +17,7 @@ class PluginLitModel {
     this.vsConstants = vsConstants;
   }
   static getAttribs() {
-    const attribs = ['uv', 'position', 'normal'];
+    const attribs = ['uv', 'position', 'normal', 'color'];
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'lightIrradiance', 'sampler'];
     const attribsSkin = attribs.concat(['objectId', 'boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['joints', 'jointDebugPalette']);
@@ -70,6 +70,7 @@ class PluginLitModel {
     gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, layout.byteOffsets.position);
     gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, layout.byteOffsets.normal);
     gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, layout.byteOffsets.uv);
+    gl.vertexAttribPointer(shader.attribs.color, 4, gl.UNSIGNED_BYTE, true, stride, layout.byteOffsets.color);
     if (skinned) {
       gl.vertexAttribPointer(shader.attribs.objectId, 1, gl.FLOAT, false, stride, layout.byteOffsets.objectId);
       gl.vertexAttribPointer(shader.attribs.boneWeights,

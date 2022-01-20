@@ -898,6 +898,7 @@ function populateControls() {
     { name: 'albedo', value: 'shaders/debugAlbedo.fs' },
     { name: 'depth', value: 'shaders/debugDepth.fs' },
     { name: 'UVs', value: 'shaders/debugUVs.fs' },
+    { name: 'solid wire', value: 'shaders/debugSolidWire.fs' },
     { name: 'skin weights', value: 'shaders/debugSkinWeights.fs' },
     { name: 'joint count', value: 'shaders/debugJointCount.fs' },
     { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },

@@ -38,7 +38,8 @@ class MemoryLayout {
     return new MemoryLayout([
       {name: "position", count: 3, type: "float32"},
       {name: "normal", count: 3, type: "float32"},
-      {name: "uv", count: 2, type: "float32"}
+      {name: "uv", count: 2, type: "float32"},
+      {name: "color", count: 4, type: "uint8"}
     ]);
   }
   static skinnedVertexLayout() {
