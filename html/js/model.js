@@ -27,10 +27,12 @@ function getModelStats(json) {
   return stats;
 }
 
-function chunked(array, chunkSize) {
+function chunkedAndSorted(array, chunkSize) {
   let out = [];
   for (let i = 0; i < array.length; i += chunkSize) {
-    out.push(array.slice(i, i+chunkSize));
+    let t = array.slice(i, i+chunkSize);
+    t.sort();
+    out.push(t);
   }
   return out;
 }
@@ -80,17 +82,8 @@ function chaitinColorSort(vertexCount, triangles, k) {
   return sorted;
 }
 
-function arrayCmp(visited, a, b) {
+function arrayCmp(a, b) {
   let i = 0;
-  const checkVisited = (t0, t1) => {return t0 || visited[t1];};
-  const avisited = a.reduce(checkVisited, false);  
-  const bvisited = b.reduce(checkVisited, false);
-  if (avisited && !bvisited) {
-    return -1;
-  }
-  if (!avisited && bvisited) {
-    return 1;
-  }
   while (i < a.length && i < b.length) {
     if (a[i] < b[i]) {
       return -1;
@@ -114,12 +107,14 @@ function arrayCmp(visited, a, b) {
 // We can use this function to paint vertices with
 // barycentric coordinates.
 function colorVertices(vertexCount, meshes, colors) {
-  let labels = Array.apply(null, Array(vertexCount)).map(() => {return 0});
+  let labels = Array.apply(null, Array(vertexCount)).map(() => 0);
   let triangles = [];
   meshes.forEach((mesh) => {
-    triangles = triangles.concat(chunked(mesh.indices, 3));
+    triangles = triangles.concat(chunkedAndSorted(mesh.indices, 3));
   });
-  let sorted = chaitinColorSort(vertexCount, triangles, 3);
+  triangles.sort(arrayCmp);
+  let sorted = triangles.reduce((acc, val) => acc.concat(val), []);
+  //let sorted = chaitinColorSort(vertexCount, triangles, 3);
   let neighbors = vertexNeighbors(triangles);
   let maxIndex = 1;
   sorted.forEach((vertexIndex) => {
