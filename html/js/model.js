@@ -194,8 +194,7 @@ class Model {
     json.dataArrays.color = colorVertices(this.stats.vertexCount, json.meshes, [
       0xff000000,
       0x00ff0000,
-      0x0000ff00,
-      0x000000ff
+      0x0000ff00
     ]);
     this.memoryLayout = json.skin ? MemoryLayout.skinnedVertexLayout() : MemoryLayout.defaultVertexLayout();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
