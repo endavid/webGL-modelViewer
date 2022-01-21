@@ -1109,7 +1109,6 @@ function populateControls() {
   // * Model Settings
   UiUtils.addGroup('gModel', 'Model Settings', [
     UiUtils.createCheckboxes('onLoadOptions', {
-      isZAxisUp: { text: 'Z is up', default: Config.isZAxisUp },
       recomputeNormals: { text: 'recompute normals', default: Config.recomputeNormals },
       reRig: { text: 're-rig', default: Config.reRig },
     }, (key, value) => {

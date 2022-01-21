@@ -105,19 +105,6 @@ class Gfx {
     });
   }
 
-  static flipAxisZ(model) {
-    const modelRef = model;
-    const n = model.vertices.length;
-    const coordsPerVertex = 8; // position (3), normal (3), uv (2)
-    for (let i = 0; i < n; i += coordsPerVertex) {
-      const positionY = model.vertices[i + 1];
-      const positionZ = model.vertices[i + 2];
-      modelRef.vertices[i + 1] = positionZ;
-      modelRef.vertices[i + 2] = -positionY;
-      // it seems that the normals of the models I've tested don't need flipping...
-    }
-  }
-
   static modelFileToJson(name, url, materialUrls) {
     const ext = Gfx.getModelFileExtension(name, url);
     if (ext === 'Obj') {

@@ -1,5 +1,4 @@
 const Config = {
-  isZAxisUp: false,
   recomputeNormals: false,
   reRig: false,
   isLockRotationY: false,

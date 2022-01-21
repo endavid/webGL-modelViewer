@@ -190,9 +190,6 @@ class Model {
   static createAsync(gl, name, url, config, imageUrls, materialUrls, onProgress, onDone, onError) {
     Gfx.modelFileToJson(name, url, materialUrls)
       .then((json) => {
-        if (config.isZAxisUp) {
-          Gfx.flipAxisZ(json);
-        }
         if (config.recomputeNormals || json.missingNormals) {
           if (window.Worker) {
             const worker = new Worker('./js/modelWorker.js');
