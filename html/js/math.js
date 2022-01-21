@@ -422,6 +422,17 @@ const VMath = {
     return v;
   },
 
+  hexColorToIntVector: (color) => {
+    // e.g. #120e14
+    let v = [
+      color.slice(1, 3),
+      color.slice(3, 5),
+      color.slice(5, 7),
+    ];
+    v = v.map(a => parseInt(a, 16));
+    return v;
+  },
+
   travelDistance(ray, distance) {
     const m = ray.direction.map(a => distance * a);
     return VMath.sum(ray.start, m);

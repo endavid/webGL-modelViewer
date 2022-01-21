@@ -5,11 +5,11 @@ import Transform from './transform.js';
 import MemoryLayout from './memoryLayout.js';
 
 function readColor(landmark) {
-  let color = [1, 1, 1];
+  let color = [255, 255, 255];
   if (landmark.color !== undefined) {
-    color = VMath.hexColorToNormalizedVector(landmark.color);
+    color = VMath.hexColorToIntVector(landmark.color);
   }
-  const alpha = 1.0;
+  const alpha = 255;
   return color.concat(alpha);
 }
 
@@ -232,9 +232,9 @@ class Model {
       colors[key] = readColor(p);
       if (p.disabled) {
         // half-bright dots for disabled landmarks
-        colors[key][0] *= 0.5;
-        colors[key][1] *= 0.5;
-        colors[key][2] *= 0.5;
+        colors[key][0] /= 2;
+        colors[key][1] /= 2;
+        colors[key][2] /= 2;
       }
     });
     if (this.skinnedModel) {
@@ -253,10 +253,14 @@ class Model {
             const positionInBindPose = {};
             landmarkList.forEach((key) => {
               const index = e.data.indices[key];
+              skinData[key] = {
+                weights: self.getSkinningWeights(index),
+                indices: self.getSkinningIndices(index)
+              }
               const [x, y, z] = self.skinnedModel.getInverseSkinnedVertex(
                 positions[key],
-                self.getSkinningWeights(index),
-                self.getSkinningIndices(index)
+                skinData[key].weights,
+                skinData[key].indices
               );
               positionInBindPose[key] = [x, y, z];
               const disabled = landmarks[key].disabled || false;
@@ -279,28 +283,37 @@ class Model {
     }
   }
   setDotsVertexData(gl, positions, colors, skinData) {
-    let vertices = [];
+    let dataArrays = {
+      position: [],
+      color: []
+    };
+    if (skinData) {
+      dataArrays.boneWeights = [];
+      dataArrays.boneIndices = [];
+      this.dotMemoryLayout = MemoryLayout.skinnedColoredVertexLayout();
+    } else {
+      this.dotMemoryLayout = MemoryLayout.coloredVertexLayout();
+    }
     const landmarkList = Object.keys(positions);
     landmarkList.forEach((key) => {
-      vertices = vertices.concat(positions[key]).concat(colors[key]);
+      dataArrays.position = dataArrays.position.concat(positions[key]);
+      dataArrays.color = dataArrays.color.concat(colors[key]);
       if (skinData) {
-        vertices = vertices.concat(skinData[key]);
+        dataArrays.boneWeights = dataArrays.boneWeights.concat(skinData[key].weights);
+        dataArrays.boneIndices = dataArrays.boneIndices.concat(skinData[key].indices);
       }
     });
-    if (vertices.length === 0) {
+    if (dataArrays.position.length === 0) {
       return;
     }
     this.numDots = landmarkList.length;
     if (this.dotBuffer) {
       gl.deleteBuffer(this.dotBuffer);
     }
+    let buffer = this.dotMemoryLayout.createInterleavedArrayBufferFromDataArrays(dataArrays);
     this.dotBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.dotBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    this.dotBufferStride = 3 + 4; // position + rgba
-    if (skinData) {
-      this.dotBufferStride += 4 + 4; // 4 weights + 4 indices
-    }
+    gl.bufferData(gl.ARRAY_BUFFER, buffer, gl.STATIC_DRAW);
   }
   getTransformMatrix() {
     return this.transform.toColumnMajorArray();

@@ -53,6 +53,19 @@ class MemoryLayout {
       {name: "boneIndices", count: 4, type: "uint8"}
     ]));
   }
+  static coloredVertexLayout() {
+    return new MemoryLayout([
+      {name: "position", count: 3, type: "float32"},
+      {name: "color", count: 4, type: "uint8"}
+    ]);
+  }
+  static skinnedColoredVertexLayout() {
+    let layout = MemoryLayout.coloredVertexLayout().memoryLineDescriptor;
+    return new MemoryLayout(layout.concat([
+      {name: "boneWeights", count: 4, type: "float32"},
+      {name: "boneIndices", count: 4, type: "uint8"}
+    ]));
+  }
   createInterleavedArrayBufferFromDataArrays(namedArrays) {
     // assume "position" is always present
     const vertexCount = namedArrays.position.length / 3;
