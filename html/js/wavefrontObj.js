@@ -8,8 +8,11 @@ class WavefrontObj {
     const uniqueIndexTriplets = {};
     const model = {
       materials: {},
-      stride: 8,
-      vertices: [],
+      dataArrays: {
+        position: [],
+        normal: [],
+        uv: []
+      },
       meshes: [],
     };
     let lastGroup = -1;
@@ -86,14 +89,18 @@ class WavefrontObj {
       uniqueIndexTriplets[k] = newVertexIndex;
       newVertexIndex += 1;
       const triplet = k.split('/').map(d => parseInt(d, 10) - 1);
-      model.vertices.push(positions[3 * triplet[0]]);
-      model.vertices.push(positions[3 * triplet[0] + 1]);
-      model.vertices.push(positions[3 * triplet[0] + 2]);
-      model.vertices.push(triplet[2] === undefined ? 0 : normals[3 * triplet[2]]);
-      model.vertices.push(triplet[2] === undefined ? 0 : normals[3 * triplet[2] + 1]);
-      model.vertices.push(triplet[2] === undefined ? 0 : normals[3 * triplet[2] + 2]);
-      model.vertices.push(triplet[1] === undefined ? 0 : uvs[2 * triplet[1]]);
-      model.vertices.push(triplet[1] === undefined ? 0 : uvs[2 * triplet[1] + 1]);
+      model.dataArrays.position.push(positions[3 * triplet[0]]);
+      model.dataArrays.position.push(positions[3 * triplet[0] + 1]);
+      model.dataArrays.position.push(positions[3 * triplet[0] + 2]);
+      if (!model.missingNormals) {
+        model.dataArrays.normal.push(normals[3 * triplet[2]]);
+        model.dataArrays.normal.push(normals[3 * triplet[2] + 1]);
+        model.dataArrays.normal.push(normals[3 * triplet[2] + 2]);
+      }
+      if (!model.missingUVs) {
+        model.dataArrays.uv.push(uvs[2 * triplet[1]]);
+        model.dataArrays.uv.push(uvs[2 * triplet[1] + 1]);  
+      }
     });
     console.log(`# shared vertices: ${countSharedVertices}/${positions.length}`);
     meshes.forEach((m) => {
@@ -165,16 +172,17 @@ class WavefrontObj {
 
   static export(model, submeshes, callback) {
     let out = '# Vertices\n';
-    for (let i = 0; i < model.vertices.length; i += 8) {
-      out += `v ${model.vertices[i]} ${model.vertices[i + 1]} ${model.vertices[i + 2]}\n`;
+    let {position, normal, uv} = model.dataArrays;
+    for (let i = 0; i < position.length; i += 3) {
+      out += `v ${position[i]} ${position[i + 1]} ${position[i + 2]}\n`;
     }
     out += '# Normals\n';
-    for (let i = 0; i < model.vertices.length; i += 8) {
-      out += `vn ${model.vertices[i + 3]} ${model.vertices[i + 4]} ${model.vertices[i + 5]}\n`;
+    for (let i = 0; i < normal.length; i += 3) {
+      out += `vn ${normal[i]} ${normal[i + 1]} ${normal[i + 2]}\n`;
     }
     out += '# Texture coordinates\n';
-    for (let i = 0; i < model.vertices.length; i += 8) {
-      out += `vt ${model.vertices[i + 6]} ${model.vertices[i + 7]}\n`;
+    for (let i = 0; i < uv.length; i += 2) {
+      out += `vt ${uv[i]} ${uv[i + 1]}\n`;
     }
     var meshesToExport = model.meshes;
     if (Array.isArray(submeshes)) {

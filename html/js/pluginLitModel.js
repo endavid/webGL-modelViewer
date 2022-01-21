@@ -17,7 +17,7 @@ class PluginLitModel {
     this.vsConstants = vsConstants;
   }
   static getAttribs() {
-    const attribs = ['uv', 'position', 'normal'];
+    const attribs = ['uv', 'position', 'normal', 'color'];
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'lightIrradiance', 'sampler'];
     const attribsSkin = attribs.concat(['objectId', 'boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['joints', 'jointDebugPalette']);
@@ -55,7 +55,8 @@ class PluginLitModel {
     const [light] = scene.lights;
     const skinned = model.skinnedModel;
     const shader = skinned ? skinShader : normalShader;
-    const stride = 4 * model.stride; // in bytes
+    const layout = model.memoryLayout;
+    const stride = layout.bytesPerLine;
     shader.use(gl);
     gl.uniform1i(shader.uniforms.sampler, 0);
     gl.uniformMatrix4fv(shader.uniforms.Pmatrix, false, camera.projectionMatrix);
@@ -66,15 +67,16 @@ class PluginLitModel {
     gl.uniform4f(shader.uniforms.lightIrradiance,
       light.irradiance[0], light.irradiance[1], light.irradiance[2], light.irradiance[3]);
     gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexBuffer);
-    gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
-    gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, 4 * 3);
-    gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, 4 * (3 + 3));
+    gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, layout.byteOffsets.position);
+    gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, layout.byteOffsets.normal);
+    gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, layout.byteOffsets.uv);
+    gl.vertexAttribPointer(shader.attribs.color, 4, gl.UNSIGNED_BYTE, true, stride, layout.byteOffsets.color);
     if (skinned) {
-      gl.vertexAttribPointer(shader.attribs.objectId, 1, gl.FLOAT, false, stride, 4 * (3 + 3 + 2));
+      gl.vertexAttribPointer(shader.attribs.objectId, 1, gl.FLOAT, false, stride, layout.byteOffsets.objectId);
       gl.vertexAttribPointer(shader.attribs.boneWeights,
-        4, gl.FLOAT, false, stride, 4 * (3 + 3 + 3));
+        4, gl.FLOAT, false, stride, layout.byteOffsets.boneWeights);
       gl.vertexAttribPointer(shader.attribs.boneIndices,
-        4, gl.FLOAT, false, stride, 4 * (3 + 3 + 3 + 4));
+        4, gl.UNSIGNED_BYTE, false, stride, layout.byteOffsets.boneIndices);
       gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
       const debugJointCount = (scene.settings || {}).debugJointCount;
       gl.uniform4fv(shader.uniforms.jointDebugPalette,

@@ -47,7 +47,8 @@ class PluginDots {
       }
       const skinned = model.skinnedModel;
       const shader = skinned ? self.shaders.skin : self.shaders.normal;
-      const stride = 4 * model.dotBufferStride;
+      const layout = model.dotMemoryLayout;
+      const stride = layout.bytesPerLine;
       shader.use(gl);
       gl.uniformMatrix4fv(shader.uniforms.Pmatrix, false, camera.projectionMatrix);
       gl.uniformMatrix4fv(shader.uniforms.Vmatrix, false, camera.viewMatrix);
@@ -55,13 +56,13 @@ class PluginDots {
       gl.uniform1f(shader.uniforms.pointSize, self.pointSize);
       gl.uniform4f(shader.uniforms.tint, self.tint[0], self.tint[1], self.tint[2], self.tint[3]);
       gl.bindBuffer(gl.ARRAY_BUFFER, model.dotBuffer);
-      gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, 0);
-      gl.vertexAttribPointer(shader.attribs.color, 4, gl.FLOAT, false, stride, 4 * 3);
+      gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, layout.byteOffsets.position);
+      gl.vertexAttribPointer(shader.attribs.color, 4, gl.UNSIGNED_BYTE, true, stride, layout.byteOffsets.color);
       if (skinned) {
         gl.vertexAttribPointer(shader.attribs.boneWeights,
-          4, gl.FLOAT, false, stride, 4 * (3 + 4));
+          4, gl.FLOAT, false, stride, layout.byteOffsets.boneWeights);
         gl.vertexAttribPointer(shader.attribs.boneIndices,
-          4, gl.FLOAT, false, stride, 4 * (3 + 4 + 4));
+          4, gl.UNSIGNED_BYTE, false, stride, layout.byteOffsets.boneIndices);
         gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
       }
       gl.drawArrays(gl.POINTS, 0, model.numDots);

@@ -93,42 +93,57 @@ function sourceIdToSemantics(id) {
   return null;
 }
 
-// interleave vertex data as 
+function emptyDataArrays() {
+  return {
+    position: [],
+    normal: [],
+    uv: [],
+    objectId: [],
+    boneWeights: [],
+    boneIndices: []
+  };
+}
+
+// Do not actually interleave vertex data, but make sure
+// there's one as many normals and UVs as positions, so it can be 
+// interleaved if necessary (so, duplicate data if necessary)
 // position (3), normal (3), UVs (2) [, objectId (1), skin weights (4), skin indices (4)]
-function interleaveVertexData(vertexData, polygons, skin, invertAxis) {
-  const vertices = [];
+function prepareDataArraysForInterleaving(vertexData, polygons, skin, invertAxis) {
+  const dataArrays = emptyDataArrays();
   const d = vertexData;
   let missingNormals = false;
   let missingUVs = false;
   polygons.forEach((p) => {
-    vertices.push(d.positions[3 * p[0]]);
+    dataArrays.position.push(d.positions[3 * p[0]]);
     if (invertAxis) {
-      vertices.push(d.positions[3 * p[0] + 2]);
-      vertices.push(-d.positions[3 * p[0] + 1]);
+      dataArrays.position.push(d.positions[3 * p[0] + 2]);
+      dataArrays.position.push(-d.positions[3 * p[0] + 1]);
     } else {
-      vertices.push(d.positions[3 * p[0] + 1]);
-      vertices.push(d.positions[3 * p[0] + 2]);
+      dataArrays.position.push(d.positions[3 * p[0] + 1]);
+      dataArrays.position.push(d.positions[3 * p[0] + 2]);
     }
     const noNormals = p[1] === undefined;
     if (noNormals) {
       missingNormals = true;
-    }
-    vertices.push(noNormals ? 0 : d.normals[3 * p[1]]);
-    if (invertAxis) {
-      vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 2]);
-      vertices.push(noNormals ? 0 : -d.normals[3 * p[1] + 1]);
     } else {
-      vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 1]);
-      vertices.push(noNormals ? 0 : d.normals[3 * p[1] + 2]);
+      dataArrays.normal.push(d.normals[3 * p[1]]);
+      if (invertAxis) {
+        dataArrays.normal.push(d.normals[3 * p[1] + 2]);
+        dataArrays.normal.push(-d.normals[3 * p[1] + 1]);
+      } else {
+        dataArrays.normal.push(d.normals[3 * p[1] + 1]);
+        dataArrays.normal.push(d.normals[3 * p[1] + 2]);
+      }  
     }
     const noUVs = p[2] === undefined;
     if (noUVs) {
       missingUVs = true;
+    } else {
+      dataArrays.uv.push(d.uvs[2 * p[2]] || 0);
+      dataArrays.uv.push(d.uvs[2 * p[2] + 1] || 0);  
     }
-    vertices.push(noUVs ? 0 : d.uvs[2 * p[2]] || 0);
-    vertices.push(noUVs ? 0 : d.uvs[2 * p[2] + 1] || 0);
     if (skin) {
-      vertices.push(skin.jointCount[p[0]]);
+      dataArrays.objectId.push(skin.jointCount[p[0]]);
       const weights = [1.0, 0.0, 0.0, 0.0];
       const indices = [0, 0, 0, 0];
       const list = skin.weights[p[0]] || [];
@@ -138,19 +153,18 @@ function interleaveVertexData(vertexData, polygons, skin, invertAxis) {
         weights[k] = list[k][1];
         /* eslint-enable prefer-destructuring */
       }
-      weights.forEach((w) => { vertices.push(w); });
-      indices.forEach((i) => { vertices.push(i); });
+      weights.forEach((w) => { dataArrays.boneWeights.push(w); });
+      indices.forEach((i) => { dataArrays.boneIndices.push(i); });
     }
   });
   return {
-    vertices,
+    dataArrays,
     missingNormals,
     missingUVs
   };
 }
 
 function readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffset) {
-  let vertices = [];
   const meshes = [];
   const ngons = {};
   let missingNormals = false;
@@ -160,6 +174,7 @@ function readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffse
     normals: [],
     uvs: [],
   };
+  const dataArrays = emptyDataArrays();
   let src = geometry.mesh.source;
   if (!Array.isArray(src)) {
     src = [src];
@@ -205,12 +220,14 @@ function readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffse
       }
     }
     meshes.push(submesh);
-    const interleaved = interleaveVertexData(vertexData, polygons, skin, invertAxis);
-    missingNormals ||= interleaved.missingNormals;
-    missingUVs ||= interleaved.missingUVs;
+    const data = prepareDataArraysForInterleaving(vertexData, polygons, skin, invertAxis);
+    missingNormals ||= data.missingNormals;
+    missingUVs ||= data.missingUVs;
     // !! Maximum call stack size exceeded, if we concatenate like below:
     // !! vertices.push(...interleaved.vertices);
-    vertices = vertices.concat(interleaved.vertices);
+    Object.keys(dataArrays).forEach((attrib) => {
+      dataArrays[attrib] = dataArrays[attrib].concat(data.dataArrays[attrib]);
+    });
   });
   const name = geometry._name || geometry._id;
   Object.keys(ngons).forEach((n) => {
@@ -218,14 +235,14 @@ function readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffse
   });
   return {
     meshes,
-    vertices,
+    dataArrays,
     missingNormals,
     missingUVs
   };
 }
 
 function readMeshes(json, skin, defaultMaterial) {
-  let vertices = [];
+  let dataArrays = emptyDataArrays();
   let meshes = [];
   const invertAxis = isZUp(json);
   let missingNormals = false;
@@ -235,19 +252,19 @@ function readMeshes(json, skin, defaultMaterial) {
   {
     geometries = [geometries];
   }
-  const stride = skin ? 17 : 8;
   geometries.forEach((geometry) => {
-    const vertexOffset = vertices.length / stride;
+    const vertexOffset = dataArrays.position.length / 3;
     const g = readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffset);
-    missingNormals |= g.missingNormals;
-    missingUVs |= g.missingUVs;
-    vertices = vertices.concat(g.vertices);
+    missingNormals ||= g.missingNormals;
+    missingUVs ||= g.missingUVs;
+    Object.keys(dataArrays).forEach((attrib) => {
+      dataArrays[attrib] = dataArrays[attrib].concat(g.dataArrays[attrib]);
+    });
     meshes = meshes.concat(g.meshes);
   });
   return {
     meshes,
-    stride,
-    vertices,
+    dataArrays,
     materials: {},
     missingNormals,
     missingUVs,

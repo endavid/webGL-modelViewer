@@ -1,6 +1,7 @@
 attribute vec3 position;
 attribute vec3 normal;
 attribute vec2 uv;
+attribute vec4 color;
 uniform mat4 Pmatrix;
 uniform mat4 Vmatrix;
 uniform mat4 Mmatrix;
@@ -11,6 +12,7 @@ varying vec3 worldPosition;
 varying highp float viewDepth;
 varying vec4 debugBoneWeightColor;
 varying vec4 debugBoneCount;
+varying vec4 vertexColor;
 void main(void) { // pre-built function
   vec4 worldPos = Mmatrix * vec4(position, 1.);
   worldPosition = worldPos.xyz;
@@ -24,4 +26,5 @@ void main(void) { // pre-built function
   cameraPosition = -camTranslation.xyz;
   debugBoneWeightColor = vec4(0.5, 0.5, 0.5, 1.0);
   debugBoneCount = vec4(0.5, 0.5, 0.5, 1.0);
+  vertexColor = color;
 }

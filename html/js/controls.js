@@ -898,6 +898,7 @@ function populateControls() {
     { name: 'albedo', value: 'shaders/debugAlbedo.fs' },
     { name: 'depth', value: 'shaders/debugDepth.fs' },
     { name: 'UVs', value: 'shaders/debugUVs.fs' },
+    { name: 'solid wire', value: 'shaders/debugSolidWire.fs' },
     { name: 'skin weights', value: 'shaders/debugSkinWeights.fs' },
     { name: 'joint count', value: 'shaders/debugJointCount.fs' },
     { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },
@@ -1108,7 +1109,6 @@ function populateControls() {
   // * Model Settings
   UiUtils.addGroup('gModel', 'Model Settings', [
     UiUtils.createCheckboxes('onLoadOptions', {
-      isZAxisUp: { text: 'Z is up', default: Config.isZAxisUp },
       recomputeNormals: { text: 'recompute normals', default: Config.recomputeNormals },
       reRig: { text: 're-rig', default: Config.reRig },
     }, (key, value) => {

@@ -76,7 +76,7 @@
       return progress;
     }
     numVertices() {
-      return this.vertices.length / this.stride;
+      return this.dataArrays.position.length / 3;
     }
     numTriangles() {
       let numTriangles = 0;
@@ -86,12 +86,12 @@
       return numTriangles;
     }
     getPosition(vertexIndex) {
-      const i = vertexIndex * this.stride;
-      return this.vertices.slice(i, i + 3);
+      const i = 3 * vertexIndex;
+      return this.dataArrays.position.slice(i, i + 3);
     }
     getNormal(vertexIndex) {
-      const i = vertexIndex * this.stride;
-      return this.vertices.slice(i + 3, i + 6);
+      const i = 3 * vertexIndex;
+      return this.dataArrays.normal.slice(i, i + 3);
     }
     recomputeNormal(i) {
       const div = (divisor, v) => v / divisor;
@@ -104,7 +104,6 @@
       if (progress.done) {
         return progress;
       }
-      const j = i * this.stride;
       const position = this.getPosition(i);
       const hash = VMath.hashVertex(position);
       const triangleList = this.facesPerPosition[hash];
@@ -116,9 +115,9 @@
       const vectorSum = faceNormals.reduce(VMath.sum, [0, 0, 0]);
       const normalAverage = vectorSum.map(div.bind(null, numContributingFaces));
       /* eslint-disable prefer-destructuring */
-      this.vertices[j + 3] = normalAverage[0];
-      this.vertices[j + 4] = normalAverage[1];
-      this.vertices[j + 5] = normalAverage[2];
+      this.dataArrays.normal[3 * i] = normalAverage[0];
+      this.dataArrays.normal[3 * i + 1] = normalAverage[1];
+      this.dataArrays.normal[3 * i + 2] = normalAverage[2];
       /* eslint-enable prefer-destructuring */
       return progress;
     }

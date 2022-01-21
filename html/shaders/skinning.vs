@@ -3,8 +3,10 @@
 attribute vec3 position;
 attribute vec3 normal;
 attribute vec2 uv;
+attribute vec4 color;
 attribute float objectId;
 attribute vec4 boneWeights;
+// @todo update to webgl2 that supports ivec4
 attribute vec4 boneIndices;
 uniform mat4 joints[BONE_COUNT];
 uniform vec4 jointDebugPalette[BONE_COUNT];
@@ -18,6 +20,7 @@ varying vec3 worldPosition;
 varying highp float viewDepth;
 varying vec4 debugBoneWeightColor;
 varying vec4 debugBoneCount;
+varying vec4 vertexColor;
 void main(void) { // pre-built function
   vec4 p = vec4(position, 1.);
   int i0 = int(boneIndices.x);
@@ -55,4 +58,5 @@ void main(void) { // pre-built function
   // for debugging bone count
   int count = int(objectId);
   debugBoneCount = jointDebugPalette[count];
+  vertexColor = color;
 }

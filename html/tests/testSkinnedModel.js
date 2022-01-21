@@ -1,6 +1,7 @@
 /* eslint-env qunit */
 import Collada from '../js/collada.js';
 import SkinnedModel from '../js/skinnedModel.js';
+import Transform from '../js/transform.js';
 import $ from '../js/jquery.module.js';
 
 QUnit.module('SkinnedModel');
@@ -13,7 +14,7 @@ QUnit.test('add pose keyframe', (assert) => {
     dataType: 'text',
     success(data) {
       const model = Collada.parse(data);
-      const skinnedModel = new SkinnedModel(model.skin, model.skeleton, model.anims);
+      const skinnedModel = new SkinnedModel(model.skin, model.skeleton, model.anims, new Transform({}));
       assert.equal(skinnedModel.keyframeCount, 5);
       const posefile = {
         pose: {
