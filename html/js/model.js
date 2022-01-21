@@ -137,7 +137,7 @@ class Model {
     this.vertexBuffer = gl.createBuffer();
     this.stats = getModelStats(json);
     if (json.skin) {
-      this.skinnedModel = new SkinnedModel(json.skin, json.skeleton, json.anims, armatureTransform, config);
+      this.skinnedModel = new SkinnedModel(json.skin, json.skeleton, json.anims, armatureTransform, config.reRig);
     } else {
       this.skinnedModel = null;
     }

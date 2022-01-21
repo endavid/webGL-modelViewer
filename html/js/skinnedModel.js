@@ -354,7 +354,7 @@ function isParentOfAnyOfTheSkinned(jointName, skinnedJointNames, skeleton) {
 }
 
 class SkinnedModel {
-  constructor(skin, skeleton, anims, armatureTransform, config) {
+  constructor(skin, skeleton, anims, armatureTransform, reRig) {
     let self = this;
     this.jointCount = skin.joints.length;
     this.joints = new Array(this.jointCount * 16);
@@ -384,8 +384,8 @@ class SkinnedModel {
     if (animKeys.length > 0 && anims[animKeys[0]].keyframes) {
       this.keyframeCount = anims[animKeys[0]].keyframes.length;
     }
-    this.anims = standardizeAnimsToUseTransforms(skeleton, anims, config.reRig);
-    if (config.reRig) {
+    this.anims = standardizeAnimsToUseTransforms(skeleton, anims, reRig);
+    if (reRig) {
       // when re-rigging, we only keep translations in the rig
       removeRotationsFromRig(skeleton);
       recomputeBindMatrices(this.jointNames, skeleton, armatureTransform, this.inverseBindMatrices);
