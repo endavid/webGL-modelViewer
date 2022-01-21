@@ -172,7 +172,7 @@
       return progress
     }
     getNumVertices() {
-      return this.vertices.length / this.stride;
+      return this.dataArrays.position.length / 3;
     }
     getNumTriangles() {
       const numIndices = (this.triangles || []).length;
@@ -206,16 +206,16 @@
       return this.transformVertex(position);
     }
     getPosition(vertexIndex) {
-      const i = vertexIndex * this.stride;
-      return this.vertices.slice(i, i + 3);
+      const i = 3 * vertexIndex;
+      return this.dataArrays.position.slice(i, i + 3);
     }
     getSkinningWeights(vertexIndex) {
-      const i = vertexIndex * this.stride;
-      return this.vertices.slice(i + 9, i + 13);
+      const i = 4 * vertexIndex;
+      return this.dataArrays.boneWeights.slice(i, i + 4);
     }
     getSkinningIndices(vertexIndex) {
-      const i = vertexIndex * this.stride;
-      return this.vertices.slice(i + 13, i + 17);
+      const i = 4 * vertexIndex;
+      return this.dataArrays.boneIndices.slice(i, i + 4);
     }
     getJointMatrix(jointIndex) {
       const i = jointIndex * 16; // 4x4 matrix

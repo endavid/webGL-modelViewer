@@ -202,9 +202,9 @@ class Model {
             };
             worker.onmessage = (e) => {
               onProgress(e.data.progress);
-              if (e.data.done && e.data.vertices) {
+              if (e.data.done && e.data.dataArrays) {
                 const jsonRef = json;
-                jsonRef.vertices = e.data.vertices;
+                jsonRef.dataArrays = e.data.dataArrays;
                 onDone(new Model(gl, jsonRef, imageUrls, config));
               }
             };
@@ -253,11 +253,10 @@ class Model {
             const positionInBindPose = {};
             landmarkList.forEach((key) => {
               const index = e.data.indices[key];
-              skinData[key] = self.getSkinningData(index);
               const [x, y, z] = self.skinnedModel.getInverseSkinnedVertex(
                 positions[key],
-                skinData[key].slice(0, 4), // weights
-                skinData[key].slice(4, 8), // indices
+                self.getSkinningWeights(index),
+                self.getSkinningIndices(index)
               );
               positionInBindPose[key] = [x, y, z];
               const disabled = landmarks[key].disabled || false;
@@ -310,20 +309,23 @@ class Model {
     const i = 3 * vertexIndex;
     return this.dataArrays.position.slice(i, i + 3);
   }
-  getSkinningData(vertexIndex) {
-    const i = vertexIndex * this.stride;
-    return this.vertices.slice(i + 9, i + 17);
+  getSkinningWeights(vertexIndex) {
+    const i = 4 * vertexIndex;
+    return this.dataArrays.boneWeights.slice(i, i + 4);
+  }
+  getSkinningIndices(vertexIndex) {
+    const i = 4 * vertexIndex;
+    return this.dataArrays.boneIndices.slice(i, i + 4);
   }
   getSkinnedPosition(vertexIndex, position) {
     const pos = position || this.getPosition(vertexIndex);
     if (!this.skinnedModel) {
       return pos;
     }
-    const skinning = this.getSkinningData(vertexIndex);
     const skinnedPos = this.skinnedModel.getSkinnedVertex(
       pos,
-      skinning.slice(0, 4), // weights
-      skinning.slice(4, 8), // indices
+      this.getSkinningWeights(vertexIndex),
+      this.getSkinningIndices(vertexIndex)
     );
     return skinnedPos.slice(0, 3);
   }

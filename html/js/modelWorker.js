@@ -23,7 +23,7 @@ onmessage = (e) => {
   }
   msg.progress = 1;
   msg.done = true;
-  msg.vertices = modelData.vertices;
+  msg.dataArrays = modelData.dataArrays;
   postMessage(msg);
   // eslint-disable-next-line no-restricted-globals
   close(); // this worker is done, terminate
