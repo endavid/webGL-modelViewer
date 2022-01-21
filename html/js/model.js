@@ -37,51 +37,6 @@ function chunkedAndSorted(array, chunkSize) {
   return out;
 }
 
-function vertexNeighbors(triangles) {
-  let neighbors = {};
-  triangles.forEach((triangle) => {
-    triangle.forEach((vertexIndex) => {
-      if (!Array.isArray(neighbors[vertexIndex])) {
-        neighbors[vertexIndex] = [];
-      }
-      triangle.forEach((v) => {
-        if (v != vertexIndex && !neighbors[vertexIndex].includes(v)) {
-          neighbors[vertexIndex].push(v);
-        }
-      });
-    });
-  });
-  return neighbors;
-}
-
-function chaitinColorSort(vertexCount, triangles, k) {
-  let neighbors = vertexNeighbors(triangles);
-  let vertices = Array.apply(null, Array(vertexCount)).map((_, i) => {return i});
-  let sorted = [];
-  while (vertices.length > 0) {
-    let found = false;
-    for (let i = 0; i < vertices.length; i++) {
-      const vertexIndex = vertices[i];
-      let ns = neighbors[vertexIndex];
-      if (ns.length < k) {
-        sorted.push(vertexIndex);
-        vertices.splice(i, 1);
-        ns.forEach((v) => {
-          // remove vertex from the known neighbors
-          neighbors[v] = neighbors[v].filter((x) => { return x != vertexIndex; });
-        });
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      k += 1;
-      console.log(`chaitinColorSort: no candidates left! Increasing K=${k}`);
-    }
-  }
-  return sorted;
-}
-
 function arrayCmp(a, b) {
   let i = 0;
   while (i < a.length && i < b.length) {
@@ -102,39 +57,40 @@ function arrayCmp(a, b) {
   return 0;
 }
 
-// Vertex coloring. A planar graph is 4-colorable.
+// Vertex coloring. A planar graph is 4-colorable, but a mesh is not planar in general.
 // A tetrahedron needs 4 colors, but most surfaces may be 3-colorable.
 // We can use this function to paint vertices with
 // barycentric coordinates.
 function colorVertices(vertexCount, meshes, colors) {
-  let labels = Array.apply(null, Array(vertexCount)).map(() => 0);
-  let triangles = [];
+  let labels = Array.apply(null, Array(vertexCount)).map(() => {return 0});
+  let coloringFailed = 0;
   meshes.forEach((mesh) => {
-    triangles = triangles.concat(chunkedAndSorted(mesh.indices, 3));
-  });
-  triangles.sort(arrayCmp);
-  let sorted = triangles.reduce((acc, val) => acc.concat(val), []);
-  //let sorted = chaitinColorSort(vertexCount, triangles, 3);
-  let neighbors = vertexNeighbors(triangles);
-  let maxIndex = 1;
-  sorted.forEach((vertexIndex) => {
-    let usedColors = [];
-    neighbors[vertexIndex].forEach((v) => {
-      if (labels[v] != 0) {
-        usedColors.push(labels[v]);
-      }
+    let triangles = chunkedAndSorted(mesh.indices, 3);
+    triangles.sort(arrayCmp);
+    triangles.forEach((triangle) => {
+      let available = [1, 2, 3];
+      triangle.forEach((vertexIndex) => {
+        available = available.filter((x) => { return x != labels[vertexIndex]; });
+      });
+      triangle.forEach((vertexIndex) => {
+        if (labels[vertexIndex] === 0) {
+          if (available.length === 0) {
+            coloringFailed += 1;
+          } else {
+            labels[vertexIndex] = available.shift();
+          }
+        }
+      });
     });
-    let colorIndex = 1;
-    while (usedColors.includes(colorIndex)) {
-      colorIndex+=1;
-      maxIndex = Math.max(colorIndex, maxIndex);
-    }
-    labels[vertexIndex] = colorIndex;
   });
-  console.log(`${maxIndex}-colorable.`)
+  if (coloringFailed > 0) {
+    console.log(`Not 3-colorable. ${coloringFailed} vertices couldn't be colored.`)
+  } else {
+    console.log('Model is 3-colorable.');
+  }
   let flatColorData = [];
   labels.forEach((label) => {
-    let color = label > 0 ? colors[(label-1)%colors.length] : 0;
+    let color = label > 0 ? colors[label-1] : 0;
     flatColorData.push(0xff & (color >> 24));
     flatColorData.push(0xff & (color >> 16));
     flatColorData.push(0xff & (color >> 8));
