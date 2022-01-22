@@ -35,7 +35,7 @@ const LabelUtils = {
       let { displacement, parent } = armature[k];
       while (parent) {
         displacement = VMath.sum(displacement, armature[parent].displacement);
-        parent = armature[parent].parent;
+        ({ parent } = armature[parent]);
       }
       labels[k] = ParseUtils.vectorToObject(displacement);
     });

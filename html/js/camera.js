@@ -66,9 +66,7 @@ class Camera {
     const right = VMath.cross(up, z);
     const R = VMath.rotationMatrixFromReferenceFrame(up, right);
     const aa = AngleAxis.fromMatrix(R, this.transform.rotationOrder);
-    this.pitch = aa.eulerAngles[0];
-    this.rotationY = aa.eulerAngles[1];
-    this.rotationZ = aa.eulerAngles[2];
+    [this.pitch, this.rotationY, this.rotationZ] = aa.eulerAngles;
     this.transform.eulerAngles = aa.eulerAngles;
     this.viewMatrix = viewMatrixFromTransform(this.transform);
   }

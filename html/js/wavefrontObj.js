@@ -32,7 +32,7 @@ class WavefrontObj {
       const cmd = m[0];
       switch (cmd) {
         case 'mtllib':
-          model.materialFile = m[1];
+          [, model.materialFile] = m;
           break;
         case 'v':
           m.slice(1, 4).forEach((val) => {
@@ -56,10 +56,10 @@ class WavefrontObj {
           break;
         case 'usemap':
           model.materials[m[1]] = { albedoMap: m[1] };
-          currentMaterial = m[1];
+          [, currentMaterial] = m;
           break;
         case 'usemtl':
-          currentMaterial = m[1];
+          [, currentMaterial] = m;
           if (lastGroup >= 0) {
             meshes[lastGroup].material = currentMaterial;
           }
@@ -100,7 +100,7 @@ class WavefrontObj {
       }
       if (!model.missingUVs) {
         model.dataArrays.uv.push(uvs[2 * triplet[1]]);
-        model.dataArrays.uv.push(uvs[2 * triplet[1] + 1]);  
+        model.dataArrays.uv.push(uvs[2 * triplet[1] + 1]);
       }
     });
     console.log(`# shared vertices: ${countSharedVertices}/${positions.length}`);
