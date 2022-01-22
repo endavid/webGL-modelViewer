@@ -59,7 +59,7 @@ const LabelUtils = {
   importLabelsLnd(labelFile) {
     const labels = {};
     ParseUtils.forEachLine(labelFile, (s) => {
-      const real = '-?\\d+\.?\\d*';
+      const real = '-?\\d+\\.?\\d*';
       const p = new RegExp(`\\s*(\\d+)\\s+(${real})\\s+(${real})\\s+(${real})\\s+(${real})\\s+(${real})\\s+(${real})\\s+([ \\.\\w]+)`);
       const m = p.exec(s);
       if (m) {
