@@ -53,7 +53,7 @@ class Gfx {
       $.get(vsPath), $.get(fsPath),
     ]);
     if (vsConstants) {
-      let vertexConstants = "";
+      let vertexConstants = '';
       Object.keys(vsConstants).forEach((k) => {
         vertexConstants += `${k} = ${vsConstants[k]};\n`;
       });
@@ -247,11 +247,11 @@ class Gfx {
   }
 
   static formatArray(array, prefix, columns) {
-    let out = "";
+    let out = '';
     for (let i = 0; i < array.length; i += columns) {
       let s = `${prefix}${array[i]}`;
-      for (let j = 1; j < columns; j++) {
-        s += `, ${array[i+j]}`
+      for (let j = 1; j < columns; j += 1) {
+        s += `, ${array[i + j]}`;
       }
       if (i + columns < array.length) {
         s += ',';
@@ -277,8 +277,8 @@ class Gfx {
     s += '"dataArrays": {\n';
     const strArrays = Object.keys(model.dataArrays).map((attribute) => {
       let str = `  "${attribute}": [\n`;
-      str += Gfx.formatArray(model.dataArrays[attribute], "    ", layout.counts[attribute]);
-      str += `  ]`;
+      str += Gfx.formatArray(model.dataArrays[attribute], '    ', layout.counts[attribute]);
+      str += '  ]';
       return str;
     });
     s += strArrays.join(',\n');
@@ -290,7 +290,7 @@ class Gfx {
       s += `  {"material": "${m.material}",\n`;
       s += '  "indices": [\n';
       // assume triangles
-      s += Gfx.formatArray(m.indices, "    ", 3);
+      s += Gfx.formatArray(m.indices, '    ', 3);
       s += '  ]}';
       if (i + 1 < model.meshes.length) {
         s += ',';
@@ -389,10 +389,10 @@ class Gfx {
   // Also https://stackoverflow.com/a/51628844
   static getProgramInfo(gl, program) {
     const result = {
-        attributes: [],
-        uniforms: [],
-        attributeCount: 0,
-        uniformCount: 0
+      attributes: [],
+      uniforms: [],
+      attributeCount: 0,
+      uniformCount: 0,
     };
     const activeUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
     const activeAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
@@ -400,50 +400,50 @@ class Gfx {
     // Taken from the WebGl spec:
     // http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14
     const enums = {
-        0x8B50: 'FLOAT_VEC2',
-        0x8B51: 'FLOAT_VEC3',
-        0x8B52: 'FLOAT_VEC4',
-        0x8B53: 'INT_VEC2',
-        0x8B54: 'INT_VEC3',
-        0x8B55: 'INT_VEC4',
-        0x8B56: 'BOOL',
-        0x8B57: 'BOOL_VEC2',
-        0x8B58: 'BOOL_VEC3',
-        0x8B59: 'BOOL_VEC4',
-        0x8B5A: 'FLOAT_MAT2',
-        0x8B5B: 'FLOAT_MAT3',
-        0x8B5C: 'FLOAT_MAT4',
-        0x8B5E: 'SAMPLER_2D',
-        0x8B60: 'SAMPLER_CUBE',
-        0x1400: 'BYTE',
-        0x1401: 'UNSIGNED_BYTE',
-        0x1402: 'SHORT',
-        0x1403: 'UNSIGNED_SHORT',
-        0x1404: 'INT',
-        0x1405: 'UNSIGNED_INT',
-        0x1406: 'FLOAT'
+      0x8B50: 'FLOAT_VEC2',
+      0x8B51: 'FLOAT_VEC3',
+      0x8B52: 'FLOAT_VEC4',
+      0x8B53: 'INT_VEC2',
+      0x8B54: 'INT_VEC3',
+      0x8B55: 'INT_VEC4',
+      0x8B56: 'BOOL',
+      0x8B57: 'BOOL_VEC2',
+      0x8B58: 'BOOL_VEC3',
+      0x8B59: 'BOOL_VEC4',
+      0x8B5A: 'FLOAT_MAT2',
+      0x8B5B: 'FLOAT_MAT3',
+      0x8B5C: 'FLOAT_MAT4',
+      0x8B5E: 'SAMPLER_2D',
+      0x8B60: 'SAMPLER_CUBE',
+      0x1400: 'BYTE',
+      0x1401: 'UNSIGNED_BYTE',
+      0x1402: 'SHORT',
+      0x1403: 'UNSIGNED_SHORT',
+      0x1404: 'INT',
+      0x1405: 'UNSIGNED_INT',
+      0x1406: 'FLOAT',
     };
 
     // Loop through active uniforms
-    for (let i=0; i < activeUniforms; i++) {
-        const uniform = gl.getActiveUniform(program, i);
-        result.uniforms.push({
-          name: uniform.name,
-          size: uniform.size,
-          type: enums[uniform.type]
-        });
-        result.uniformCount += uniform.size;
+    for (let i = 0; i < activeUniforms; i += 1) {
+      const uniform = gl.getActiveUniform(program, i);
+      result.uniforms.push({
+        name: uniform.name,
+        size: uniform.size,
+        type: enums[uniform.type],
+      });
+      result.uniformCount += uniform.size;
     }
 
     // Loop through active attributes
-    for (let i=0; i < activeAttributes; i++) {
-        const attribute = gl.getActiveAttrib(program, i);
-        result.attributes.push({
-          name: attribute.name,
-          size: attribute.size,
-          type: enums[attribute.type]
-        });
-        result.attributeCount += attribute.size;
+    for (let i = 0; i < activeAttributes; i += 1) {
+      const attribute = gl.getActiveAttrib(program, i);
+      result.attributes.push({
+        name: attribute.name,
+        size: attribute.size,
+        type: enums[attribute.type],
+      });
+      result.attributeCount += attribute.size;
     }
 
     return result;

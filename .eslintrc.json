@@ -10,6 +10,7 @@
     "consistent-return": 0,
     "no-console": 0,
     "import/extensions": 0,
-    "lines-between-class-members": 0
+    "lines-between-class-members": 0,
+    "spaced-comment": ["error", "always", { "markers": ["/"] }]
   }
 }

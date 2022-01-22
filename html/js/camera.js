@@ -13,7 +13,7 @@ function coordinateOrDefault(v, d) {
   return [
     valueOrDefault(v.x, d[0]),
     valueOrDefault(v.y, d[1]),
-    valueOrDefault(v.z, d[2])
+    valueOrDefault(v.z, d[2]),
   ];
 }
 
@@ -111,10 +111,10 @@ class Camera {
   }
   getFlippedRotation() {
     const M = this.viewMatrix;
-    let R = [
+    const R = [
       M[0], M[1], M[2],
       M[4], M[5], -M[6],
-      M[8], -M[9], M[10]
+      M[8], -M[9], M[10],
     ];
     return R;
   }

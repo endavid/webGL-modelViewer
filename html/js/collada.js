@@ -14,7 +14,7 @@ function simplifyName(name) {
   // Collada files exported from FBX have some ugly _ncl1_x appended
   // to every joint name
   let s = name;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 4; i += 1) {
     s = s.replace(`_ncl1_${i}`, '');
   }
   return s;
@@ -100,12 +100,12 @@ function emptyDataArrays() {
     uv: [],
     objectId: [],
     boneWeights: [],
-    boneIndices: []
+    boneIndices: [],
   };
 }
 
 // Do not actually interleave vertex data, but make sure
-// there's one as many normals and UVs as positions, so it can be 
+// there's one as many normals and UVs as positions, so it can be
 // interleaved if necessary (so, duplicate data if necessary)
 // position (3), normal (3), UVs (2) [, objectId (1), skin weights (4), skin indices (4)]
 function prepareDataArraysForInterleaving(vertexData, polygons, skin, invertAxis) {
@@ -133,14 +133,14 @@ function prepareDataArraysForInterleaving(vertexData, polygons, skin, invertAxis
       } else {
         dataArrays.normal.push(d.normals[3 * p[1] + 1]);
         dataArrays.normal.push(d.normals[3 * p[1] + 2]);
-      }  
+      }
     }
     const noUVs = p[2] === undefined;
     if (noUVs) {
       missingUVs = true;
     } else {
       dataArrays.uv.push(d.uvs[2 * p[2]] || 0);
-      dataArrays.uv.push(d.uvs[2 * p[2] + 1] || 0);  
+      dataArrays.uv.push(d.uvs[2 * p[2] + 1] || 0);
     }
     if (skin) {
       dataArrays.objectId.push(skin.jointCount[p[0]]);
@@ -160,7 +160,7 @@ function prepareDataArraysForInterleaving(vertexData, polygons, skin, invertAxis
   return {
     dataArrays,
     missingNormals,
-    missingUVs
+    missingUVs,
   };
 }
 
@@ -210,19 +210,19 @@ function readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffse
           ngons[`${c}`] = true;
         }
         j += c;
-      });  
+      });
     } else {
       // all triangles
       const count = parseInt(polylist._count, 10);
-      for (let k = 0; k < count; k++) {
+      for (let k = 0; k < count; k += 1) {
         addTriangle(0, 1, 2);
         j += 3;
       }
     }
     meshes.push(submesh);
     const data = prepareDataArraysForInterleaving(vertexData, polygons, skin, invertAxis);
-    missingNormals ||= data.missingNormals;
-    missingUVs ||= data.missingUVs;
+    missingNormals = missingNormals || data.missingNormals;
+    missingUVs = missingUVs || data.missingUVs;
     // !! Maximum call stack size exceeded, if we concatenate like below:
     // !! vertices.push(...interleaved.vertices);
     Object.keys(dataArrays).forEach((attrib) => {
@@ -237,26 +237,25 @@ function readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffse
     meshes,
     dataArrays,
     missingNormals,
-    missingUVs
+    missingUVs,
   };
 }
 
 function readMeshes(json, skin, defaultMaterial) {
-  let dataArrays = emptyDataArrays();
+  const dataArrays = emptyDataArrays();
   let meshes = [];
   const invertAxis = isZUp(json);
   let missingNormals = false;
   let missingUVs = false;
   let geometries = json.COLLADA.library_geometries.geometry;
-  if (!Array.isArray(geometries))
-  {
+  if (!Array.isArray(geometries)) {
     geometries = [geometries];
   }
   geometries.forEach((geometry) => {
     const vertexOffset = dataArrays.position.length / 3;
     const g = readMeshSource(geometry, skin, defaultMaterial, invertAxis, vertexOffset);
-    missingNormals ||= g.missingNormals;
-    missingUVs ||= g.missingUVs;
+    missingNormals = missingNormals || g.missingNormals;
+    missingUVs = missingUVs || g.missingUVs;
     Object.keys(dataArrays).forEach((attrib) => {
       dataArrays[attrib] = dataArrays[attrib].concat(g.dataArrays[attrib]);
     });
@@ -540,7 +539,7 @@ function readMaterials(json, defaultTexture) {
   // default
   const mat = {};
   mat[defaultTexture] = {
-    albedoMap: defaultTexture
+    albedoMap: defaultTexture,
   };
   const effects = {};
   let fxArray = (json.COLLADA.library_effects || {}).effect;
@@ -596,7 +595,7 @@ class Collada {
     const x2js = new X2JS();
     const json = x2js.xml_str2json(xmlText);
     if (!json) {
-      throw new Error("Unable to parse XML file")
+      throw new Error('Unable to parse XML file');
     }
     const skin = readSkin(json);
     const model = readMeshes(json, skin, defaultTexture);

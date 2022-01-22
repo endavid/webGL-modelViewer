@@ -24,9 +24,9 @@ QUnit.test('Model Data', (assert) => {
         0, 0, 1,
         -1, 0, 0,
         0, -1, 0,
-        0, 0, -1,  
+        0, 0, -1,
       ],
-      uv: []
+      uv: [],
     },
     meshes: [{
       indices: [

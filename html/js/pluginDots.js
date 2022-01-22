@@ -1,5 +1,5 @@
 import Shader from './shader.js';
-import PluginLitModel from './pluginLitModel.js'
+import PluginLitModel from './pluginLitModel.js';
 
 // Renders dots in 3D
 class PluginDots {
@@ -14,10 +14,14 @@ class PluginDots {
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'pointSize', 'tint'];
     const attribsSkin = attribs.concat(['boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['joints']);
-    return { attribs, uniforms, attribsSkin, uniformsSkin };
+    return {
+      attribs, uniforms, attribsSkin, uniformsSkin,
+    };
   }
   static async createAsync(gl, scene) {
-    const {attribs, uniforms, attribsSkin, uniformsSkin } = PluginDots.getAttribs();
+    const {
+      attribs, uniforms, attribsSkin, uniformsSkin,
+    } = PluginDots.getAttribs();
     const shaders = {};
     const fs = 'shaders/outColor.fs';
     const vsConstants = PluginLitModel.getVsConstants(scene);
@@ -56,8 +60,10 @@ class PluginDots {
       gl.uniform1f(shader.uniforms.pointSize, self.pointSize);
       gl.uniform4f(shader.uniforms.tint, self.tint[0], self.tint[1], self.tint[2], self.tint[3]);
       gl.bindBuffer(gl.ARRAY_BUFFER, model.dotBuffer);
-      gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, layout.byteOffsets.position);
-      gl.vertexAttribPointer(shader.attribs.color, 4, gl.UNSIGNED_BYTE, true, stride, layout.byteOffsets.color);
+      gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false,
+        stride, layout.byteOffsets.position);
+      gl.vertexAttribPointer(shader.attribs.color, 4, gl.UNSIGNED_BYTE, true,
+        stride, layout.byteOffsets.color);
       if (skinned) {
         gl.vertexAttribPointer(shader.attribs.boneWeights,
           4, gl.FLOAT, false, stride, layout.byteOffsets.boneWeights);
@@ -74,12 +80,14 @@ class PluginDots {
     const vsConstants = PluginLitModel.getVsConstants(scene);
     let someDiffer = false;
     Object.keys(vsConstants).forEach((k) => {
-      someDiffer = someDiffer || (self.vsConstants[k] != vsConstants[k]);
+      someDiffer = someDiffer || (self.vsConstants[k] !== vsConstants[k]);
     });
     if (someDiffer) {
-      const {attribsSkin, uniformsSkin } = PluginDots.getAttribs();
+      const { attribsSkin, uniformsSkin } = PluginDots.getAttribs();
       const { vs, fs } = this.shaders.skin;
-      this.shaders.skin = await Shader.createAsync(glState.gl, vs, fs, attribsSkin, uniformsSkin, vsConstants);
+      this.shaders.skin = await Shader.createAsync(
+        glState.gl, vs, fs, attribsSkin, uniformsSkin, vsConstants,
+      );
     }
   }
 }

@@ -72,7 +72,7 @@ function getMousePos(canvas, evt, viewRect) {
   const rect = canvas.getBoundingClientRect();
   const x = evt.clientX - rect.left;
   const y = evt.clientY - rect.top;
-  const {width, height} = viewRect;
+  const { width, height } = viewRect;
   // normalized coordinates
   const u = x / width;
   const v = 1 - y / height;
@@ -97,10 +97,18 @@ class Renderer {
     const auxWidth = width / 4;
     const auxHeight = height / 3;
     this.views = [
-      new CanvasView({x: 0, y: 0, width: mainWidth, height}),
-      new CanvasView({x: mainWidth, y: height - auxHeight, width: auxWidth, height: auxHeight}),
-      new CanvasView({x: mainWidth, y: height - 2 * auxHeight, width: auxWidth, height: auxHeight}),
-      new CanvasView({x: mainWidth, y: 0, width: auxWidth, height: auxHeight})
+      new CanvasView({
+        x: 0, y: 0, width: mainWidth, height,
+      }),
+      new CanvasView({
+        x: mainWidth, y: height - auxHeight, width: auxWidth, height: auxHeight,
+      }),
+      new CanvasView({
+        x: mainWidth, y: height - 2 * auxHeight, width: auxWidth, height: auxHeight,
+      }),
+      new CanvasView({
+        x: mainWidth, y: 0, width: auxWidth, height: auxHeight,
+      }),
     ];
     this.mouseState = {
       amortization: 0.06,
@@ -139,7 +147,7 @@ class Renderer {
       },
       settings: {
         debugJointCount: false,
-      }
+      },
     };
     this.selectionRadiusInPixels = 10;
     this.selectedModel = 0;
@@ -181,14 +189,14 @@ class Renderer {
         background: 0,
         litModel: 1,
         dots: 2,
-        overlay: 3
+        overlay: 3,
       };
     });
   }
   initPlugins2d() {
     this.plugins2d = [
       new PluginLabels(),
-      new PluginSkeleton()
+      new PluginSkeleton(),
     ];
   }
   initFramebuffers() {
@@ -209,14 +217,15 @@ class Renderer {
   }
   async replaceLitShader(fragmentShaderUri) {
     const { gl } = this.glState;
-    var plugin;
+    let plugin;
     if (fragmentShaderUri.startsWith('intersect')) {
       plugin = await PluginIntersection.createAsync(gl, this.whiteTexture, this.scene);
       if (fragmentShaderUri.endsWith('lit')) {
         plugin.doLightPass = true;
       }
     } else {
-      plugin = await PluginLitModel.createAsync(gl, this.whiteTexture, fragmentShaderUri, this.scene);
+      plugin = await PluginLitModel.createAsync(gl,
+        this.whiteTexture, fragmentShaderUri, this.scene);
     }
     this.scene.settings.debugJointCount = fragmentShaderUri.indexOf('JointCount') >= 0;
     this.plugins[this.pluginIndeces.litModel] = plugin;
@@ -244,12 +253,14 @@ class Renderer {
     }
     glState.clear();
     this.views.forEach((view) => {
-      const {x, y, width, height} = view.rect;
+      const {
+        x, y, width, height,
+      } = view.rect;
       glState.viewport(x, y, width, height);
       this.plugins.forEach((plugin) => {
         plugin.draw(glState, scene, view, deltaTime);
-      });  
-    })
+      });
+    });
     if (captureNextFrameCallback) {
       const imgData = readPixelsAsImageData(glState.gl, s);
       captureNextFrameCallback(imgData);
@@ -429,7 +440,7 @@ class Renderer {
   setImage(obj, url, callback) {
     const { gl } = this.glState;
     if (obj.img && obj.img.webglTexture) {
-      let tex = obj.img.webglTexture;
+      const tex = obj.img.webglTexture;
       obj.img = null;
       gl.deleteTexture(tex);
     }
@@ -495,7 +506,8 @@ class Renderer {
       const { camera } = this.views[0];
       const { width, height } = this.views[0].rect;
       const m = model.getTransformMatrix();
-      const {joint, distance} = model.skinnedModel.getClosestJoint(screenCoords, m, camera, width, height);
+      const { joint, distance } = model.skinnedModel.getClosestJoint(screenCoords,
+        m, camera, width, height);
       if (distance < this.selectionRadiusInPixels) {
         model.skinnedModel.selectedJoint = joint;
         this.onJointSelection(joint);
@@ -514,7 +526,7 @@ class Renderer {
     names.forEach((k) => {
       const pos = model.getPositionForLabel(k);
       const [x, y, z] = VMath.mulScalar(pos, scale);
-      transformedLabels[k] = {x, y, z};
+      transformedLabels[k] = { x, y, z };
       if (model.labels[k].disabled) {
         transformedLabels[k].disabled = true;
       }
@@ -525,7 +537,7 @@ class Renderer {
     this.scene.selectedMesh = name === 'all' ? false : name;
   }
   async onSceneUpdate() {
-    for (let i = 0; i < this.plugins.length; i++) {
+    for (let i = 0; i < this.plugins.length; i += 1) {
       if (this.plugins[i].onSceneUpdate) {
         await this.plugins[i].onSceneUpdate(this.glState, this.scene);
       }

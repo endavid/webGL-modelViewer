@@ -72,16 +72,16 @@ function guessRotationOrder(jointName) {
 function guessRightAxis(jointName) {
   const cheatSheet = {
     bendRight: [
-      "hip", "pelvis", "abdomen", "chest", "neck", "head",
-      "thigh", "shin", "foot", "pectoral"],
-    bendBack: ["collar", "shldr", "hand"],
-    bendDown: ["arm"]
+      'hip', 'pelvis', 'abdomen', 'chest', 'neck', 'head',
+      'thigh', 'shin', 'foot', 'pectoral'],
+    bendBack: ['collar', 'shldr', 'hand'],
+    bendDown: ['arm'],
   };
   const axis = {
     bendRight: [1, 0, 0],
     bendBack: [0, 0, -1],
-    bendDown: [0, -1, 0]
-  }
+    bendDown: [0, -1, 0],
+  };
   const rs = Object.keys(cheatSheet);
   const name = jointName.toLowerCase();
   for (let i = 0; i < rs.length; i += 1) {
@@ -97,7 +97,7 @@ function guessRightAxis(jointName) {
 }
 
 function findChildren(skeleton, jointName) {
-  let children = [];
+  const children = [];
   const joints = Object.keys(skeleton);
   joints.forEach((j) => {
     if (skeleton[j].parent === jointName) {
@@ -159,7 +159,7 @@ function standardizeAnimsToUseTransforms(skeleton, anims, reRig) {
       return;
     }
     const a = anims[joint];
-    const rotationOrder = skeleton[joint].rotationOrder;
+    const { rotationOrder } = skeleton[joint];
     const keyframes = a.keyframes.slice(0);
     const transforms = a.keyframes.map(() => new Transform({
       position: [0, 0, 0],
@@ -238,8 +238,8 @@ function removeRotationsFromRig(skeleton) {
   });
   jointNames.forEach((j) => {
     const m = jointMatrices[j];
-    let t = [m[3], m[7], m[11]];
-    let mParent = jointMatrices[skeleton[j].parent];
+    const t = [m[3], m[7], m[11]];
+    const mParent = jointMatrices[skeleton[j].parent];
     if (mParent) {
       // the translation should just be the diff respect parent
       t[0] -= mParent[3];
@@ -250,7 +250,7 @@ function removeRotationsFromRig(skeleton) {
       1, 0, 0, t[0],
       0, 1, 0, t[1],
       0, 0, 1, t[2],
-      0, 0, 0, 1
+      0, 0, 0, 1,
     ];
   });
 }
@@ -276,13 +276,13 @@ function createJointColorPalette(joints) {
     // try to detect symmetric joints by removing starting or ending Ls/Rs, Left or Right
     const name = joints[i].toLowerCase();
     let jointKey = name;
-    if (name.startsWith("left")) {
+    if (name.startsWith('left')) {
       jointKey = name.substr(4, name.length);
-    } else if (name.startsWith("right")) {
+    } else if (name.startsWith('right')) {
       jointKey = name.substr(5, name.length);
-    } else if (name.endsWith("_l") || name.endsWith("_r")) {
+    } else if (name.endsWith('_l') || name.endsWith('_r')) {
       jointKey = name.substr(0, name.length - 2);
-    } else if (name.startsWith("l") || name.startsWith("r")) {
+    } else if (name.startsWith('l') || name.startsWith('r')) {
       jointKey = name.substr(1, name.length);
     }
     const colorIndex = j % numColors;
@@ -301,7 +301,7 @@ function createJointColorPalette(joints) {
 }
 
 function createJointCountPalette(maxJointCount) {
-  let count = Math.max(4, maxJointCount);
+  const count = Math.max(4, maxJointCount);
   const palette = new Float32Array(count * 4);
   for (let i = 0; i < 4; i += 1) {
     // blue to green
@@ -344,7 +344,7 @@ function getSkeletonTopology(skeleton) {
 
 // Finds relevant root joints. Useful to ignore IK joints that are not skinned.
 function isParentOfAnyOfTheSkinned(jointName, skinnedJointNames, skeleton) {
-  for (let i = 0; i < skinnedJointNames.length; i++) {
+  for (let i = 0; i < skinnedJointNames.length; i += 1) {
     const j = skinnedJointNames[i];
     if (skeleton[j].parent === jointName) {
       return true;
@@ -355,7 +355,7 @@ function isParentOfAnyOfTheSkinned(jointName, skinnedJointNames, skeleton) {
 
 class SkinnedModel {
   constructor(skin, skeleton, anims, armatureTransform, reRig) {
-    let self = this;
+    const self = this;
     this.jointCount = skin.joints.length;
     this.joints = new Array(this.jointCount * 16);
     for (let offset = 0; offset < 16 * this.jointCount; offset += 16) {
@@ -463,7 +463,7 @@ class SkinnedModel {
   getRotationMatrix(name, keyframe) {
     const jointAnim = this.anims[name] || {};
     if (jointAnim.matrix) {
-      console.warn("Not supported: getRotationMatrix");
+      console.warn('Not supported: getRotationMatrix');
       return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
     }
     const transform = arrayValueOrDefault(jointAnim.transforms, keyframe, Transform.identity());
@@ -527,10 +527,10 @@ class SkinnedModel {
           sz: 1,
           tx: 0,
           ty: 0,
-          tz: 0
+          tz: 0,
         };
         tkeys.forEach((tk) => {
-          if (pose[joint][tk] != undefined) {
+          if (pose[joint][tk] !== undefined) {
             t[tk] = pose[joint][tk];
           }
         });
@@ -641,7 +641,7 @@ class SkinnedModel {
       const p = self.getJointPosition(index, keyframe);
       return VMath.mulVector(modelMatrix, p.concat(1));
     }
-    const {x, y} = screenCoords;
+    const { x, y } = screenCoords;
     let closest = 0;
     let distance = 1e100;
     for (let i = 0; i < this.jointNames.length; i += 1) {
@@ -656,7 +656,7 @@ class SkinnedModel {
     }
     distance = Math.sqrt(distance);
     const joint = this.jointNames[closest];
-    return {joint, distance};
+    return { joint, distance };
   }
 
   // MARK: skeleton alignment functions
@@ -665,15 +665,15 @@ class SkinnedModel {
     return [m[3], m[7], m[11]];
   }
   getJointRotationAngleAxis(joint, keyframe) {
-    let node = this.skeleton[joint];
-    let R = this.getRotationMatrix(joint, keyframe);
+    const node = this.skeleton[joint];
+    const R = this.getRotationMatrix(joint, keyframe);
     return AngleAxis.fromMatrix(R, node.rotationOrder);
   }
   getEulerAndAngleAxis(angle, axis, joint) {
-    let node = this.skeleton[joint];
+    const node = this.skeleton[joint];
     const angleAxis = new AngleAxis(angle, axis, node.rotationOrder);
     let eulerNew = angleAxis.eulerAngles.map(VMath.radToDeg);
-    let eulerNow = [0, 0 ,0];
+    let eulerNow = [0, 0, 0];
     const jointAnim = this.anims[joint];
     if (jointAnim) {
       const transform = jointAnim.transforms[keyframe];
@@ -682,14 +682,16 @@ class SkinnedModel {
         eulerNew = VMath.sum(eulerNow, eulerNew);
       }
     }
-    return {joint, eulerNow, eulerNew, angleAxis};
+    return {
+      joint, eulerNow, eulerNew, angleAxis,
+    };
   }
   pointBoneToTarget(name, targetPosition, keyframe) {
-    let i = this.jointIndices[name];
-    let node = this.skeleton[name];
+    const i = this.jointIndices[name];
+    const node = this.skeleton[name];
     const { parent } = node;
     if (!parent) {
-      console.warning("pointBoneToTarget: not a bone.");
+      console.warning('pointBoneToTarget: not a bone.');
       return;
     }
     const t = VMath.readCoordinates(targetPosition).slice(0, 3);
@@ -705,18 +707,18 @@ class SkinnedModel {
     return res;
   }
   twistParentToPointBoneToTarget(name, targetPosition, keyframe) {
-    let i = this.jointIndices[name];
-    let node = this.skeleton[name];
+    const i = this.jointIndices[name];
+    const node = this.skeleton[name];
     const { parent } = node;
     if (!parent) {
-      console.warning("twistParentToPointBoneToTarget: not a bone.");
+      console.warning('twistParentToPointBoneToTarget: not a bone.');
       return;
     }
-    let nodeParent = this.skeleton[parent];
+    const nodeParent = this.skeleton[parent];
     const j = this.jointIndices[parent];
     const grandparent = nodeParent.parent;
     if (!grandparent) {
-      console.warning("twistParentToPointBoneToTarget: no parent bone.");
+      console.warning('twistParentToPointBoneToTarget: no parent bone.');
       return;
     }
     const t = VMath.readCoordinates(targetPosition).slice(0, 3);
@@ -729,17 +731,17 @@ class SkinnedModel {
     const vt = VMath.normalize(VMath.diff(t, p1));
     const right = VMath.normalize(math.cross(v0, v1));
     const up = VMath.normalize(math.cross(right, vt));
-    const vt_projected = VMath.normalize(math.cross(right, up));
-    const v1_projected = VMath.normalize(math.cross(right, v0));
-    const angle = Math.acos(math.dot(v1_projected, vt_projected))
+    const vtProjected = VMath.normalize(math.cross(right, up));
+    const v1Projected = VMath.normalize(math.cross(right, v0));
+    const angle = Math.acos(math.dot(v1Projected, vtProjected));
     // @todo this is wrong because the twist should be defined with
-    // respect to the bind pose! 
+    // respect to the bind pose!
     // First add twist, side, bend controls to make sure
     // we get twist right.
     // Check GetRotationInLocalAxis in Skeleton.cpp
     // You just need to convert the angleAxis to the bone frame of ref.
     const res = this.getEulerAndAngleAxis(angle, v0, grandparent);
-    console.log(`bones: ${v0}, ${v1}; target dir: ${vt}; v1_proj: ${v1_projected}; angle: ${VMath.radToDeg(angle)}`);
+    console.log(`bones: ${v0}, ${v1}; target dir: ${vt}; v1_proj: ${v1Projected}; angle: ${VMath.radToDeg(angle)}`);
     return res;
   }
 
@@ -753,7 +755,7 @@ class SkinnedModel {
     const aa = this.getJointRotationAngleAxis(joint, frame);
     const angleAxis = aa.toLocalAxis(R);
     const eulerAngles = angleAxis.eulerAngles.map(VMath.radToDeg);
-    return {x: eulerAngles[0], y: eulerAngles[1], z: eulerAngles[2]};
+    return { x: eulerAngles[0], y: eulerAngles[1], z: eulerAngles[2] };
   }
   convertLocalRotationToGlobalAxis(joint, eulerAngles) {
     const angles = eulerAngles.map(VMath.degToRad);
@@ -769,10 +771,12 @@ class SkinnedModel {
     const self = this;
     const { anims, skeleton } = this;
     const keys = Object.keys(anims);
-    const mirroring = {l: 'r', r: 'l', L: 'R', R: 'L'};
+    const mirroring = {
+      l: 'r', r: 'l', L: 'R', R: 'L',
+    };
     if (!mirroring[referenceSide]) {
       console.error(`Unsupported referenceSide: ${referenceSide}`);
-      return
+      return;
     }
     const mirrorSide = mirroring[referenceSide];
     keys.forEach((joint) => {
@@ -785,12 +789,12 @@ class SkinnedModel {
         return;
       }
       if (!skeleton[mirrorJoint]) {
-        // this check avoids copying lowerJaw to "rowerJaw" :D
+        // this check avoids copying lowerJaw to 'rowerJaw' :D
         return;
       }
       self.addJointAnimationEntryIfMissing(joint, frame);
       self.addJointAnimationEntryIfMissing(mirrorJoint, frame);
-      const {position, eulerAngles} = anims[joint].transforms[frame];
+      const { position, eulerAngles } = anims[joint].transforms[frame];
       const mirrorPosition = [...position];
       const mirrorAngles = [...eulerAngles];
       mirrorPosition[0] = -mirrorPosition[0];

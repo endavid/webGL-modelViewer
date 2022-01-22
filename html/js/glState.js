@@ -22,19 +22,19 @@ class GlState {
       none: gl.NONE,
       front: gl.FRONT,
       back: gl.BACK,
-      both: gl.FRONT_AND_BACK
+      both: gl.FRONT_AND_BACK,
     };
     this.cullFace = this.Cull.none;
     this.stencilOp = {
       fail: gl.KEEP,
       zfail: gl.KEEP,
-      zpass: gl.KEEP
+      zpass: gl.KEEP,
     };
     this.stencilFunc = {
       func: gl.ALWAYS,
       ref: 0,
       // read mask
-      mask: 0xffffffff
+      mask: 0xffffffff,
     };
     // write mask
     this.stencilMask = 0xffffffff;
@@ -92,10 +92,10 @@ class GlState {
     this.cullFace = mode;
   }
   setStencilOp(fail, zfail, zpass) {
-    if (this.stencilOp.fail === fail 
+    if (this.stencilOp.fail === fail
       && this.stencilOp.zfail === zfail
       && this.stencilOp.zpass === zpass) {
-        return;
+      return;
     }
     this.gl.stencilOp(fail, zfail, zpass);
     this.stencilOp.fail = fail;

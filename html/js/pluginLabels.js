@@ -5,8 +5,8 @@ class PluginLabels {
     this.colors = {
       world: '#999999',
       model: '#ffffff',
-      selected: '#00ff00'
-    }
+      selected: '#00ff00',
+    };
   }
   setColor(context, color) {
     /* eslint-disable no-param-reassign */

@@ -2,7 +2,7 @@ import Camera from './camera.js';
 
 class CanvasView {
   constructor(rect) {
-    const {width, height} = rect;
+    const { width, height } = rect;
     this.rect = rect;
     const aspect = width / height;
     this.background = {};

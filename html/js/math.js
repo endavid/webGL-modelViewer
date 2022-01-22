@@ -178,9 +178,9 @@ const VMath = {
     // the orthogonal basis are the columns:
     // https://www.euclideanspace.com/maths/algebra/matrix/orthogonal/index.htm
     const R = [
-      [xAxis[0], yAxis[0], zAxis[0] ],
-      [xAxis[1], yAxis[1], zAxis[1] ],
-      [xAxis[2], yAxis[2], zAxis[2] ],
+      [xAxis[0], yAxis[0], zAxis[0]],
+      [xAxis[1], yAxis[1], zAxis[1]],
+      [xAxis[2], yAxis[2], zAxis[2]],
     ];
     return R;
   },

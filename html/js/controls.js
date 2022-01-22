@@ -178,7 +178,7 @@ const Update = {
     const idx = i || Config.selectedCamera;
     const camera = viewer.getCamera(idx);
     const cfgCamera = Config.cameras[idx];
-    camera.setFOV(cfgCamera.fov);  
+    camera.setFOV(cfgCamera.fov);
   },
   camera: (i) => {
     Update.cameraLocation(i);
@@ -232,7 +232,7 @@ const Update = {
     viewer.scene.lights[0].setAlpha(a);
   },
   sun: () => {
-    let sun = viewer.scene.lights[0];
+    const sun = viewer.scene.lights[0];
     sun.setAltitude(Config.sun.altitude);
     sun.setEastWest(Config.sun.eastWest);
     sun.setIntensity(Config.sun.intensity);
@@ -246,8 +246,8 @@ const Update = {
       UISetter.anim.updateJointControls();
       UISetter.anim.updateJointColor();
     }
-  }
-}
+  },
+};
 
 
 const UISetter = {
@@ -255,7 +255,7 @@ const UISetter = {
     setSlider: (id, value) => {
       $(`#${id}`).val(value);
       $(`#${id}_number`).val(value);
-    }
+    },
   },
   camera: {
     distance: (z) => {
@@ -297,7 +297,7 @@ const UISetter = {
       Object.keys(cfgCamera).forEach((k) => {
         UISetter.global.setSlider(`camera_${k}`, cfgCamera[k]);
       });
-    }
+    },
   },
   model: {
     rotation: (rotation) => {
@@ -323,7 +323,7 @@ const UISetter = {
       $('#modelScaleExp10').val(logScale);
       $('#modelScaleExp10_number').val(logScale);
       Config.model.scale = 10 ** parseFloat(logScale);
-    }
+    },
   },
   sun: {
     altitude: (h) => {
@@ -344,8 +344,8 @@ const UISetter = {
     alpha: (a) => {
       $('#SunAlpha').val(a);
       $('#SunAlpha_number').val(a);
-      Config.sun.alpha = a; 
-    }
+      Config.sun.alpha = a;
+    },
   },
   anim: {
     keyframe: (k) => {
@@ -368,8 +368,10 @@ const UISetter = {
         $(`#gPose_${joint}_${id}${axis}`).val(value);
         $(`#gPose_${joint}_${id}${axis}_number`).val(value);
         const frame = Config.keyframe;
-        const index = {x: 0, y: 1, z: 2}[axis];
-        model.skinnedModel.setAnimValue({ joint, frame, key, value, index });
+        const index = { x: 0, y: 1, z: 2 }[axis];
+        model.skinnedModel.setAnimValue({
+          joint, frame, key, value, index,
+        });
         model.skinnedModel.applyPose(frame);
       }
     },
@@ -396,16 +398,16 @@ const UISetter = {
       }
     },
     updateJointControls: () => {
-      let angles = {x: 0, y: 0, z: 0};
-      let localAngles = {x: 0, y: 0, z: 0};
-      let pos = {x: 0, y: 0, z: 0};
+      let angles = { x: 0, y: 0, z: 0 };
+      let localAngles = { x: 0, y: 0, z: 0 };
+      let pos = { x: 0, y: 0, z: 0 };
       const model = viewer.getSelectedModel();
       if (model && model.skinnedModel) {
         const joint = model.skinnedModel.selectedJoint;
         angles = {
           x: $(`#gPose_${joint}_anglex`).val(),
           y: $(`#gPose_${joint}_angley`).val(),
-          z: $(`#gPose_${joint}_anglez`).val()
+          z: $(`#gPose_${joint}_anglez`).val(),
         };
         pos = {
           x: $(`#gPose_${joint}_translationx`).val(),
@@ -431,9 +433,9 @@ const UISetter = {
       $('#selectedJoint').val(name);
       UISetter.anim.updateJointControls();
       UISetter.anim.updateJointColor();
-    }
-  }
-}
+    },
+  },
+};
 
 // aliases
 UISetter.anim.setJointRotation = UISetter.anim.setJointValue.bind(null, 'angle', 'eulerAngles');
@@ -534,9 +536,9 @@ const Actions = {
         model.skinnedModel.setPose(pose.pose, frame);
         UISetter.anim.keyframe(frame);
       })
-      .fail((e) => {
-        console.error(e);
-      });
+        .fail((e) => {
+          console.error(e);
+        });
     },
     makeSymmetric: (referenceSide) => {
       const frame = Config.keyframe;
@@ -570,7 +572,7 @@ const Actions = {
       if (model && model.skinnedModel) {
         const label = $('#deleteLabel_select').val();
         const joint = model.skinnedModel.selectedJoint;
-        let labelPos = model.labels[label];
+        const labelPos = model.labels[label];
         let aa;
         if (alignment === 'twist') {
           aa = model.skinnedModel.twistParentToPointBoneToTarget(joint, labelPos, Config.keyframe);
@@ -588,7 +590,7 @@ const Actions = {
       const model = viewer.getSelectedModel();
       if (model && model.skinnedModel) {
         const joint = model.skinnedModel.selectedJoint;
-        ['x', 'y', 'z'].forEach((axis, i) => {
+        ['x', 'y', 'z'].forEach((axis) => {
           UISetter.anim.setJointRotation(joint, axis, 0);
           UISetter.anim.setJointTranslation(joint, axis, 0);
         });
@@ -603,14 +605,14 @@ const Actions = {
         UISetter.anim.updateJointControls();
       }
     },
-    jointLocalAngle: (value, axis) => {
+    jointLocalAngle: () => {
       const model = viewer.getSelectedModel();
       if (model && model.skinnedModel) {
         const joint = model.skinnedModel.selectedJoint;
         const eulerAngles = [
-          $(`#joint_localAnglex`).val(),
-          $(`#joint_localAngley`).val(),
-          $(`#joint_localAnglez`).val()
+          $('#joint_localAnglex').val(),
+          $('#joint_localAngley').val(),
+          $('#joint_localAnglez').val(),
         ];
         const angleAxis = model.skinnedModel.convertLocalRotationToGlobalAxis(joint, eulerAngles);
         // keep only 4 digits (in degrees)
@@ -640,12 +642,12 @@ const Actions = {
           return;
         }
         const palette = model.skinnedModel.jointColorPalette;
-        const c = VMath.hexColorToNormalizedVector(e.target.value);      
+        const c = VMath.hexColorToNormalizedVector(e.target.value);
         c.forEach((value, i) => {
           palette[4 * jointIndex + i] = value;
         });
       }
-    }
+    },
   },
   shader: {
     checkAspect: (img) => {
@@ -673,19 +675,19 @@ const Actions = {
       });
     },
     clearBackground: () => {
-      for (let i = 0; i < viewer.views.length; i++) {
+      for (let i = 0; i < viewer.views.length; i += 1) {
         viewer.setBackgroundImage(i, null);
       }
       clearFileBrowser('backgroundFileBrowser');
     },
     clearOverlay: () => {
-      for (let i = 0; i < viewer.views.length; i++) {
+      for (let i = 0; i < viewer.views.length; i += 1) {
         viewer.setOverlayImage(i, null);
       }
       clearFileBrowser('overlayFileBrowser');
-    }
-  }
-}
+    },
+  },
+};
 
 // aliases
 Actions.anim.alignBone = Actions.anim.alignBoneWith.bind(null, 'cross');
@@ -785,32 +787,32 @@ function populateControls() {
           model.labels = labels;
           populateLabelList(labels);
         }
-      }
+      };
       return importer;
     }
     const ext = Gfx.getFileExtension(f.name);
     if (ext === 'Json') {
-      $.getJSON(f.uri, importLabels(LabelUtils.importLabels));  
+      $.getJSON(f.uri, importLabels(LabelUtils.importLabels));
     } else if (ext === 'Txt') {
       $.ajax({
         async: true,
         url: f.uri,
         datatype: 'text',
-        success: importLabels(LabelUtils.importLabelsTxt)
+        success: importLabels(LabelUtils.importLabelsTxt),
       });
     } else if (ext === 'Lnd') {
       $.ajax({
         async: true,
         url: f.uri,
         datatype: 'text',
-        success: importLabels(LabelUtils.importLabelsLnd)
+        success: importLabels(LabelUtils.importLabelsLnd),
       });
     } else if (ext === 'Pp') {
       $.ajax({
         async: true,
         url: f.uri,
         datatype: 'xml',
-        success: importLabels(LabelUtils.importLabelsXml)
+        success: importLabels(LabelUtils.importLabelsXml),
       });
     } else {
       setError('Supported label formats: Json, Txt, Lnd, Pp');
@@ -903,7 +905,7 @@ function populateControls() {
     { name: 'joint count', value: 'shaders/debugJointCount.fs' },
     { name: 'world normal', value: 'shaders/debugWorldNormal.fs' },
     { name: 'intersect', value: 'intersect' },
-    { name: 'intersect lit', value: 'intersect-lit' }
+    { name: 'intersect lit', value: 'intersect-lit' },
   ];
 
   const labelFilterPresets = [
@@ -915,36 +917,36 @@ function populateControls() {
     { name: 'enabled && front && right', value: 'enabledFrontRight' },
     { name: 'enabled && front && left', value: 'enabledFrontLeft' },
     { name: 'enabled && back && right', value: 'enabledBackRight' },
-    { name: 'enabled && back && left', value: 'enabledBackLeft' }
+    { name: 'enabled && back && left', value: 'enabledBackLeft' },
   ];
 
   const labelFilters = {
-    all: () => { return true; },
-    enabled: (_, label) => { return !label.disabled; },
-    disabled: (_, label) => { return label.disabled; },
-    enabledFront: (name, label) => { return !label.disabled && name.indexOf('Back') < 0; },
-    enabledBack: (name, label) => { return !label.disabled && name.indexOf('Front') < 0 && name.indexOf('Bust') < 0; },
-    enabledFrontRight: (name, label) => { return labelFilters.enabledFront(name, label) && name.endsWith('Right'); },
-    enabledFrontLeft: (name, label) => { return labelFilters.enabledFront(name, label) && name.endsWith('Left'); },
-    enabledBackRight: (name, label) => { return !label.disabled && name.indexOf('Back') >= 0 && name.indexOf('Right') >= 0; },
-    enabledBackLeft: (name, label) => { return !label.disabled && name.indexOf('Back') >= 0 && name.indexOf('Left') >= 0; }
+    all: () => true,
+    enabled: (_, label) => !label.disabled,
+    disabled: (_, label) => label.disabled,
+    enabledFront: (name, label) => !label.disabled && name.indexOf('Back') < 0,
+    enabledBack: (name, label) => !label.disabled && name.indexOf('Front') < 0 && name.indexOf('Bust') < 0,
+    enabledFrontRight: (name, label) => labelFilters.enabledFront(name, label) && name.endsWith('Right'),
+    enabledFrontLeft: (name, label) => labelFilters.enabledFront(name, label) && name.endsWith('Left'),
+    enabledBackRight: (name, label) => !label.disabled && name.indexOf('Back') >= 0 && name.indexOf('Right') >= 0,
+    enabledBackLeft: (name, label) => !label.disabled && name.indexOf('Back') >= 0 && name.indexOf('Left') >= 0,
   };
 
   const modelSlots = [
     { name: 'slot 0', value: 0 },
     { name: 'slot 1', value: 1 },
     { name: 'slot 2', value: 2 },
-    { name: 'slot 3', value: 3 }
-  ]
+    { name: 'slot 3', value: 3 },
+  ];
 
   // Create the UI controls
   // * Toolbar (it won't execute if toolbar.json doesn't exist)
   $.getJSON('toolbar.json', (cfg) => {
-    let elements = [];
+    const elements = [];
     Object.keys(cfg).forEach((g) => {
-      let row = [];
+      const row = [];
       cfg[g].forEach((b) => {
-        let fn = () => {
+        const fn = () => {
           if (b.preset) {
             Object.keys(b.preset).forEach((key) => {
               Object.keys(b.preset[key]).forEach((field) => {
@@ -956,7 +958,7 @@ function populateControls() {
           if (b.actions) {
             Object.keys(b.actions).forEach((key) => {
               b.actions[key].forEach((action) => {
-                const cmd = action.cmd;
+                const { cmd } = action;
                 Actions[key][cmd].apply(null, action.args);
               });
             });
@@ -965,12 +967,12 @@ function populateControls() {
             console.log(b);
           }
         };
-        let btn = {
+        const btn = {
           id: b.id,
           text: b.text,
           icon: b.icon,
           iconType: b.iconType || '',
-          callback: fn
+          callback: fn,
         };
         row.push(btn);
       });
@@ -981,7 +983,7 @@ function populateControls() {
   // * File
   UiUtils.addGroup('gFile', 'File', [
     UiUtils.createDropdownList('modelSlot', 'Slot', modelSlots, (e) => {
-      viewer.selectedModel = parseInt(e.value);
+      viewer.selectedModel = parseInt(e.value, 10);
     }),
     UiUtils.createFileBrowser('fileBrowser', 'load models & textures', true, onChangeFileBrowser),
     UiUtils.createDropdownList('selectedModel', 'Presets', modelPresets, Actions.model.reload),
@@ -1073,7 +1075,7 @@ function populateControls() {
           Gfx.saveJson(labelsFiltered, 'labels');
         }
       },
-    }
+    },
     ]),
     UiUtils.createTextInput('pickLabel', 'Label name', 'new', (e) => {
       viewer.scene.labels.selected = e.target.value;
@@ -1089,8 +1091,7 @@ function populateControls() {
         const label = $(`#${e.target.id}`).val();
         $('#pickLabel').val(label);
         viewer.scene.labels.selected = label;
-      }
-    ),
+      }),
     UiUtils.createSlider('pointSize', 'Point size', Config.pointSize, 0, 16, 1, (value) => {
       viewer.setPointSize(value);
     }),
@@ -1145,15 +1146,15 @@ function populateControls() {
         Update.modelTransform();
       }),
     UiUtils.createButtons('modelButtons', [{
-        id: 'placeOnFloor',
-        text: 'Place on floor',
-        callback: Actions.model.placeOnFloor,
-      },
-      {
-        id: 'dumpScaledTranslation',
-        text: 'Dump scaled translation',
-        callback: Actions.model.dumpScaledTranslation,
-      }
+      id: 'placeOnFloor',
+      text: 'Place on floor',
+      callback: Actions.model.placeOnFloor,
+    },
+    {
+      id: 'dumpScaledTranslation',
+      text: 'Dump scaled translation',
+      callback: Actions.model.dumpScaledTranslation,
+    },
     ]),
     UiUtils.createDropdownList('submesh', 'Submesh', [], (obj) => {
       viewer.selectSubmesh(obj.value);
@@ -1187,35 +1188,34 @@ function populateControls() {
         Update.cameraLocation(Config.selectedCamera);
       }),
     UiUtils.createMultiSlider(
-      `camera_position`,
+      'camera_position',
       ['x', 'y', 'z'],
       'position XYZ',
       [0, 0.95, 3.01], -10, 10, 0.01,
-      Update.cameraPosition
+      Update.cameraPosition,
     ),
     UiUtils.createMultiSlider(
-      `camera_target`,
+      'camera_target',
       ['x', 'y', 'z'],
       'target XYZ',
       [0, 0.95, 0], -10, 10, 0.01,
-      Update.cameraTarget
+      Update.cameraTarget,
     ),
     UiUtils.createMultiSlider(
-      `camera_up`,
+      'camera_up',
       ['x', 'y', 'z'],
       'up XYZ',
       [0, 1, 0], -1, 1, 0.01,
-      Update.cameraUp
+      Update.cameraUp,
     ),
     UiUtils.createSlider('camera_fov', 'Field of View',
       Config.cameras[0].fov, 1, 90, 1, (value) => {
         Config.cameras[Config.selectedCamera].fov = parseFloat(value);
-        Update.cameraFov(Config.selectedCamera)
+        Update.cameraFov(Config.selectedCamera);
       }),
-    UiUtils.createDropdownList('selectCamera', 'Select camera', 
-      [{name: 0, value: 0}, {name: 1, value: 1}, {name: 2, value: 2}, {name: 3, value: 3}],
-      UISetter.camera.select
-    ),
+    UiUtils.createDropdownList('selectCamera', 'Select camera',
+      [{ name: 0, value: 0 }, { name: 1, value: 1 }, { name: 2, value: 2 }, { name: 3, value: 3 }],
+      UISetter.camera.select),
     UiUtils.createButtons('cameraDumps', [
       {
         id: 'dumpProjection',
@@ -1240,7 +1240,6 @@ function populateControls() {
     ]),
   ]);
   // * Light Settings
-  const sun = viewer.scene.lights[0];
   UiUtils.addGroup('gLight', 'Light Settings', [
     UiUtils.createSlider('SunAltitude', 'sun altitude', Config.sun.altitude, -1, 1, 0.05, Update.sunAltitude),
     UiUtils.createSlider('SunEastWest', 'sun east-west', Config.sun.eastWest, -1, 1, 0.05, Update.sunEastWest),
@@ -1282,7 +1281,7 @@ function populateControls() {
     UiUtils.createFileBrowser('jrofileBrowser', 'load joint rotation order', false, onAddJroFile),
     UiUtils.createCheckboxes('animOptions', {
       showSkeleton: { text: 'showSkeleton', default: Config.showSkeleton },
-      showJointLabels: { text: 'showJointLabels', default: Config.showJointLabels }
+      showJointLabels: { text: 'showJointLabels', default: Config.showJointLabels },
     }, Actions.anim.setOption),
     UiUtils.createDropdownList('selectedJoint', 'Joint', [], Update.jointSelection),
     UiUtils.createAngleSliders('joint', null, [0, 0, 0], Actions.anim.jointAngle),
@@ -1293,34 +1292,34 @@ function populateControls() {
       {
         id: 'alignBone',
         text: 'Align Bone',
-        callback: Actions.anim.alignBone
+        callback: Actions.anim.alignBone,
       },
       {
         id: 'twistAlign',
         text: 'Twist Align',
-        callback: Actions.anim.twistAlign
+        callback: Actions.anim.twistAlign,
       },
       {
         id: 'zeroJoint',
         text: 'Zero',
-        callback: Actions.anim.zeroJoint
-      }
+        callback: Actions.anim.zeroJoint,
+      },
     ]),
     UiUtils.createButtons('poseAlgoButtons', [
       {
         id: 'poseZeroTranslations',
         text: 'Zero Tx',
-        callback: Actions.anim.zeroTranslations
+        callback: Actions.anim.zeroTranslations,
       },
       {
         id: 'poseMirrorLeft',
         text: 'Mirror L',
-        callback: Actions.anim.makeSymmetric.bind(null, 'l')
+        callback: Actions.anim.makeSymmetric.bind(null, 'l'),
       },
       {
         id: 'poseMirrorRight',
         text: 'Mirror R',
-        callback: Actions.anim.makeSymmetric.bind(null, 'r')
+        callback: Actions.anim.makeSymmetric.bind(null, 'r'),
       },
     ]),
     UiUtils.createButtonWithOptions('savePose', 'Save Pose', ' as ', 'Json', saveCurrentPose),
@@ -1357,7 +1356,7 @@ $(document).ready(() => {
   viewer.setCameraDistanceCallback(UISetter.camera.distance);
   viewer.setJointSelectionCallback(UISetter.anim.selectJoint);
   viewer.setBackgroundColor(Config.backgroundColor);
-  for (let i = 0; i < viewer.views.length; i++) {
+  for (let i = 0; i < viewer.views.length; i += 1) {
     Update.camera(i);
   }
   populateControls();

@@ -11,12 +11,12 @@ class WavefrontObj {
       dataArrays: {
         position: [],
         normal: [],
-        uv: []
+        uv: [],
       },
       meshes: [],
     };
     let lastGroup = -1;
-    var currentMaterial = 'unknown';
+    let currentMaterial = 'unknown';
     lines.forEach((s) => {
       if (s.startsWith('#')) {
         // comments
@@ -24,48 +24,47 @@ class WavefrontObj {
       }
       // the filter is to remove potential extra white spaces
       // https://stackoverflow.com/a/64942185
-      const m = s.split(" ").filter(Boolean);
-      if (m.length == 0) {
+      const m = s.split(' ').filter(Boolean);
+      if (m.length === 0) {
         // empty line?
         return;
       }
       const cmd = m[0];
       switch (cmd) {
-        case "mtllib":
+        case 'mtllib':
           model.materialFile = m[1];
           break;
-        case "v":
+        case 'v':
           m.slice(1, 4).forEach((val) => {
             positions.push(parseFloat(val));
           });
           // right now, vertex color is not supported
           // so ignore the RGB values if there are 3 extra numbers at the end
           break;
-        case "vn":
+        case 'vn':
           m.slice(1, 4).forEach((val) => {
             normals.push(parseFloat(val));
           });
           break;
-        case "vt":
+        case 'vt':
           uvs.push(parseFloat(m[1]));
           uvs.push(parseFloat(m[2]));
           break;
-        case "g":
+        case 'g':
           meshes.push({ name: m[1], indices: [], material: currentMaterial });
           lastGroup += 1;
           break;
-        case "usemap":
-          const material = { albedoMap: m[1] };
-          model.materials[m[1]] = material;
+        case 'usemap':
+          model.materials[m[1]] = { albedoMap: m[1] };
           currentMaterial = m[1];
           break;
-        case "usemtl":
+        case 'usemtl':
           currentMaterial = m[1];
           if (lastGroup >= 0) {
             meshes[lastGroup].material = currentMaterial;
           }
           break;
-        case "f":
+        case 'f':
           if (meshes.length === 0) {
             // file with no 'g', so create a default mesh
             meshes.push({ name: 'unknown', indices: [], material: currentMaterial });
@@ -75,6 +74,8 @@ class WavefrontObj {
             meshes[meshes.length - 1].indices.push(val);
           });
           break;
+        default:
+          console.warn(`Unknown Wavefront cmd: ${cmd}`);
       }
     });
     model.missingUVs = uvs.length === 0;
@@ -172,7 +173,7 @@ class WavefrontObj {
 
   static export(model, submeshes, callback) {
     let out = '# Vertices\n';
-    let {position, normal, uv} = model.dataArrays;
+    const { position, normal, uv } = model.dataArrays;
     for (let i = 0; i < position.length; i += 3) {
       out += `v ${position[i]} ${position[i + 1]} ${position[i + 2]}\n`;
     }
@@ -184,9 +185,9 @@ class WavefrontObj {
     for (let i = 0; i < uv.length; i += 2) {
       out += `vt ${uv[i]} ${uv[i + 1]}\n`;
     }
-    var meshesToExport = model.meshes;
+    let meshesToExport = model.meshes;
     if (Array.isArray(submeshes)) {
-      meshesToExport = model.meshes.filter((m) => { return submeshes.indexOf(m.material) >= 0; })
+      meshesToExport = model.meshes.filter(m => submeshes.indexOf(m.material) >= 0);
     }
     meshesToExport.forEach((m) => {
       out += `usemap ${m.texture}\n`; // old Wavefront texture map

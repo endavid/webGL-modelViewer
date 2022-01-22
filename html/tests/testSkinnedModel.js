@@ -14,7 +14,8 @@ QUnit.test('add pose keyframe', (assert) => {
     dataType: 'text',
     success(data) {
       const model = Collada.parse(data);
-      const skinnedModel = new SkinnedModel(model.skin, model.skeleton, model.anims, new Transform({}));
+      const skinnedModel = new SkinnedModel(model.skin,
+        model.skeleton, model.anims, new Transform({}));
       assert.equal(skinnedModel.keyframeCount, 5);
       const posefile = {
         pose: {

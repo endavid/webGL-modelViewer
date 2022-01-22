@@ -21,17 +21,21 @@ class PluginLitModel {
     const uniforms = ['Pmatrix', 'Vmatrix', 'Mmatrix', 'lightDirection', 'lightIrradiance', 'sampler'];
     const attribsSkin = attribs.concat(['objectId', 'boneWeights', 'boneIndices']);
     const uniformsSkin = uniforms.concat(['joints', 'jointDebugPalette']);
-    return {attribs, uniforms, attribsSkin, uniformsSkin};
+    return {
+      attribs, uniforms, attribsSkin, uniformsSkin,
+    };
   }
   static getVsConstants(scene) {
     const boneCount = getMaxBoneCount(scene);
     const vsConstants = {
-      "const int BONE_COUNT": boneCount
+      'const int BONE_COUNT': boneCount,
     };
     return vsConstants;
   }
   static async createAsync(gl, whiteTexture, fragmentShader, scene) {
-    const {attribs, uniforms, attribsSkin, uniformsSkin } = PluginLitModel.getAttribs();
+    const {
+      attribs, uniforms, attribsSkin, uniformsSkin,
+    } = PluginLitModel.getAttribs();
     const shaders = {};
     const fs = fragmentShader || 'shaders/lighting.fs';
     const vsConstants = PluginLitModel.getVsConstants(scene);
@@ -51,7 +55,9 @@ class PluginLitModel {
     if (!model || !model.vertexBuffer) {
       return;
     }
-    const { camera, whiteTexture, gl, scene, normalShader, skinShader } = args;
+    const {
+      camera, whiteTexture, gl, scene, normalShader, skinShader,
+    } = args;
     const [light] = scene.lights;
     const skinned = model.skinnedModel;
     const shader = skinned ? skinShader : normalShader;
@@ -67,18 +73,23 @@ class PluginLitModel {
     gl.uniform4f(shader.uniforms.lightIrradiance,
       light.irradiance[0], light.irradiance[1], light.irradiance[2], light.irradiance[3]);
     gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexBuffer);
-    gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false, stride, layout.byteOffsets.position);
-    gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false, stride, layout.byteOffsets.normal);
-    gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false, stride, layout.byteOffsets.uv);
-    gl.vertexAttribPointer(shader.attribs.color, 4, gl.UNSIGNED_BYTE, true, stride, layout.byteOffsets.color);
+    gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false,
+      stride, layout.byteOffsets.position);
+    gl.vertexAttribPointer(shader.attribs.normal, 3, gl.FLOAT, false,
+      stride, layout.byteOffsets.normal);
+    gl.vertexAttribPointer(shader.attribs.uv, 2, gl.FLOAT, false,
+      stride, layout.byteOffsets.uv);
+    gl.vertexAttribPointer(shader.attribs.color, 4, gl.UNSIGNED_BYTE, true,
+      stride, layout.byteOffsets.color);
     if (skinned) {
-      gl.vertexAttribPointer(shader.attribs.objectId, 1, gl.FLOAT, false, stride, layout.byteOffsets.objectId);
+      gl.vertexAttribPointer(shader.attribs.objectId, 1, gl.FLOAT, false,
+        stride, layout.byteOffsets.objectId);
       gl.vertexAttribPointer(shader.attribs.boneWeights,
         4, gl.FLOAT, false, stride, layout.byteOffsets.boneWeights);
       gl.vertexAttribPointer(shader.attribs.boneIndices,
         4, gl.UNSIGNED_BYTE, false, stride, layout.byteOffsets.boneIndices);
       gl.uniformMatrix4fv(shader.uniforms.joints, false, skinned.joints);
-      const debugJointCount = (scene.settings || {}).debugJointCount;
+      const { debugJointCount } = scene.settings || {};
       gl.uniform4fv(shader.uniforms.jointDebugPalette,
         debugJointCount ? skinned.jointCountPalette : skinned.jointColorPalette);
     }
@@ -104,16 +115,16 @@ class PluginLitModel {
   }
   draw(glState, scene, view) {
     const { camera } = view;
-    const irradiance = scene.lights[0].irradiance;
+    const { irradiance } = scene.lights[0];
     PluginLitModel.setDepthPass(glState, irradiance[3] < 0.99);
     const args = {
-      camera: camera,
+      camera,
       whiteTexture: this.whiteTexture,
       gl: glState.gl,
-      scene: scene,
+      scene,
       normalShader: this.shaders.lit,
-      skinShader: this.shaders.litSkin
-    }
+      skinShader: this.shaders.litSkin,
+    };
     const drawModel = PluginLitModel.drawModel.bind(this, args);
     scene.models.forEach(drawModel);
   }
@@ -122,12 +133,14 @@ class PluginLitModel {
     const vsConstants = PluginLitModel.getVsConstants(scene);
     let someDiffer = false;
     Object.keys(vsConstants).forEach((k) => {
-      someDiffer = someDiffer || (self.vsConstants[k] != vsConstants[k]);
+      someDiffer = someDiffer || (self.vsConstants[k] !== vsConstants[k]);
     });
     if (someDiffer) {
-      const {attribsSkin, uniformsSkin } = PluginLitModel.getAttribs();
+      const { attribsSkin, uniformsSkin } = PluginLitModel.getAttribs();
       const { vs, fs } = this.shaders.litSkin;
-      this.shaders.litSkin = await Shader.createAsync(glState.gl, vs, fs, attribsSkin, uniformsSkin, vsConstants);
+      this.shaders.litSkin = await Shader.createAsync(
+        glState.gl, vs, fs, attribsSkin, uniformsSkin, vsConstants,
+      );
     }
   }
 }

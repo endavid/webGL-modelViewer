@@ -7,8 +7,8 @@ class PluginSkeleton {
       bone: '#00ff00',
       selected: '#ff00ff',
       unparented: '#ff0000',
-      shadow: '#000000'
-    }
+      shadow: '#000000',
+    };
   }
   setColor(context, color) {
     /* eslint-disable no-param-reassign */
@@ -28,17 +28,20 @@ class PluginSkeleton {
     const { skinnedModel } = mainModel;
     if (skinnedModel && skinnedModel.showSkeleton) {
       const modelMatrix = mainModel.getTransformMatrix();
-      const { jointNames, jointIndices, skeleton, currentKeyframe } = skinnedModel;
-      function getJointPosition(index) {
+      const {
+        jointNames, jointIndices, skeleton, currentKeyframe,
+      } = skinnedModel;
+      const getJointPosition = (index) => {
         const p = skinnedModel.getJointPosition(index, currentKeyframe);
         return VMath.mulVector(modelMatrix, p.concat(1));
-      }
+      };
       for (let i = 0; i < jointNames.length; i += 1) {
         const name = jointNames[i];
         const node = skeleton[name];
         if (!node) {
           // this means the names in the rig do not correspond
           // to the names in poses! Bad COLLADA!
+          // eslint-disable-next-line no-continue
           continue;
         }
         const { parent } = node;
@@ -52,6 +55,7 @@ class PluginSkeleton {
           if (skinnedModel.showJointLabels) {
             self.drawLabel(context, p1, name, jointColor, shadowColor);
           }
+          // eslint-disable-next-line no-continue
           continue;
         }
         const j = jointIndices[parent];
@@ -61,6 +65,7 @@ class PluginSkeleton {
           if (skinnedModel.showJointLabels) {
             self.drawLabel(context, p1, name, jointColor, shadowColor);
           }
+          // eslint-disable-next-line no-continue
           continue;
         }
         const color = name === skinnedModel.selectedJoint ? self.colors.selected : self.colors.bone;
@@ -72,7 +77,7 @@ class PluginSkeleton {
         if (skinnedModel.showJointLabels) {
           self.drawLabel(context, p1, name, jointColor, shadowColor);
         }
-    }
+      }
     }
   }
   static getJointColor(skinnedModel, jointName) {

@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 import Gfx from './gfx.js';
 import VMath from './math.js';
 import SkinnedModel from './skinnedModel.js';
@@ -17,8 +18,8 @@ function getModelStats(json) {
   const stats = {
     vertexCount: json.dataArrays.position.length / 3,
     meshCount: json.meshes.length,
-    missingUVs: json.missingUVs ? true : false,
-    missingNormals: json.missingNormals ? true : false
+    missingUVs: json.missingUVs,
+    missingNormals: json.missingNormals,
   };
   if (json.skin) {
     stats.jointCount = json.skin.joints.length;
@@ -28,9 +29,9 @@ function getModelStats(json) {
 }
 
 function chunkedAndSorted(array, chunkSize) {
-  let out = [];
+  const out = [];
   for (let i = 0; i < array.length; i += chunkSize) {
-    let t = array.slice(i, i+chunkSize);
+    const t = array.slice(i, i + chunkSize);
     t.sort();
     out.push(t);
   }
@@ -62,15 +63,15 @@ function arrayCmp(a, b) {
 // We can use this function to paint vertices with
 // barycentric coordinates.
 function colorVertices(vertexCount, meshes, colors) {
-  let labels = Array.apply(null, Array(vertexCount)).map(() => {return 0});
+  const labels = [...Array(vertexCount)].map(() => 0);
   let coloringFailed = 0;
   meshes.forEach((mesh) => {
-    let triangles = chunkedAndSorted(mesh.indices, 3);
+    const triangles = chunkedAndSorted(mesh.indices, 3);
     triangles.sort(arrayCmp);
     triangles.forEach((triangle) => {
       let available = [1, 2, 3];
       triangle.forEach((vertexIndex) => {
-        available = available.filter((x) => { return x != labels[vertexIndex]; });
+        available = available.filter(x => x !== labels[vertexIndex]);
       });
       triangle.forEach((vertexIndex) => {
         if (labels[vertexIndex] === 0) {
@@ -84,13 +85,13 @@ function colorVertices(vertexCount, meshes, colors) {
     });
   });
   if (coloringFailed > 0) {
-    console.log(`Not 3-colorable. ${coloringFailed} vertices couldn't be colored.`)
+    console.log(`Not 3-colorable. ${coloringFailed} vertices couldn't be colored.`);
   } else {
     console.log('Model is 3-colorable.');
   }
-  let flatColorData = [];
+  const flatColorData = [];
   labels.forEach((label) => {
-    let color = label > 0 ? colors[label-1] : 0;
+    const color = label > 0 ? colors[label - 1] : 0;
     flatColorData.push(0xff & (color >> 24));
     flatColorData.push(0xff & (color >> 16));
     flatColorData.push(0xff & (color >> 8));
@@ -137,23 +138,27 @@ class Model {
     this.vertexBuffer = gl.createBuffer();
     this.stats = getModelStats(json);
     if (json.skin) {
-      this.skinnedModel = new SkinnedModel(json.skin, json.skeleton, json.anims, armatureTransform, config.reRig);
+      this.skinnedModel = new SkinnedModel(json.skin, json.skeleton,
+        json.anims, armatureTransform, config.reRig);
     } else {
       this.skinnedModel = null;
     }
-    // color with barycentric coordinates (1, 0, 0), (0, 1, 0), (0, 0, 1)
-    json.dataArrays.color = colorVertices(this.stats.vertexCount, json.meshes, [
-      0xff000000,
-      0x00ff0000,
-      0x0000ff00
-    ]);
-    this.memoryLayout = json.skin ? MemoryLayout.skinnedVertexLayout() : MemoryLayout.defaultVertexLayout();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-    let arrayBuffer = this.memoryLayout.createInterleavedArrayBufferFromDataArrays(json.dataArrays);
-    gl.bufferData(gl.ARRAY_BUFFER, arrayBuffer, gl.STATIC_DRAW);
-    // for rendering purposes only, we don't need to remember .vertices,
+    // for rendering purposes only, we don't need to keep these arrays,
     // but we will need them if we want to do things on the CPU side.
     this.dataArrays = json.dataArrays;
+    // color with barycentric coordinates (1, 0, 0), (0, 1, 0), (0, 0, 1)
+    this.dataArrays.color = colorVertices(this.stats.vertexCount, json.meshes, [
+      0xff000000,
+      0x00ff0000,
+      0x0000ff00,
+    ]);
+    this.memoryLayout = json.skin ? MemoryLayout.skinnedVertexLayout()
+      : MemoryLayout.defaultVertexLayout();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+    const arrayBuffer = this.memoryLayout.createInterleavedArrayBufferFromDataArrays(
+      this.dataArrays,
+    );
+    gl.bufferData(gl.ARRAY_BUFFER, arrayBuffer, gl.STATIC_DRAW);
     // submeshes
     const meshes = [];
     let triangles = []; // again, remember for CPU computations
@@ -161,7 +166,7 @@ class Model {
       const id = m.material || '';
       const mat = json.materials[id] || {};
       const albedoMapName = mat.albedoMap || 'missing';
-      let albedoMapUrl = imageUrls[albedoMapName]
+      const albedoMapUrl = imageUrls[albedoMapName]
         // if the .dds texture is missing, try to find equivalent .png
         || imageUrls[`${Gfx.getFileNameWithoutExtension(albedoMapName)}.png`]
         // or use the 'missing' texture otherwise
@@ -252,16 +257,18 @@ class Model {
               const index = e.data.indices[key];
               skinData[key] = {
                 weights: self.getSkinningWeights(index),
-                indices: self.getSkinningIndices(index)
-              }
+                indices: self.getSkinningIndices(index),
+              };
               const [x, y, z] = self.skinnedModel.getInverseSkinnedVertex(
                 positions[key],
                 skinData[key].weights,
-                skinData[key].indices
+                skinData[key].indices,
               );
               positionInBindPose[key] = [x, y, z];
               const disabled = landmarks[key].disabled || false;
-              self.labels[key] = { index, x, y, z };
+              self.labels[key] = {
+                index, x, y, z,
+              };
               if (disabled) {
                 self.labels[key].disabled = true;
               }
@@ -280,9 +287,9 @@ class Model {
     }
   }
   setDotsVertexData(gl, positions, colors, skinData) {
-    let dataArrays = {
+    const dataArrays = {
       position: [],
-      color: []
+      color: [],
     };
     if (skinData) {
       dataArrays.boneWeights = [];
@@ -307,7 +314,7 @@ class Model {
     if (this.dotBuffer) {
       gl.deleteBuffer(this.dotBuffer);
     }
-    let buffer = this.dotMemoryLayout.createInterleavedArrayBufferFromDataArrays(dataArrays);
+    const buffer = this.dotMemoryLayout.createInterleavedArrayBufferFromDataArrays(dataArrays);
     this.dotBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.dotBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, buffer, gl.STATIC_DRAW);
@@ -335,7 +342,7 @@ class Model {
     const skinnedPos = this.skinnedModel.getSkinnedVertex(
       pos,
       this.getSkinningWeights(vertexIndex),
-      this.getSkinningIndices(vertexIndex)
+      this.getSkinningIndices(vertexIndex),
     );
     return skinnedPos.slice(0, 3);
   }
@@ -348,7 +355,7 @@ class Model {
         if (label.x === undefined) {
           pos = this.getSkinnedPosition(label.index);
         } else {
-          pos = VMath.readCoordinates(label).slice(0, 3);  
+          pos = VMath.readCoordinates(label).slice(0, 3);
           pos = this.getSkinnedPosition(label.index, pos);
         }
       } else {
@@ -383,8 +390,8 @@ class Model {
     if (window.Worker) {
       const worker = new Worker('./js/modelDistanceWorker.js');
       const boundingBox = {
-        min: {x: Number.MAX_VALUE, y: Number.MAX_VALUE, z: Number.MAX_VALUE},
-        max: {x: Number.MIN_VALUE, y: Number.MIN_VALUE, z: Number.MIN_VALUE},
+        min: { x: Number.MAX_VALUE, y: Number.MAX_VALUE, z: Number.MAX_VALUE },
+        max: { x: Number.MIN_VALUE, y: Number.MIN_VALUE, z: Number.MIN_VALUE },
       };
       const load = {
         boundingBox,
@@ -400,7 +407,7 @@ class Model {
           onDone(e.data.boundingBox);
         }
       };
-      worker.postMessage(load);        
+      worker.postMessage(load);
     } else {
       console.error("Can't create Worker to find bounding box");
     }

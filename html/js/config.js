@@ -6,7 +6,7 @@ const Config = {
   model: {
     position: { x: 0, y: 0, z: 0 },
     rotation: { x: 0, y: 0, z: 0 },
-    scale: 1
+    scale: 1,
   },
   selectedCamera: 0,
   cameras: [
@@ -17,7 +17,7 @@ const Config = {
       pitch: 0,
       rotationY: 0,
       fov: 26.9,
-      eye: { position: {}, target: {}, up: {} }
+      eye: { position: {}, target: {}, up: {} },
     },
     {
       distance: 3.01,
@@ -26,7 +26,7 @@ const Config = {
       pitch: 0,
       rotationY: 45,
       fov: 26.9,
-      eye: { position: {}, target: {}, up: {} }
+      eye: { position: {}, target: {}, up: {} },
     },
     {
       distance: 3.01,
@@ -35,7 +35,7 @@ const Config = {
       pitch: 0,
       rotationY: -45,
       fov: 26.9,
-      eye: { position: {}, target: {}, up: {} }
+      eye: { position: {}, target: {}, up: {} },
     },
     {
       distance: 3.01,
@@ -44,14 +44,14 @@ const Config = {
       pitch: 0,
       rotationY: 180,
       fov: 26.9,
-      eye: { position: {}, target: {}, up: {} }
+      eye: { position: {}, target: {}, up: {} },
     },
   ],
   sun: {
     altitude: 1,
     eastWest: 0.2,
     intensity: 0.8,
-    alpha: 1
+    alpha: 1,
   },
   needsReload: false,
   keyframe: -1,
@@ -61,6 +61,6 @@ const Config = {
   showLabels: true,
   showPoints: true,
   showSkeleton: false,
-  showJointLabels: false
+  showJointLabels: false,
 };
 export default Config;
