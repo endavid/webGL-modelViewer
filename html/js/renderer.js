@@ -445,7 +445,7 @@ class Renderer {
       gl.deleteTexture(tex);
     }
     if (!url) {
-      if (callback) callback(img);
+      if (callback) callback(null);
       return;
     }
     Gfx.loadTexture(gl, url, false, (img) => {

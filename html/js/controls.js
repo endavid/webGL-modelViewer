@@ -651,6 +651,10 @@ const Actions = {
   },
   shader: {
     checkAspect: (img) => {
+      if (!img) {
+        setWarning('Not an image');
+        return;
+      }
       const aspect = img.height / img.width;
       const sizeinfo = `${img.width}×${img.height}`;
       if (Math.abs(aspect - 1.5) > 0.01) {
