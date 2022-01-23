@@ -108,7 +108,7 @@ function findChildren(skeleton, jointName) {
 }
 
 function getDisplacement(skeleton, jointName) {
-  let jm = skeleton[jointName].matrix;
+  const jm = skeleton[jointName].matrix;
   return [jm[3], jm[7], jm[11]];
 }
 
@@ -669,7 +669,7 @@ class SkinnedModel {
     const R = this.getRotationMatrix(joint, keyframe);
     return AngleAxis.fromMatrix(R, node.rotationOrder);
   }
-  getEulerAndAngleAxis(angle, axis, joint) {
+  getEulerAndAngleAxis(angle, axis, joint, keyframe) {
     const node = this.skeleton[joint];
     const angleAxis = new AngleAxis(angle, axis, node.rotationOrder);
     let eulerNew = angleAxis.eulerAngles.map(VMath.radToDeg);
@@ -702,7 +702,7 @@ class SkinnedModel {
     const v1 = VMath.normalize(VMath.diff(t, p0));
     const axis = VMath.normalize(math.cross(v0, v1));
     const angle = Math.acos(math.dot(v0, v1));
-    const res = this.getEulerAndAngleAxis(angle, axis, parent);
+    const res = this.getEulerAndAngleAxis(angle, axis, parent, keyframe);
     console.log(`bone dir: ${v0}; target dir: ${v1}; axis: ${axis}; angle: ${VMath.radToDeg(angle)}`);
     return res;
   }
@@ -740,7 +740,7 @@ class SkinnedModel {
     // we get twist right.
     // Check GetRotationInLocalAxis in Skeleton.cpp
     // You just need to convert the angleAxis to the bone frame of ref.
-    const res = this.getEulerAndAngleAxis(angle, v0, grandparent);
+    const res = this.getEulerAndAngleAxis(angle, v0, grandparent, keyframe);
     console.log(`bones: ${v0}, ${v1}; target dir: ${vt}; v1_proj: ${v1Projected}; angle: ${VMath.radToDeg(angle)}`);
     return res;
   }
