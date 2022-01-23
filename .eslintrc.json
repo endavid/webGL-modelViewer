@@ -11,6 +11,7 @@
     "no-console": 0,
     "import/extensions": 0,
     "lines-between-class-members": 0,
-    "spaced-comment": ["error", "always", { "markers": ["/"] }]
+    "spaced-comment": ["error", "always", { "markers": ["/"] }],
+    "no-param-reassign": ["error", { "props": false }]
   }
 }

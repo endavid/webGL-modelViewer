@@ -1,5 +1,11 @@
 import VMath from './math.js';
 
+function setColor(context, color) {
+  context.fillStyle = color;
+  context.strokeStyle = color;
+  context.textAlign = 'center';
+}
+
 class PluginLabels {
   constructor() {
     this.colors = {
@@ -7,13 +13,6 @@ class PluginLabels {
       model: '#ffffff',
       selected: '#00ff00',
     };
-  }
-  setColor(context, color) {
-    /* eslint-disable no-param-reassign */
-    context.fillStyle = color;
-    context.strokeStyle = color;
-    context.textAlign = 'center';
-    /* eslint-enable no-param-reassign */
   }
   draw(context, scene, camera) {
     const self = this;
@@ -23,7 +22,7 @@ class PluginLabels {
     if (!labels.showLabels) {
       return;
     }
-    self.setColor(context, self.colors.world);
+    setColor(context, self.colors.world);
     Object.keys(labels.world).forEach((k) => {
       const pos = VMath.readCoordinates(labels.world[k]);
       const pix = camera.worldToPixels(pos, canvas.width, canvas.height);
@@ -32,7 +31,7 @@ class PluginLabels {
     const [mainModel] = scene.models;
     if (mainModel && mainModel.labels) {
       const modelMatrix = mainModel.getTransformMatrix();
-      self.setColor(context, self.colors.model);
+      setColor(context, self.colors.model);
       const { selected } = scene.labels;
       Object.keys(mainModel.labels).forEach((k) => {
         const label = mainModel.labels[k];
@@ -44,11 +43,11 @@ class PluginLabels {
         const world = VMath.mulVector(modelMatrix, posScaled);
         const pix = camera.worldToPixels(world, canvas.width, canvas.height);
         if (k === selected) {
-          self.setColor(context, self.colors.selected);
+          setColor(context, self.colors.selected);
         }
         PluginLabels.drawLabel(context, pix[0], pix[1], k);
         if (k === selected) {
-          self.setColor(context, self.colors.model);
+          setColor(context, self.colors.model);
         }
       });
     }

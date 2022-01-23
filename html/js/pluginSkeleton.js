@@ -1,5 +1,34 @@
 import VMath from './math.js';
 
+function setColor(context, color) {
+  context.fillStyle = color;
+  context.strokeStyle = color;
+  context.textAlign = 'center';
+}
+
+function drawLabel(ctx, point, label, color, shadowColor) {
+  // save all the canvas settings
+  ctx.save();
+  // translate the canvas origin so 0, 0 is at
+  // the top front right corner of our F
+  ctx.translate(point[0], point[1]);
+  // draw an arrow
+  ctx.beginPath();
+  ctx.moveTo(10, 5);
+  ctx.lineTo(0, 0);
+  ctx.lineTo(5, 10);
+  ctx.moveTo(0, 0);
+  ctx.lineTo(15, 15);
+  ctx.stroke();
+  // draw the text.
+  setColor(ctx, shadowColor);
+  ctx.fillText(label, 21, 25);
+  setColor(ctx, color);
+  ctx.fillText(label, 20, 24);
+  // restore the canvas to its old settings.
+  ctx.restore();
+}
+
 class PluginSkeleton {
   constructor() {
     this.colors = {
@@ -9,13 +38,6 @@ class PluginSkeleton {
       unparented: '#ff0000',
       shadow: '#000000',
     };
-  }
-  setColor(context, color) {
-    /* eslint-disable no-param-reassign */
-    context.fillStyle = color;
-    context.strokeStyle = color;
-    context.textAlign = 'center';
-    /* eslint-enable no-param-reassign */
   }
   draw(context, scene, camera) {
     const self = this;
@@ -48,34 +70,35 @@ class PluginSkeleton {
         const w1 = getJointPosition(i);
         const p1 = camera.worldToPixels(w1, width, height);
         const jointColor = PluginSkeleton.getJointColor(skinnedModel, name);
-        const shadowColor = name === skinnedModel.selectedJoint ? self.colors.selected : self.colors.shadow;
+        const shadowColor = name === skinnedModel.selectedJoint ? self.colors.selected
+          : self.colors.shadow;
         if (!parent) {
-          self.setColor(context, self.colors.root);
+          setColor(context, self.colors.root);
           PluginSkeleton.drawCircle(context, p1);
           if (skinnedModel.showJointLabels) {
-            self.drawLabel(context, p1, name, jointColor, shadowColor);
+            drawLabel(context, p1, name, jointColor, shadowColor);
           }
           // eslint-disable-next-line no-continue
           continue;
         }
         const j = jointIndices[parent];
         if (j === undefined) {
-          self.setColor(context, self.colors.unparented);
+          setColor(context, self.colors.unparented);
           PluginSkeleton.drawCircle(context, p1);
           if (skinnedModel.showJointLabels) {
-            self.drawLabel(context, p1, name, jointColor, shadowColor);
+            drawLabel(context, p1, name, jointColor, shadowColor);
           }
           // eslint-disable-next-line no-continue
           continue;
         }
         const color = name === skinnedModel.selectedJoint ? self.colors.selected : self.colors.bone;
-        self.setColor(context, color);
+        setColor(context, color);
         const w0 = getJointPosition(jointIndices[parent]);
         const p0 = camera.worldToPixels(w0, width, height);
         PluginSkeleton.drawLine(context, p0, p1);
         PluginSkeleton.drawCircle(context, p1);
         if (skinnedModel.showJointLabels) {
-          self.drawLabel(context, p1, name, jointColor, shadowColor);
+          drawLabel(context, p1, name, jointColor, shadowColor);
         }
       }
     }
@@ -104,28 +127,6 @@ class PluginSkeleton {
     ctx.beginPath();
     ctx.arc(0, 0, 5, 0, 2 * Math.PI, false);
     ctx.stroke();
-    ctx.restore();
-  }
-  drawLabel(ctx, point, label, color, shadowColor) {
-    // save all the canvas settings
-    ctx.save();
-    // translate the canvas origin so 0, 0 is at
-    // the top front right corner of our F
-    ctx.translate(point[0], point[1]);
-    // draw an arrow
-    ctx.beginPath();
-    ctx.moveTo(10, 5);
-    ctx.lineTo(0, 0);
-    ctx.lineTo(5, 10);
-    ctx.moveTo(0, 0);
-    ctx.lineTo(15, 15);
-    ctx.stroke();
-    // draw the text.
-    this.setColor(ctx, shadowColor);
-    ctx.fillText(label, 21, 25);
-    this.setColor(ctx, color);
-    ctx.fillText(label, 20, 24);
-    // restore the canvas to its old settings.
     ctx.restore();
   }
 }
