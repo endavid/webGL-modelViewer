@@ -5,6 +5,7 @@ import Config from './config.js';
 import VMath from './math.js';
 import Gfx from './gfx.js';
 import LabelUtils from './labelUtils.js';
+import ControlsUpdater from './controlsUpdater.js';
 
 const { math } = window;
 
@@ -22,6 +23,7 @@ const MaterialUrls = {};
 
 // initialized on document.ready
 let viewer;
+let Update;
 
 function setInfo(text) {
   $('#infoDiv').text(text);
@@ -160,95 +162,6 @@ function updateLabelList() {
 function updateRotationLock() {
   viewer.setRotationLock(Config.isLockRotationX, Config.isLockRotationY);
 }
-
-const Update = {
-  cameraLocation: (i) => {
-    const idx = i || Config.selectedCamera;
-    const camera = viewer.getCamera(idx);
-    const cfgCamera = Config.cameras[idx];
-    camera.setLocation(
-      cfgCamera.offsetX,
-      cfgCamera.height,
-      cfgCamera.distance,
-      cfgCamera.pitch,
-      cfgCamera.rotationY,
-    );
-  },
-  cameraFov: (i) => {
-    const idx = i || Config.selectedCamera;
-    const camera = viewer.getCamera(idx);
-    const cfgCamera = Config.cameras[idx];
-    camera.setFOV(cfgCamera.fov);
-  },
-  camera: (i) => {
-    Update.cameraLocation(i);
-    Update.cameraFov(i);
-  },
-  cameraPosition: (value, axis) => {
-    const camera = viewer.getCamera(Config.selectedCamera);
-    const cfgCamera = Config.cameras[Config.selectedCamera];
-    cfgCamera.eye.position[axis] = parseFloat(value);
-    camera.setEye(cfgCamera.eye);
-  },
-  cameraTarget: (value, axis) => {
-    const camera = viewer.getCamera(Config.selectedCamera);
-    const cfgCamera = Config.cameras[Config.selectedCamera];
-    cfgCamera.eye.target[axis] = parseFloat(value);
-    camera.setEye(cfgCamera.eye);
-  },
-  cameraUp: (value, axis) => {
-    const camera = viewer.getCamera(Config.selectedCamera);
-    const cfgCamera = Config.cameras[Config.selectedCamera];
-    cfgCamera.eye.up[axis] = parseFloat(value);
-    camera.setEye(cfgCamera.eye);
-  },
-  modelTransform: () => {
-    const p = Config.model.position;
-    const r = Config.model.rotation;
-    const s = Config.model.scale;
-    viewer.setModelTransform({
-      position: [p.x, p.y, p.z],
-      rotation: [r.x, r.y, r.z],
-      scale: [s, s, s],
-    });
-  },
-  modelScale: (logValue) => {
-    Config.model.scale = 10 ** parseFloat(logValue);
-    Update.modelTransform();
-  },
-  model: () => {
-    Update.modelTransform();
-  },
-  sunAltitude: (h) => {
-    viewer.scene.lights[0].setAltitude(h);
-  },
-  sunEastWest: (ew) => {
-    viewer.scene.lights[0].setEastWest(ew);
-  },
-  sunIntensity: (i) => {
-    viewer.scene.lights[0].setIntensity(i);
-  },
-  sunAlpha: (a) => {
-    viewer.scene.lights[0].setAlpha(a);
-  },
-  sun: () => {
-    const sun = viewer.scene.lights[0];
-    sun.setAltitude(Config.sun.altitude);
-    sun.setEastWest(Config.sun.eastWest);
-    sun.setIntensity(Config.sun.intensity);
-    sun.setAlpha(Config.sun.alpha);
-  },
-  jointSelection: (obj) => {
-    console.log(obj);
-    const model = viewer.getSelectedModel();
-    if (model && model.skinnedModel) {
-      model.skinnedModel.selectedJoint = obj.value;
-      UISetter.anim.updateJointControls();
-      UISetter.anim.updateJointColor();
-    }
-  },
-};
-
 
 const UISetter = {
   global: {
@@ -1120,7 +1033,8 @@ function populateControls() {
       Config[key] = value;
       Actions.model.reload();
     }),
-    UiUtils.createSlider('modelScaleExp10', 'scale (log10)', 0, -3, 3, 0.2, Update.modelScale),
+    UiUtils.createSlider('modelScaleExp10', 'scale (log10)', 0, -3, 3, 0.2,
+      Update.modelScale.bind(Update)),
     UiUtils.createCheckboxes('axisLock', {
       isLockRotationX: { text: 'lock X', default: Config.isLockRotationX },
       isLockRotationY: { text: 'lock Y', default: Config.isLockRotationY },
@@ -1196,21 +1110,21 @@ function populateControls() {
       ['x', 'y', 'z'],
       'position XYZ',
       [0, 0.95, 3.01], -10, 10, 0.01,
-      Update.cameraPosition,
+      Update.cameraPosition.bind(Update),
     ),
     UiUtils.createMultiSlider(
       'camera_target',
       ['x', 'y', 'z'],
       'target XYZ',
       [0, 0.95, 0], -10, 10, 0.01,
-      Update.cameraTarget,
+      Update.cameraTarget.bind(Update),
     ),
     UiUtils.createMultiSlider(
       'camera_up',
       ['x', 'y', 'z'],
       'up XYZ',
       [0, 1, 0], -1, 1, 0.01,
-      Update.cameraUp,
+      Update.cameraUp.bind(Update),
     ),
     UiUtils.createSlider('camera_fov', 'Field of View',
       Config.cameras[0].fov, 1, 90, 1, (value) => {
@@ -1245,9 +1159,12 @@ function populateControls() {
   ]);
   // * Light Settings
   UiUtils.addGroup('gLight', 'Light Settings', [
-    UiUtils.createSlider('SunAltitude', 'sun altitude', Config.sun.altitude, -1, 1, 0.05, Update.sunAltitude),
-    UiUtils.createSlider('SunEastWest', 'sun east-west', Config.sun.eastWest, -1, 1, 0.05, Update.sunEastWest),
-    UiUtils.createSlider('SunIntensity', 'sun intensity', Config.sun.intensity, 0.1, 2, 0.1, Update.sunIntensity),
+    UiUtils.createSlider('SunAltitude', 'sun altitude', Config.sun.altitude, -1, 1, 0.05,
+      Update.sunAltitude.bind(Update)),
+    UiUtils.createSlider('SunEastWest', 'sun east-west', Config.sun.eastWest, -1, 1, 0.05,
+      Update.sunEastWest.bind(Update)),
+    UiUtils.createSlider('SunIntensity', 'sun intensity', Config.sun.intensity, 0.1, 2, 0.1,
+      Update.sunIntensity.bind(Update)),
   ]);
   // * Shader Settings
   UiUtils.addGroup('gShader', 'Shader Settings', [
@@ -1272,7 +1189,8 @@ function populateControls() {
     },
     ]),
     UiUtils.createSlider('overlayAlpha', 'overlay opacity', 0.5, 0, 1, 1 / 255, Actions.shader.overlayAlpha),
-    UiUtils.createSlider('SunAlpha', 'model alpha', Config.sun.alpha, 0, 1, 1 / 255, Update.sunAlpha),
+    UiUtils.createSlider('SunAlpha', 'model alpha', Config.sun.alpha, 0, 1, 1 / 255,
+      Update.sunAlpha.bind(Update)),
   ]);
   // * Animation Controls
   UiUtils.addGroup('gAnim', 'Animation Controls', [
@@ -1287,7 +1205,8 @@ function populateControls() {
       showSkeleton: { text: 'showSkeleton', default: Config.showSkeleton },
       showJointLabels: { text: 'showJointLabels', default: Config.showJointLabels },
     }, Actions.anim.setOption),
-    UiUtils.createDropdownList('selectedJoint', 'Joint', [], Update.jointSelection),
+    UiUtils.createDropdownList('selectedJoint', 'Joint', [],
+      Update.jointSelection.bind(Update)),
     UiUtils.createAngleSliders('joint', null, [0, 0, 0], Actions.anim.jointAngle),
     UiUtils.createLocalAngleSliders('joint', null, [0, 0, 0], Actions.anim.jointLocalAngle),
     UiUtils.createTranslationSliders('joint', null, [0, 0, 0], Actions.anim.jointTranslation),
@@ -1352,6 +1271,7 @@ function makeCanvasFollowScroll() {
 
 $(document).ready(() => {
   viewer = new Viewer('glCanvas', 'canvas2D', ImageUrls.white);
+  Update = new ControlsUpdater(Config, viewer, UISetter);
   viewer.setRotationCallback((r) => {
     UISetter.model.rotation(r);
     Update.modelTransform();
