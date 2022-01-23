@@ -178,7 +178,7 @@ function standardizeAnimsToUseTransforms(skeleton, anims, reRig) {
               pinv = math.inv(math.reshape(skeleton[joint].matrix, [4, 4]));
             }
             const m = math.multiply(pinv, math.reshape(matrix, [4, 4]));
-            transforms[i] = Transform.fromMatrix(m, rotationOrder);  
+            transforms[i] = Transform.fromMatrix(m, rotationOrder);
           } else {
             const t = Transform.fromRowMajorArray(matrix, rotationOrder);
             transforms[i] = t;

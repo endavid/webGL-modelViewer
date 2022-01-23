@@ -539,6 +539,10 @@ class Renderer {
   async onSceneUpdate() {
     for (let i = 0; i < this.plugins.length; i += 1) {
       if (this.plugins[i].onSceneUpdate) {
+        // no-await-in-loop suggests to execute in parallel using Promise.all, but because
+        // onSceneUpdate we may be creating some shaders, some weird stuff
+        // may happen with the OpenGL stack if we don't execute these sequeantially.
+        // eslint-disable-next-line no-await-in-loop
         await this.plugins[i].onSceneUpdate(this.glState, this.scene);
       }
     }
