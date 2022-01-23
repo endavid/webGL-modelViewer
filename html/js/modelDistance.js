@@ -92,6 +92,15 @@
     },
   };
 
+  function getProgress(step, total) {
+    const progress = {
+      step,
+      total,
+      done: step === total,
+    };
+    return progress;
+  }
+
   class ModelDistance {
     constructor(json) {
       // shallow copy
@@ -106,13 +115,14 @@
     step(step) {
       if (this.ray) {
         return this.stepRayIntersection(step);
-      } else if (this.boundingBox) {
+      }
+      if (this.boundingBox) {
         return this.stepFindBoundingBox(step);
       }
       return this.stepFindClosestPoints(step);
     }
     stepFindClosestPoints(step) {
-      const progress = this.getProgress(step, this.getNumVertices());
+      const progress = getProgress(step, this.getNumVertices());
       if (progress.done) {
         return progress;
       }
@@ -131,7 +141,7 @@
       return progress;
     }
     stepFindBoundingBox(step) {
-      const progress = this.getProgress(step, this.getNumVertices());
+      const progress = getProgress(step, this.getNumVertices());
       if (progress.done) {
         return progress;
       }
@@ -149,7 +159,7 @@
       return progress;
     }
     stepRayIntersection(step) {
-      const progress = this.getProgress(step, this.getNumTriangles());
+      const progress = getProgress(step, this.getNumTriangles());
       if (progress.done) {
         return progress;
       }
@@ -162,14 +172,6 @@
         }
       }
       return progress;
-    }
-    getProgress(step, total) {
-      const progress = {
-        step,
-        total,
-        done: step === total,
-      };
-      return progress
     }
     getNumVertices() {
       return this.dataArrays.position.length / 3;
@@ -201,7 +203,7 @@
       if (this.joints) {
         const skinningWeights = this.getSkinningWeights(vertexIndex);
         const skinningIndices = this.getSkinningIndices(vertexIndex);
-        return this.transformVertex(position, skinningWeights, skinningIndices);  
+        return this.transformVertex(position, skinningWeights, skinningIndices);
       }
       return this.transformVertex(position);
     }
