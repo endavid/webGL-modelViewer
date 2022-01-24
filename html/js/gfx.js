@@ -49,6 +49,7 @@ class Gfx {
   // Eg. Gfx.useShader(gl, 'shaders/main.vs', 'shaders/main.fs');
   // Returns a promise
   static async useShader(gl, vsPath, fsPath, vsConstants) {
+    // eslint-disable-next-line prefer-const
     let [vd, fd] = await Promise.all([
       $.get(vsPath), $.get(fsPath),
     ]);

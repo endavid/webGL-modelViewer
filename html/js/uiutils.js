@@ -139,7 +139,7 @@ const UiUtils = {
   createButtons(id, list) {
     const td = $('<td>');
     list.forEach((b) => {
-      let type='text';
+      let type = 'text';
       let content = b.text;
       if (b.icon) {
         type = 'icon';
