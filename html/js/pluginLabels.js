@@ -6,6 +6,10 @@ function setColor(context, color) {
   context.textAlign = 'center';
 }
 
+function setFontSizePt(context, size) {
+  context.font = `normal ${size}pt serif`;
+}
+
 class PluginLabels {
   constructor() {
     this.colors = {
@@ -23,6 +27,7 @@ class PluginLabels {
       return;
     }
     setColor(context, self.colors.world);
+    setFontSizePt(context, 16);
     Object.keys(labels.world).forEach((k) => {
       const pos = VMath.readCoordinates(labels.world[k]);
       const pix = camera.worldToPixels(pos, canvas.width, canvas.height);
