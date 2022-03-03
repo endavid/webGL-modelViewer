@@ -68,10 +68,10 @@ function createFloatFramebuffer(glState, width, height) {
 }
 
 // https://stackoverflow.com/a/17130415/1765629
-function getMousePos(canvas, evt, viewRect) {
+function getMousePos(canvas, evt, viewRect, devicePixelRatio) {
   const rect = canvas.getBoundingClientRect();
-  const x = evt.clientX - rect.left;
-  const y = evt.clientY - rect.top;
+  let x = evt.clientX - rect.left;
+  let y = evt.clientY - rect.top;
   const { width, height } = viewRect;
   // normalized coordinates
   const u = x / width;
@@ -79,6 +79,8 @@ function getMousePos(canvas, evt, viewRect) {
   // clip coordinates (-1, 1)
   const clipx = 2 * u - 1;
   const clipy = 2 * v - 1;
+  x *= devicePixelRatio;
+  y *= devicePixelRatio;
   return {
     x, y, u, v, clipx, clipy,
   };
@@ -87,9 +89,16 @@ function getMousePos(canvas, evt, viewRect) {
 class Renderer {
   constructor(canvasId, canvas2dId, whiteUrl) {
     const self = this;
+    this.devicePixelRatio = window.devicePixelRatio || 1;
     this.canvas = document.getElementById(canvasId);
+    // scaling for HDPI / Retina displays
+    // https://www.khronos.org/webgl/wiki/HandlingHighDPI
+    this.canvas.width = this.canvas.clientWidth * this.devicePixelRatio;
+    this.canvas.height = this.canvas.clientHeight * this.devicePixelRatio;
     if (canvas2dId) {
       this.canvas2d = document.getElementById(canvas2dId);
+      this.canvas2d.width = this.canvas2d.clientWidth * this.devicePixelRatio;
+      this.canvas2d.height = this.canvas2d.clientHeight * this.devicePixelRatio;
       this.context2d = this.canvas2d.getContext('2d');
     }
     const { width, height } = this.canvas;
@@ -284,7 +293,7 @@ class Renderer {
   mouseDown(e) {
     const midButton = 4;
     const bothLeftAndRight = 3; // for mice without mid button
-    const screenCoords = getMousePos(this.canvas, e, this.views[0].rect);
+    const screenCoords = getMousePos(this.canvas, e, this.views[0].rect, this.devicePixelRatio);
     if (e.buttons === midButton || e.buttons === bothLeftAndRight) {
       this.tryToAddLabelAt(screenCoords);
     } else {
