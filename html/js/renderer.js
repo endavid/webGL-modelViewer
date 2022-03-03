@@ -70,8 +70,8 @@ function createFloatFramebuffer(glState, width, height) {
 // https://stackoverflow.com/a/17130415/1765629
 function getMousePos(canvas, evt, viewRect, devicePixelRatio) {
   const rect = canvas.getBoundingClientRect();
-  let x = evt.clientX - rect.left;
-  let y = evt.clientY - rect.top;
+  const x = (evt.clientX - rect.left) * devicePixelRatio;
+  const y = (evt.clientY - rect.top) * devicePixelRatio;
   const { width, height } = viewRect;
   // normalized coordinates
   const u = x / width;
@@ -79,8 +79,6 @@ function getMousePos(canvas, evt, viewRect, devicePixelRatio) {
   // clip coordinates (-1, 1)
   const clipx = 2 * u - 1;
   const clipy = 2 * v - 1;
-  x *= devicePixelRatio;
-  y *= devicePixelRatio;
   return {
     x, y, u, v, clipx, clipy,
   };
