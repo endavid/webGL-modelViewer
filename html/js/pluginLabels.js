@@ -27,7 +27,6 @@ class PluginLabels {
       const pos = VMath.readCoordinates(labels.world[k]);
       const pix = camera.worldToPixels(pos, canvas.width, canvas.height);
       PluginLabels.drawLabel(context, pix[0], pix[1], k);
-      PluginLabels.drawLabel(context, 600, 900, 'test');
     });
     const [mainModel] = scene.models;
     if (mainModel && mainModel.labels) {
