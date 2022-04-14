@@ -805,6 +805,7 @@ function populateControls() {
     'banana.obj',
     'tree01.dae',
     'plane.obj',
+    'triangle.obj',
     'monigote.dae'].map(e => ({ name: e, value: `resources/${e}` }));
 
   const missingTexturePresets = [
