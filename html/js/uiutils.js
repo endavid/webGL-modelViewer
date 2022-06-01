@@ -86,6 +86,19 @@ const UiUtils = {
     }
     return slider;
   },
+  createScaleSliders(id, parentId, values, callback) {
+    const slider = UiUtils.createMultiSlider(
+      `${id}_scale`,
+      ['x', 'y', 'z'],
+      'scale XYZ',
+      values, 0, 1, 0.01,
+      callback,
+    );
+    if (parentId) {
+      slider.attr('parent', parentId);
+    }
+    return slider;
+  },
   createCheckbox(id, text, checked, callback) {
     const config = {};
     config[id] = { text, default: checked };

@@ -76,29 +76,33 @@ function addPoseGroup(skinnedModel) {
   const frame = Config.keyframe;
   const { pose } = skinnedModel.getPoseFile(frame);
   const axisToIndex = { x: 0, y: 1, z: 2 };
-  function updateJointAngle(joint, v, sub) {
-    const key = 'eulerAngles';
+  function updateJointValue(key, joint, v, sub) {
     const value = parseFloat(v);
     const index = axisToIndex[sub];
     // eslint-disable-next-line object-curly-newline
     skinnedModel.setAnimValue({ joint, frame, key, value, index });
     skinnedModel.applyPose(frame);
+  }
+  function updateJointAngle(joint, v, sub) {
+    updateJointValue('eulerAngles', joint, v, sub);
   }
   function angleSlider(s, joint, values) {
     const parentId = `${id}_${joint}`;
     return UiUtils.createAngleSliders(s, parentId, values, updateJointAngle.bind(null, joint));
   }
   function updateJointPos(joint, v, sub) {
-    const key = 'position';
-    const value = parseFloat(v);
-    const index = axisToIndex[sub];
-    // eslint-disable-next-line object-curly-newline
-    skinnedModel.setAnimValue({ joint, frame, key, value, index });
-    skinnedModel.applyPose(frame);
+    updateJointValue('position', joint, v, sub);
+  }
+  function updateJointScale(joint, v, sub) {
+    updateJointValue('scale', joint, v, sub);
   }
   function translationSlider(s, joint, values) {
     const parentId = `${id}_${joint}`;
     return UiUtils.createTranslationSliders(s, parentId, values, updateJointPos.bind(null, joint));
+  }
+  function scaleSlider(s, joint, values) {
+    const parentId = `${id}_${joint}`;
+    return UiUtils.createScaleSliders(s, parentId, values, updateJointScale.bind(null, joint));
   }
   function createControls(skeleton, parent) {
     const joints = Object.keys(skeleton);
@@ -108,6 +112,9 @@ function addPoseGroup(skinnedModel) {
       const rx = transform[0] || 0;
       const ry = transform[1] || 0;
       const rz = transform[2] || 0;
+      const sx = transform[3] || 1;
+      const sy = transform[4] || 1;
+      const sz = transform[5] || 1;
       const tx = transform[6] || 0;
       const ty = transform[7] || 0;
       const tz = transform[8] || 0;
@@ -115,6 +122,7 @@ function addPoseGroup(skinnedModel) {
       let subcontrols = [
         angleSlider(subId, joint, [rx, ry, rz]),
         translationSlider(subId, joint, [tx, ty, tz]),
+        scaleSlider(subId, joint, [sx, sy, sz]),
       ];
       const jointControls = createControls(skeleton[joint], subId);
       subcontrols = subcontrols.concat(jointControls);
@@ -314,6 +322,7 @@ const UISetter = {
       let angles = { x: 0, y: 0, z: 0 };
       let localAngles = { x: 0, y: 0, z: 0 };
       let pos = { x: 0, y: 0, z: 0 };
+      let s = { x: 1, y: 1, z: 1 };
       const model = viewer.getSelectedModel();
       if (model && model.skinnedModel) {
         const joint = model.skinnedModel.selectedJoint;
@@ -326,6 +335,11 @@ const UISetter = {
           x: $(`#gPose_${joint}_translationx`).val(),
           y: $(`#gPose_${joint}_translationy`).val(),
           z: $(`#gPose_${joint}_translationz`).val(),
+        };
+        s = {
+          x: $(`#gPose_${joint}_scalex`).val(),
+          y: $(`#gPose_${joint}_scaley`).val(),
+          z: $(`#gPose_${joint}_scalez`).val(),
         };
         const frame = Config.keyframe;
         localAngles = model.skinnedModel.getRotationInLocalAxis(joint, frame);
@@ -340,6 +354,8 @@ const UISetter = {
         $(`#joint_localAngle${axis}_number`).val(a);
         $(`#joint_translation${axis}`).val(pos[axis]);
         $(`#joint_translation${axis}_number`).val(pos[axis]);
+        $(`#joint_scale${axis}`).val(s[axis]);
+        $(`#joint_scale${axis}_number`).val(s[axis]);
       });
     },
     selectJoint: (name) => {
@@ -353,6 +369,7 @@ const UISetter = {
 // aliases
 UISetter.anim.setJointRotation = UISetter.anim.setJointValue.bind(null, 'angle', 'eulerAngles');
 UISetter.anim.setJointTranslation = UISetter.anim.setJointValue.bind(null, 'translation', 'position');
+UISetter.anim.setJointScale = UISetter.anim.setJointValue.bind(null, 'scale', 'scale');
 
 
 const Actions = {
@@ -544,6 +561,13 @@ const Actions = {
       if (model && model.skinnedModel) {
         const joint = model.skinnedModel.selectedJoint;
         UISetter.anim.setJointTranslation(joint, axis, value);
+      }
+    },
+    jointScale: (value, axis) => {
+      const model = viewer.getSelectedModel();
+      if (model && model.skinnedModel) {
+        const joint = model.skinnedModel.selectedJoint;
+        UISetter.anim.setJointScale(joint, axis, value);
       }
     },
     jointColor: (e) => {
@@ -1211,6 +1235,7 @@ function populateControls() {
     UiUtils.createAngleSliders('joint', null, [0, 0, 0], Actions.anim.jointAngle),
     UiUtils.createLocalAngleSliders('joint', null, [0, 0, 0], Actions.anim.jointLocalAngle),
     UiUtils.createTranslationSliders('joint', null, [0, 0, 0], Actions.anim.jointTranslation),
+    UiUtils.createScaleSliders('joint', null, [1, 1, 1], Actions.anim.jointScale),
     UiUtils.createColorPicker('jointColor', 'Skin weight', '#000000', Actions.anim.jointColor),
     UiUtils.createButtons('jointButtons', [
       {
