@@ -82,6 +82,7 @@ function addPoseGroup(skinnedModel) {
     // eslint-disable-next-line object-curly-newline
     skinnedModel.setAnimValue({ joint, frame, key, value, index });
     skinnedModel.applyPose(frame);
+    viewer.requestRedraw();
   }
   function updateJointAngle(joint, v, sub) {
     updateJointValue('eulerAngles', joint, v, sub);
@@ -294,6 +295,7 @@ const UISetter = {
           joint, frame, key, value, index,
         });
         model.skinnedModel.applyPose(frame);
+        viewer.requestRedraw();
       }
     },
     setJointNames: (names) => {
@@ -357,6 +359,7 @@ const UISetter = {
         $(`#joint_scale${axis}`).val(s[axis]);
         $(`#joint_scale${axis}_number`).val(s[axis]);
       });
+      viewer.requestRedraw();
     },
     selectJoint: (name) => {
       $('#selectedJoint').val(name);
@@ -377,6 +380,7 @@ const Actions = {
     setOption: (key, value) => {
       Config[key] = value;
       viewer.scene.labels[key] = value;
+      viewer.requestRedraw();
       $(`#${key}`).prop('checked', value);
     },
     bake: () => {
@@ -389,6 +393,7 @@ const Actions = {
           progressBarUpdate, () => {
             Actions.labels.setOption('showLabels', false);
             $('#progressBarDiv').hide();
+            viewer.requestRedraw();
           }, setError);
       }
     },
@@ -495,6 +500,7 @@ const Actions = {
       const model = viewer.getSelectedModel();
       if (model && model.skinnedModel) {
         model.skinnedModel[key] = value;
+        viewer.requestRedraw();
       }
     },
     alignBoneWith: (alignment) => {
@@ -554,6 +560,7 @@ const Actions = {
           $(`#gPose_${joint}_angle${axis}`).val(angles[i]);
           $(`#gPose_${joint}_angle${axis}_number`).val(angles[i]);
         });
+        viewer.requestRedraw();
       }
     },
     jointTranslation: (value, axis) => {
@@ -561,6 +568,7 @@ const Actions = {
       if (model && model.skinnedModel) {
         const joint = model.skinnedModel.selectedJoint;
         UISetter.anim.setJointTranslation(joint, axis, value);
+        viewer.requestRedraw();
       }
     },
     jointScale: (value, axis) => {
@@ -568,6 +576,7 @@ const Actions = {
       if (model && model.skinnedModel) {
         const joint = model.skinnedModel.selectedJoint;
         UISetter.anim.setJointScale(joint, axis, value);
+        viewer.requestRedraw();
       }
     },
     jointColor: (e) => {
@@ -583,6 +592,7 @@ const Actions = {
         c.forEach((value, i) => {
           palette[4 * jointIndex + i] = value;
         });
+        viewer.requestRedraw();
       }
     },
   },
@@ -614,6 +624,7 @@ const Actions = {
       viewer.views.forEach((v) => {
         v.overlay.alpha = alpha;
       });
+      viewer.requestRedraw();
     },
     clearBackground: () => {
       for (let i = 0; i < viewer.views.length; i += 1) {

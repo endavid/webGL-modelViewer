@@ -15,12 +15,14 @@ class ControlsUpdater {
       cfgCamera.pitch,
       cfgCamera.rotationY,
     );
+    this.viewer.requestRedraw();
   }
   cameraFov(i) {
     const idx = i || this.config.selectedCamera;
     const camera = this.viewer.getCamera(idx);
     const cfgCamera = this.config.cameras[idx];
     camera.setFOV(cfgCamera.fov);
+    this.viewer.requestRedraw();
   }
   camera(i) {
     this.cameraLocation(i);
@@ -31,18 +33,21 @@ class ControlsUpdater {
     const cfgCamera = this.config.cameras[this.config.selectedCamera];
     cfgCamera.eye.position[axis] = parseFloat(value);
     camera.setEye(cfgCamera.eye);
+    this.viewer.requestRedraw();
   }
   cameraTarget(value, axis) {
     const camera = this.viewer.getCamera(this.config.selectedCamera);
     const cfgCamera = this.config.cameras[this.config.selectedCamera];
     cfgCamera.eye.target[axis] = parseFloat(value);
     camera.setEye(cfgCamera.eye);
+    this.viewer.requestRedraw();
   }
   cameraUp(value, axis) {
     const camera = this.viewer.getCamera(this.config.selectedCamera);
     const cfgCamera = this.config.cameras[this.config.selectedCamera];
     cfgCamera.eye.up[axis] = parseFloat(value);
     camera.setEye(cfgCamera.eye);
+    this.viewer.requestRedraw();
   }
   modelTransform() {
     const p = this.config.model.position;
@@ -63,15 +68,19 @@ class ControlsUpdater {
   }
   sunAltitude(h) {
     this.viewer.scene.lights[0].setAltitude(h);
+    this.viewer.requestRedraw();
   }
   sunEastWest(ew) {
     this.viewer.scene.lights[0].setEastWest(ew);
+    this.viewer.requestRedraw();
   }
   sunIntensity(i) {
     this.viewer.scene.lights[0].setIntensity(i);
+    this.viewer.requestRedraw();
   }
   sunAlpha(a) {
     this.viewer.scene.lights[0].setAlpha(a);
+    this.viewer.requestRedraw();
   }
   sun() {
     const sun = this.viewer.scene.lights[0];
@@ -79,6 +88,7 @@ class ControlsUpdater {
     sun.setEastWest(this.config.sun.eastWest);
     sun.setIntensity(this.config.sun.intensity);
     sun.setAlpha(this.config.sun.alpha);
+    this.viewer.requestRedraw();
   }
   jointSelection(obj) {
     console.log(obj);
@@ -87,6 +97,7 @@ class ControlsUpdater {
       model.skinnedModel.selectedJoint = obj.value;
       this.uiSetter.anim.updateJointControls();
       this.uiSetter.anim.updateJointColor();
+      this.viewer.requestRedraw();
     }
   }
 }

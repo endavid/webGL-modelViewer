@@ -120,6 +120,7 @@ class Renderer {
     this.mouseState = {
       amortization: 0.06,
       drag: false,
+      down: false,
       old_x: 0,
       old_y: 0,
       dX: 0,
@@ -160,6 +161,7 @@ class Renderer {
     this.selectedModel = 0;
     this.plugins = [];
     this.plugins2d = [];
+    this.redrawRequested = true;
     this.init()
       .then(() => {
         Gfx.loadTexture(self.glState.gl, whiteUrl, true, (img) => {
@@ -198,6 +200,7 @@ class Renderer {
         dots: 2,
         overlay: 3,
       };
+      self.redrawRequested = true;
     });
   }
   initPlugins2d() {
@@ -236,6 +239,7 @@ class Renderer {
     }
     this.scene.settings.debugJointCount = fragmentShaderUri.indexOf('JointCount') >= 0;
     this.plugins[this.pluginIndeces.litModel] = plugin;
+    this.redrawRequested = true;
   }
   static readImageData() {
     const p = new Promise((resolve, reject) => {
@@ -248,6 +252,9 @@ class Renderer {
     return p;
   }
   draw(deltaTime) {
+    if (!this.mouseState.down && !this.redrawRequested && !captureNextFrameCallback) {
+      return;
+    }
     const { glState, scene, context2d } = this;
     const s = this.outputSurface;
     const fb = this.resources.framebuffers[s];
@@ -280,6 +287,10 @@ class Renderer {
       plugin.draw(context2d, scene, camera, deltaTime);
     });
     glState.flush();
+    this.redrawRequested = false;
+  }
+  requestRedraw() {
+    this.redrawRequested = true;
   }
   movementUpdate() {
     if (!this.mouseState.drag) {
@@ -289,6 +300,7 @@ class Renderer {
     }
   }
   mouseDown(e) {
+    this.mouseState.down = true;
     const midButton = 4;
     const bothLeftAndRight = 3; // for mice without mid button
     const screenCoords = getMousePos(this.canvas, e, this.views[0].rect, this.devicePixelRatio);
@@ -304,6 +316,7 @@ class Renderer {
     return false;
   }
   mouseUp(e) {
+    this.mouseState.down = false;
     this.mouseState.drag = false;
     e.preventDefault();
     return false;
@@ -335,6 +348,7 @@ class Renderer {
     // viewMatrix to camera transform => -pos
     this.onCameraDistance(z);
     e.preventDefault();
+    this.redrawRequested = true;
     return false;
   }
   applyAngleDeltas() {
@@ -421,6 +435,7 @@ class Renderer {
       model.transform.scale = s;
       model.transform.eulerAngles = r;
       model.transform.position = p;
+      this.redrawRequested = true;
     }
   }
   getPositionForLabel(modelIndex, labelId) {
@@ -442,14 +457,17 @@ class Renderer {
       } else {
         model.skinnedModel.applyPose(keyframe);
       }
+      this.redrawRequested = true;
     }
   }
   setImage(obj, url, callback) {
     const { gl } = this.glState;
+    const self = this;
     if (obj.img && obj.img.webglTexture) {
       const tex = obj.img.webglTexture;
       obj.img = null;
       gl.deleteTexture(tex);
+      this.redrawRequested = true;
     }
     if (!url) {
       if (callback) callback(null);
@@ -458,6 +476,7 @@ class Renderer {
     Gfx.loadTexture(gl, url, false, (img) => {
       obj.url = url;
       obj.img = img;
+      self.redrawRequested = true;
       if (callback) callback(img);
     });
   }
@@ -471,26 +490,32 @@ class Renderer {
   }
   setBackgroundColor(rgb) {
     this.glState.setClearColor(rgb);
+    this.redrawRequested = true;
   }
   setOutputSurface(id) {
     this.outputSurface = id;
   }
   setPointSize(size) {
     this.getPlugin('dots').pointSize = size;
+    this.redrawRequested = true;
   }
   setPointColor(r, g, b, a) {
     this.getPlugin('dots').tint = [r, g, b, a];
+    this.redrawRequested = true;
   }
   setLabelScale(scale) {
     this.scene.labels.scale = scale;
+    this.redrawRequested = true;
   }
   setLabelFilter(filter) {
     this.scene.labelFilter = filter;
+    this.redrawRequested = true;
   }
   deleteLabel(labelName) {
     const model = this.scene.models[this.selectedModel];
     if (model && model.labels[labelName]) {
       delete model.labels[labelName];
+      this.redrawRequested = true;
     }
   }
   tryToAddLabelAt(screenCoords) {
@@ -499,11 +524,13 @@ class Renderer {
     const { clipx, clipy } = screenCoords;
     const ray = camera.rayFromScreenCoordinates(clipx, clipy);
     const model = this.scene.models[this.selectedModel];
+    const self = this;
     if (model) {
       model.getSurfaceIntersection(ray, (si) => {
         // inverse the transform because it will be applied to the model label
         const p = model.transform.inversePoint(si.point);
         model.labels[selected] = p;
+        self.redrawRequested = true;
       });
     }
   }
@@ -542,17 +569,19 @@ class Renderer {
   }
   selectSubmesh(name) {
     this.scene.selectedMesh = name === 'all' ? false : name;
+    this.redrawRequested = true;
   }
   async onSceneUpdate() {
     for (let i = 0; i < this.plugins.length; i += 1) {
       if (this.plugins[i].onSceneUpdate) {
         // no-await-in-loop suggests to execute in parallel using Promise.all, but because
         // onSceneUpdate we may be creating some shaders, some weird stuff
-        // may happen with the OpenGL stack if we don't execute these sequeantially.
+        // may happen with the OpenGL stack if we don't execute these sequentially.
         // eslint-disable-next-line no-await-in-loop
         await this.plugins[i].onSceneUpdate(this.glState, this.scene);
       }
     }
+    this.redrawRequested = true;
   }
 }
 export { Renderer as default };
