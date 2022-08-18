@@ -488,8 +488,8 @@ class Renderer {
     const { overlay } = this.views[i];
     this.setImage(overlay, url, callback);
   }
-  setBackgroundColor(rgb) {
-    this.glState.setClearColor(rgb);
+  setBackgroundColor(rgb, alpha = 1) {
+    this.glState.setClearColor(rgb, alpha);
     this.redrawRequested = true;
   }
   setOutputSurface(id) {

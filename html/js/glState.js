@@ -8,6 +8,7 @@ class GlState {
     this.setStencilTest(false);
     this.setBlend(false);
     this.clearColor = 0x0;
+    this.clearAlpha = 1;
     this.stacks = {
       framebuffer: [],
       renderbuffer: [],
@@ -39,11 +40,12 @@ class GlState {
     // write mask
     this.stencilMask = 0xffffffff;
   }
-  setClearColor(rgb) {
-    if (rgb !== this.clearColor) {
+  setClearColor(rgb, alpha) {
+    if (rgb !== this.clearColor || alpha !== this.clearAlpha) {
       this.clearColor = rgb;
+      this.clearAlpha = alpha;
       const v = VMath.rgbToFloat(rgb);
-      this.gl.clearColor(v[0], v[1], v[2], 1);
+      this.gl.clearColor(v[0], v[1], v[2], alpha);
     }
   }
   setScissorTest(enable) {

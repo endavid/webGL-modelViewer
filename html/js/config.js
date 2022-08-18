@@ -53,9 +53,12 @@ const Config = {
     intensity: 0.8,
     alpha: 1,
   },
+  clear: {
+    color: 0x3d4d4d,
+    alpha: 1,
+  },
   needsReload: false,
   keyframe: -1,
-  backgroundColor: 0x3d4d4d,
   pointSize: 3,
   labelScale: 1,
   showLabels: true,

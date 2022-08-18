@@ -49,6 +49,15 @@ class ControlsUpdater {
     camera.setEye(cfgCamera.eye);
     this.viewer.requestRedraw();
   }
+  clearAlpha(a) {
+    this.config.clear.alpha = a;
+    this.viewer.setBackgroundColor(this.config.clear.color, a);
+  }
+  clearColor(event) {
+    const intValue = parseInt(event.target.value.slice(1), 16);
+    this.config.clear.color = intValue;
+    this.viewer.setBackgroundColor(intValue, this.config.clear.alpha);
+  }
   modelTransform() {
     const p = this.config.model.position;
     const r = this.config.model.rotation;
