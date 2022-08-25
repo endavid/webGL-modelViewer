@@ -60,6 +60,10 @@ const VMath = {
     return v.map(a => s * a);
   },
 
+  divScalar(v, s) {
+    return v.map(a => a / s);
+  },
+
   degToRad: angle => (angle * Math.PI / 180.0),
 
   radToDeg: angle => angle * 180.0 / Math.PI,

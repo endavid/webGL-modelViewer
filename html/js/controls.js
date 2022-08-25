@@ -776,6 +776,12 @@ function populateControls() {
     viewer.setLabelScale(Config.labelScale);
   }
 
+  function onLoadCamera(values) {
+    $.getJSON(values[0].uri, (cameraConfig) => {
+      console.log(cameraConfig);
+    });
+  }
+
   function onAddPoseFiles(values) {
     const model = viewer.getSelectedModel();
     if (!model || !model.skinnedModel) {
@@ -1116,6 +1122,7 @@ function populateControls() {
   ]);
   // * Camera Settings
   UiUtils.addGroup('gCamera', 'Camera Settings', [
+    UiUtils.createFileBrowser('camerafileBrowser', 'load camera', false, onLoadCamera),
     UiUtils.createSlider('camera_distance', 'distance',
       Config.cameras[0].distance, 0.2, 10, 0.01, (value) => {
         Config.cameras[Config.selectedCamera].distance = parseFloat(value);
