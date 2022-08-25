@@ -142,6 +142,10 @@ class AngleAxis {
     const newAxis = math.multiply(R, this.axis);
     return new AngleAxis(this.angle, newAxis, 'xzy');
   }
+  toString() {
+    const degrees = VMath.radToDeg(this.angle);
+    return `(a: ${degrees}, axis: [${this.axis}])`;
+  }
 }
 
 export { AngleAxis as default };

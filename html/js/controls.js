@@ -778,7 +778,7 @@ function populateControls() {
 
   function onLoadCamera(values) {
     $.getJSON(values[0].uri, (cameraConfig) => {
-      console.log(cameraConfig);
+      Update.cameraInitFromFile(cameraConfig);
     });
   }
 
@@ -1234,7 +1234,7 @@ function populateControls() {
     UiUtils.createSlider('overlayAlpha', 'overlay opacity', 0.5, 0, 1, 1 / 255, Actions.shader.overlayAlpha),
     UiUtils.createSlider('SunAlpha', 'model alpha', Config.sun.alpha, 0, 1, 1 / 255,
       Update.sunAlpha.bind(Update)),
-    UiUtils.createColorPicker('clearColor', 'Clear color', `#${Config.clear.color.toString(16)}`, 
+    UiUtils.createColorPicker('clearColor', 'Clear color', `#${Config.clear.color.toString(16)}`,
       Update.clearColor.bind(Update)),
     UiUtils.createSlider('clearAlpha', 'Clear alpha', Config.clear.alpha, 0, 1, 1 / 255,
       Update.clearAlpha.bind(Update)),

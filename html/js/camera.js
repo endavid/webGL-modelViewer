@@ -1,6 +1,7 @@
 import VMath from './math.js';
 import Transform from './transform.js';
 import AngleAxis from './angleAxis.js';
+import Quaternion from './quaternion.js';
 
 // Unfortunately, I wasn't able to import math.js as a module
 const { math } = window;
@@ -42,6 +43,24 @@ class Camera {
   }
   getPosition() {
     return this.transform.position;
+  }
+  initFromFile({ fov, position, rotation }) {
+    this.setFOV(fov);
+    // config is in cm, convert to meters
+    const pMeters = VMath.divScalar(position, 100.0);
+    pMeters[2] = -pMeters[2]; // negative Z
+    const q = new Quaternion(rotation[3], rotation.slice(0, 3));
+    const aa = q.toAngleAxis('xzy');
+    console.log(this.transform.position);
+    console.log(`Camera rotation: ${aa.toString()}`);
+    const eu = aa.eulerAngles;
+    const degrees = eu.map(VMath.radToDeg);
+    console.log(`Euler: [${degrees}]`);
+    // inverse rotation, because in our camera model, we rotate Y around the model
+    const RyInv = VMath.rotationMatrixAroundY(-eu[1]);
+    const p = math.multiply(RyInv, pMeters);
+    console.log(`Camera position: ${pMeters}; model-relative: ${p}`);
+    this.setLocation(p[0], p[1], p[2], -degrees[0], degrees[1]);
   }
   setLocation(offsetX, height, distance, pitch, rotationY) {
     this.offsetX = valueOrDefault(offsetX, this.offsetX);

@@ -1,3 +1,5 @@
+import VMath from './math.js';
+
 class ControlsUpdater {
   constructor(config, viewer, uiSetter) {
     this.config = config;
@@ -47,6 +49,19 @@ class ControlsUpdater {
     const cfgCamera = this.config.cameras[this.config.selectedCamera];
     cfgCamera.eye.up[axis] = parseFloat(value);
     camera.setEye(cfgCamera.eye);
+    this.viewer.requestRedraw();
+  }
+  cameraInitFromFile(config) {
+    const camera = this.viewer.getCamera(this.config.selectedCamera);
+    camera.initFromFile(config);
+    this.uiSetter.camera.fov(camera.fov);
+    this.uiSetter.camera.distance(camera.distance);
+    this.uiSetter.camera.height(camera.height);
+    this.uiSetter.camera.offsetX(camera.offsetX);
+    const pitch = VMath.round(camera.pitch, 2);
+    const rotationY = VMath.round(camera.rotationY, 2);
+    this.uiSetter.camera.pitch(pitch);
+    this.uiSetter.camera.rotationY(rotationY);
     this.viewer.requestRedraw();
   }
   clearAlpha(a) {
