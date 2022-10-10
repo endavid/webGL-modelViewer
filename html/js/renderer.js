@@ -530,6 +530,7 @@ class Renderer {
         // inverse the transform because it will be applied to the model label
         const p = model.transform.inversePoint(si.point);
         model.labels[selected] = p;
+        console.log(p);
         self.redrawRequested = true;
       });
     }

@@ -160,6 +160,7 @@ function populateLabelList(labels) {
   UiUtils.addUrisToDropdownList('centerModel_select', names);
   $('#deleteLabel_select').empty();
   UiUtils.addUrisToDropdownList('deleteLabel_select', keys);
+  viewer.requestRedraw();
 }
 
 function updateLabelList() {
