@@ -1318,7 +1318,25 @@ function makeCanvasFollowScroll() {
   });
 }
 
+function addCanvases() {
+  const div = $('#canvasContainer');
+  const urlParams = new URLSearchParams(window.location.search);
+  const width = parseInt(urlParams.get('width') || 600, 10);
+  const height = 3 * width / 2;
+  const wSmallView = width / 3;
+  const widthExt = width + wSmallView;
+  const glCanvas = $('<canvas>').attr('id', 'glCanvas')
+    .attr('width', `${widthExt}`).attr('height', `${height}`)
+    .attr('style', `width: ${widthExt}px; height: ${height}px;`);
+  glCanvas.append('Your browser does not support the HTML5 canvas tag.');
+  const canvas2D = $('<canvas>').attr('id', 'canvas2D')
+    .attr('width', `${width}`).attr('height', `${height}`)
+    .attr('style', `width: ${width}px; height: ${height}px;`);
+  div.append(glCanvas).append(canvas2D);
+}
+
 $(document).ready(() => {
+  addCanvases();
   viewer = new Viewer('glCanvas', 'canvas2D', ImageUrls.white);
   Update = new ControlsUpdater(Config, viewer, UISetter);
   viewer.setRotationCallback((r) => {
