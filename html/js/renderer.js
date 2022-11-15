@@ -84,8 +84,33 @@ function getMousePos(canvas, evt, viewRect, devicePixelRatio) {
   };
 }
 
+function createViews(width, height, showSideViews) {
+  if (!showSideViews) {
+    return [new CanvasView({
+      x: 0, y: 0, width, height,
+    })];
+  }
+  const mainWidth = 3 * width / 4;
+  const auxWidth = width / 4;
+  const auxHeight = height / 3;
+  return [
+    new CanvasView({
+      x: 0, y: 0, width: mainWidth, height,
+    }),
+    new CanvasView({
+      x: mainWidth, y: height - auxHeight, width: auxWidth, height: auxHeight,
+    }),
+    new CanvasView({
+      x: mainWidth, y: height - 2 * auxHeight, width: auxWidth, height: auxHeight,
+    }),
+    new CanvasView({
+      x: mainWidth, y: 0, width: auxWidth, height: auxHeight,
+    }),
+  ];
+}
+
 class Renderer {
-  constructor(canvasId, canvas2dId, whiteUrl) {
+  constructor(canvasId, canvas2dId, whiteUrl, showSideViews) {
     const self = this;
     this.devicePixelRatio = window.devicePixelRatio || 1;
     this.canvas = document.getElementById(canvasId);
@@ -100,23 +125,7 @@ class Renderer {
       this.context2d = this.canvas2d.getContext('2d');
     }
     const { width, height } = this.canvas;
-    const mainWidth = 3 * width / 4;
-    const auxWidth = width / 4;
-    const auxHeight = height / 3;
-    this.views = [
-      new CanvasView({
-        x: 0, y: 0, width: mainWidth, height,
-      }),
-      new CanvasView({
-        x: mainWidth, y: height - auxHeight, width: auxWidth, height: auxHeight,
-      }),
-      new CanvasView({
-        x: mainWidth, y: height - 2 * auxHeight, width: auxWidth, height: auxHeight,
-      }),
-      new CanvasView({
-        x: mainWidth, y: 0, width: auxWidth, height: auxHeight,
-      }),
-    ];
+    this.views = createViews(width, height, showSideViews);
     this.mouseState = {
       amortization: 0.06,
       drag: false,

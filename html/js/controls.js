@@ -1318,13 +1318,12 @@ function makeCanvasFollowScroll() {
   });
 }
 
-function addCanvases() {
+function addCanvases(paramWidth, showSideViews) {
   const div = $('#canvasContainer');
-  const urlParams = new URLSearchParams(window.location.search);
-  const width = parseInt(urlParams.get('width') || 600, 10);
+  const width = parseInt(paramWidth || 600, 10);
   const height = 3 * width / 2;
   const wSmallView = width / 3;
-  const widthExt = width + wSmallView;
+  const widthExt = showSideViews ? width + wSmallView : width;
   const glCanvas = $('<canvas>').attr('id', 'glCanvas')
     .attr('width', `${widthExt}`).attr('height', `${height}`)
     .attr('style', `width: ${widthExt}px; height: ${height}px;`);
@@ -1336,8 +1335,10 @@ function addCanvases() {
 }
 
 $(document).ready(() => {
-  addCanvases();
-  viewer = new Viewer('glCanvas', 'canvas2D', ImageUrls.white);
+  const urlParams = new URLSearchParams(window.location.search);
+  const showSideViews = !(urlParams.get('sides') === 'false');
+  addCanvases(urlParams.get('width'), showSideViews);
+  viewer = new Viewer('glCanvas', 'canvas2D', ImageUrls.white, showSideViews);
   Update = new ControlsUpdater(Config, viewer, UISetter);
   viewer.setRotationCallback((r) => {
     UISetter.model.rotation(r);
