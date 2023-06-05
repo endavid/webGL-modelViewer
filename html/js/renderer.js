@@ -165,6 +165,9 @@ class Renderer {
       settings: {
         debugJointCount: false,
       },
+      // parameters for depth debug shader
+      depthNear: 2.5,
+      depthFar: 3,
     };
     this.selectionRadiusInPixels = 10;
     this.selectedModel = 0;

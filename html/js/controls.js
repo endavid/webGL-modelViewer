@@ -1239,6 +1239,10 @@ function populateControls() {
       Update.clearColor.bind(Update)),
     UiUtils.createSlider('clearAlpha', 'Clear alpha', Config.clear.alpha, 0, 1, 1 / 255,
       Update.clearAlpha.bind(Update)),
+    UiUtils.createSlider('depthNear', 'Depth near', Config.depthNear, 0, 3, 0.05,
+      Update.depthNear.bind(Update)),
+    UiUtils.createSlider('depthFar', 'Depth far', Config.depthFar, 0, 6, 0.1,
+      Update.depthFar.bind(Update)),
   ]);
   // * Animation Controls
   UiUtils.addGroup('gAnim', 'Animation Controls', [

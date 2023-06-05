@@ -73,6 +73,16 @@ class ControlsUpdater {
     this.config.clear.color = intValue;
     this.viewer.setBackgroundColor(intValue, this.config.clear.alpha);
   }
+  depthNear(value) {
+    this.config.depthNear = value;
+    this.viewer.scene.depthNear = value;
+    this.viewer.requestRedraw();
+  }
+  depthFar(value) {
+    this.config.depthFar = value;
+    this.viewer.scene.depthFar = value;
+    this.viewer.requestRedraw();
+  }
   modelTransform() {
     const p = this.config.model.position;
     const r = this.config.model.rotation;

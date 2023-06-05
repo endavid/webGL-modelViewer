@@ -11,10 +11,11 @@ function getMaxBoneCount(scene) {
 }
 
 class PluginLitModel {
-  constructor(shaders, whiteTexture, vsConstants) {
+  constructor(shaders, whiteTexture, vsConstants, isDepth) {
     this.shaders = shaders;
     this.whiteTexture = whiteTexture;
     this.vsConstants = vsConstants;
+    this.isDepth = isDepth;
   }
   static getAttribs() {
     const attribs = ['uv', 'position', 'normal', 'color'];
@@ -41,7 +42,7 @@ class PluginLitModel {
     const vsConstants = PluginLitModel.getVsConstants(scene);
     shaders.lit = await Shader.createAsync(gl, 'shaders/geometry.vs', fs, attribs, uniforms);
     shaders.litSkin = await Shader.createAsync(gl, 'shaders/skinning.vs', fs, attribsSkin, uniformsSkin, vsConstants);
-    return new PluginLitModel(shaders, whiteTexture, vsConstants);
+    return new PluginLitModel(shaders, whiteTexture, vsConstants, fs.includes('Depth'));
   }
   static setDepthPass(glState, isBlend) {
     glState.setBlend(isBlend);
@@ -70,8 +71,15 @@ class PluginLitModel {
     gl.uniformMatrix4fv(shader.uniforms.Mmatrix, false, model.getTransformMatrix());
     gl.uniform3f(shader.uniforms.lightDirection,
       light.direction[0], light.direction[1], light.direction[2]);
-    gl.uniform4f(shader.uniforms.lightIrradiance,
-      light.irradiance[0], light.irradiance[1], light.irradiance[2], light.irradiance[3]);
+    if (this.isDepth) {
+      const depthSlope = 1.0 / (scene.depthNear - scene.depthFar);
+      const depthOffset = -scene.depthFar * depthSlope;
+      gl.uniform4f(shader.uniforms.lightIrradiance,
+        scene.depthNear, scene.depthFar, depthSlope, depthOffset);
+    } else {
+      gl.uniform4f(shader.uniforms.lightIrradiance,
+        light.irradiance[0], light.irradiance[1], light.irradiance[2], light.irradiance[3]);
+    }
     gl.bindBuffer(gl.ARRAY_BUFFER, model.vertexBuffer);
     gl.vertexAttribPointer(shader.attribs.position, 3, gl.FLOAT, false,
       stride, layout.byteOffsets.position);

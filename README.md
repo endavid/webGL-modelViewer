@@ -7,10 +7,17 @@ If you are looking for something more powerful, take a look at Three.js.
 Installation
 ------------
 
-You will need to open it within a web server (because of CORS issues, it can't be opened as a local file). Just open `html/modelViewer.html`.
-You can see it running here: http://endavid.com/webGL-modelViewer/html/modelViewer.html
+You will need to open it within a web server. Because of CORS issues, it can't be opened as a local file, unless you start Chrome with
 
-Alternatively, you can install it as a Chrome plugin. Just point to the location of the `html` folder when adding it as a extension.
+```bash
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --allow-file-access-from-files
+```
+
+Then just open `html/modelViewer.html`.
+
+You can see it running here: [Da Model Viewer](http://endavid.com/webGL-modelViewer/html/modelViewer.html)
+
+Alternatively, you can install it as a Chrome plugin (deprecated in Dec 22). Just point to the location of the `html` folder when adding it as a extension.
 
 Supported formats
 -----------------
@@ -20,10 +27,11 @@ Supported formats
 
 Rigged Collada models are supported as well. You can preview the keyframes in an animation, inspect the skeleton, and transform the joints. At the moment, the joint transforms are limited to Collada files where those transforms are stored as separate rotations, and not as a single matrix.
 
-
 Development
 -----------
+
 ### Style
+
 We target ECMAScript 2016 (or ES7), so we can use all modern syntactic sugar. Older versions of Javascript are not supported.
 Use ESLint to get the style right. I'm using AirBnB Javascript style as base. To install it, install Node.js first. Then, from the console, run `npm install` inside the root directory of this repository.
 
@@ -43,6 +51,7 @@ Comments about some of the custom rules in the ESLint config file:
 * `"lines-between-class-members": 0`. IDEs make code pretty enough these days, so member functions are already easy to spot since they appear in a different color. No need to add extra spaces.
 
 ### Architecture
+
 The code is roughly divided into 2 main blocks: UI and rendering. All the UI is created throw `controls.js`, with some helpers from `uiutils.js`. The rest of the code is related to rendering. The main rendering loop is in `renderer.js`. A `Renderer` contains a series of 3D and 2D plugins. The 3D plugins render things in the WebGL canvas, while the 2D plugins are used to overlay things using a 2D context.
 
 A `Renderer` contains a `scene`, that looks like this,
@@ -65,6 +74,3 @@ this.scene = {
 `PluginLitModel` takes care of rendering all the `models` in the scene, but at the moment the viewer only lets you load one model at a time.
 
 The labels inside the `world` section are labels with coordinates in world space. Labels in model space are inside `model.labels`.
-
-
-

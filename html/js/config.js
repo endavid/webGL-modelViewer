@@ -57,6 +57,8 @@ const Config = {
     color: 0x3d4d4d,
     alpha: 1,
   },
+  depthNear: 2.5,
+  depthFar: 3,
   needsReload: false,
   keyframe: -1,
   pointSize: 3,
