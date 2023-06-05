@@ -274,6 +274,7 @@ function mapWeightsPerVertex(vcount, jointWeightIndices, weightData) {
   const weights = [];
   const jointCount = [];
   const overflowCount = {};
+  const maxOverflow = {};
   let maxJointCount = 0;
   let iv = 0;
   vcount.forEach((jointsPerVertex) => {
@@ -293,13 +294,17 @@ function mapWeightsPerVertex(vcount, jointWeightIndices, weightData) {
     jointWeightPairs.sort((a, b) => b[1] - a[1]);
     // if there are more joints, ignore the least important ones
     const mostImportant = jointWeightPairs.slice(0, 4);
+    const remnant = 1.0 - mostImportant.reduce((sum, v) => sum + v[1], 0);
+    maxOverflow[jointsPerVertex] = Math.max(maxOverflow[jointsPerVertex] || 0, remnant);
+    mostImportant[0][1] += remnant;
     weights.push(mostImportant);
     // the jointCount will be passed as objectId
     jointCount.push(jointsPerVertex - 1);
   });
   Object.keys(overflowCount).forEach((key) => {
     const count = overflowCount[key];
-    console.warn(`There are ${count} vertices with ${key} contributing joints! Only taking the most important 4 and ignoring the rest...`);
+    const maxLost = maxOverflow[key];
+    console.warn(`There are ${count} vertices with ${key} contributing joints! Only taking the most important 4 and ignoring the rest... The maximum ignored contribution amounted for ${maxLost}`);
   });
   return { weights, jointCount, maxJointCount };
 }
