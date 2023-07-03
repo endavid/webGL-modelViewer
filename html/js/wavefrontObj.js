@@ -17,6 +17,10 @@ class WavefrontObj {
     };
     let lastGroup = -1;
     let currentMaterial = 'unknown';
+    const storeFn = (val) => {
+      uniqueIndexTriplets[val] = (uniqueIndexTriplets[val] || 0) + 1;
+      meshes[meshes.length - 1].indices.push(val);
+    };
     lines.forEach((s) => {
       if (s.startsWith('#')) {
         // comments
@@ -69,10 +73,14 @@ class WavefrontObj {
             // file with no 'g', so create a default mesh
             meshes.push({ name: 'unknown', indices: [], material: currentMaterial });
           }
-          m.slice(1, 4).forEach((val) => {
-            uniqueIndexTriplets[val] = (uniqueIndexTriplets[val] || 0) + 1;
-            meshes[meshes.length - 1].indices.push(val);
-          });
+          m.slice(1, 4).forEach(storeFn);
+          // support for quads
+          if (m.length > 4) {
+            const indices = [1, 3, 4];
+            indices.forEach((i) => {
+              storeFn(m[i]);
+            });
+          }
           break;
         default:
           console.warn(`Unknown Wavefront cmd: ${cmd}`);
