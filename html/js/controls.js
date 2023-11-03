@@ -1119,6 +1119,8 @@ function populateControls() {
     ]),
     UiUtils.createDropdownList('submesh', 'Submesh', [], (obj) => {
       viewer.selectSubmesh(obj.value);
+      const info = viewer.getMeshInfo(obj.value);
+      dumpObject(info);
     }),
   ]);
   // * Camera Settings

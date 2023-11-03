@@ -117,7 +117,7 @@ class PluginLitModel {
         console.error('Not even the white texture is ready!');
       }
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
-      gl.drawElements(gl.TRIANGLES, mesh.numPoints, gl.UNSIGNED_INT, 0);
+      gl.drawElements(gl.TRIANGLES, mesh.numElements, gl.UNSIGNED_INT, 0);
     });
     shader.disable(gl);
   }

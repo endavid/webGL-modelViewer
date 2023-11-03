@@ -584,6 +584,31 @@ class Renderer {
     this.scene.selectedMesh = name === 'all' ? false : name;
     this.redrawRequested = true;
   }
+  getMesh(name) {
+    for (let i = 0; i < this.scene.models.length; i += 1) {
+      const model = this.scene.models[i];
+      for (let j = 0; j < model.meshes.length; j += 1) {
+        const mesh = model.meshes[j];
+        if (mesh.id === name) {
+          return mesh;
+        }
+      }
+    }
+    return null;
+  }
+  getMeshInfo(name) {
+    const mesh = this.getMesh(name);
+    if (!mesh) {
+      if (this.scene.models.length > 0) {
+        return this.scene.models[0].stats;
+      }
+      return {};
+    }
+    return {
+      vertexCount: mesh.numVertices,
+      triangleCount: mesh.numElements / 3,
+    };
+  }
   async onSceneUpdate() {
     for (let i = 0; i < this.plugins.length; i += 1) {
       if (this.plugins[i].onSceneUpdate) {

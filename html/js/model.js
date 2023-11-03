@@ -174,7 +174,8 @@ class Model {
       const mesh = {
         id,
         indexBuffer: gl.createBuffer(),
-        numPoints: m.indices.length,
+        numElements: m.indices.length,
+        numVertices: (new Set(m.indices)).size,
         albedoUrl: albedoMapUrl,
         albedoMap: albedoMapUrl !== undefined ? Gfx.loadTexture(gl, albedoMapUrl) : false,
       };
